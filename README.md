@@ -1,3 +1,3 @@
-# MatrixColoring
+# SparseDiffTools.jl
 
-Matrix Coloring algorithms to enhance Julia's sparse jacobian computation ability.
+A Julia package to exploit the sparsity found in derivative matrices to enhance and speed up their computation with the help of matrix coloring. 

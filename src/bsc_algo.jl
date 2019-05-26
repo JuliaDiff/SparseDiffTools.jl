@@ -1,5 +1,5 @@
 #Backtracking Sequential Coloring algorithm
-include ("custom_graph.jl")
+include("custom_graph.jl")
 
 function bsc_color(G::CGraph)
     V = num_vertices(G)

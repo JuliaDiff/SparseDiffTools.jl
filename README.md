@@ -1,5 +1,8 @@
 # SparseDiffTools.jl
 
+[![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/JuliaDiffEq/SparseDiffTools.jl.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/SparseDiffTools.jl)
+
 A Julia package to exploit the sparsity found in derivative matrices to enhance and speed up their computation with the help of matrix coloring. Jacobians of large dimensions frequently have a lot of elements equal to zero, and this fact can be utilised to speed up the process of computing such matrices. This package is fundamentally based and works on this observation.
 
 This package comprises of three separate and independent modules: `Automatic Sparsity Detection`, `Matrix Partitioning`, and `Automatic Differentiation and Recovery`.

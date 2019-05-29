@@ -6,7 +6,7 @@ include("custom_graph.jl")
 A utility function to generate a graph from input
 sparse matrix, columns are represented with vertices
 and 2 vertices are connected with an edge only if
-the two columns are mutually orthogonal.
+the two columns are not mutually orthogonal.
 """
 function matrix2graph(SparseMatrix::Array{Int64,2})
     V = col = size(SparseMatrix, 2)

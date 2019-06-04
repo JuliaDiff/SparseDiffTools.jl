@@ -1,4 +1,5 @@
-include("custom_graph.jl")
+using VertexSafeGraphs
+using LightGraphs
 
 """
     colorGraph(g)
@@ -6,9 +7,10 @@ include("custom_graph.jl")
 Find a coloring of the graph g such that no two vertices connected
 by an edge have the same color.
 """
-function colorGraph(G::CGraph)
+function contract_color(G::VSafeGraph)
+
     colornumber = 0
-    V = num_vertices(G)
+    V = nv(G)
     colors = zeros(Int64,V)
 
     while (V > 0)
@@ -35,19 +37,12 @@ function colorGraph(G::CGraph)
             nn = non_neighbors(G,x)
         end
         rem_vertex!(G,x)
-        V = num_vertices(G)
+        V = nv(G)
     end
     return colors
+
 end
 
-"""
-    num_vertices(G)
-
-Find the total number of vertices present in graph G.
-"""
-function num_vertices(G::CGraph)
-    return length(vertices(G))
-end
 
 """
     max_degree_vertex(G, nn)
@@ -55,36 +50,42 @@ end
 Find the vertex in the group nn of vertices belonging to the
 graph G which has the highest degree.
 """
-function max_degree_vertex(G::CGraph,nn::Array{Int64,1})
+function max_degree_vertex(G::VSafeGraph,nn::Array{Int64,1})
+
     max_degree = -1
     max_degree_vertex = -1
     for v in nn
-        v_degree = length(neighbors(G,v))
+        v_degree = length(inneighbors(G,v))
         if v_degree > max_degree
             max_degree = v_degree
             max_degree_vertex = v
         end
     end
     return max_degree_vertex
+
 end
+
 
 """
     max_degree_vertex(G)
 
 Find the vertex in graph with highest degree.
 """
-function max_degree_vertex(G::CGraph)
+function max_degree_vertex(G::VSafeGraph)
+
     max_degree = -1
     max_degree_vertex = -1
     for v in vertices(G)
-        v_degree = length(neighbors(G,v))
+        v_degree = length(inneighbors(G,v))
         if v_degree > max_degree
             max_degree = v_degree
             max_degree_vertex = v
         end
     end
     return max_degree_vertex
+
 end
+
 
 """
     non_neighbors(G,x)
@@ -92,19 +93,21 @@ end
 Find the set of vertices belonging to the graph G which do
 not share an edge with the vertex x.
 """
-function non_neighbors(G::CGraph, x::Int64)
-    num_non_neighbors = num_vertices(G) - vertex_degree(G,x) - 1
-    nn = zeros(Int64,num_non_neighbors)
-    index = 1
+function non_neighbors(G::VSafeGraph, x::Int64)
 
-    for i in vertices(G)
-        if ((indexin([i], neighbors(G,x)))[1] == nothing) && (i != x)
-            nn[index] = i
-            index += 1
+    nn = zeros(Int64, 0)
+    for v in vertices(G)
+        if v == x
+            continue
+        end
+        if !(v in inneighbors(G,x))
+            push!(nn, v)
         end
     end
     return nn
+
 end
+
 
 """
     length_common_neighbor(G,z,x)
@@ -112,9 +115,10 @@ end
 Find the number of vertices that share an edge with both the
 vertices z and x belonging to the graph G.
 """
-function length_common_neighbor(G::CGraph,z::Int64, x::Int64)
-    z_neighbors = neighbors(G,z)
-    x_neighbors = neighbors(G,x)
+function length_common_neighbor(G::VSafeGraph,z::Int64, x::Int64)
+
+    z_neighbors = inneighbors(G,z)
+    x_neighbors = inneighbors(G,x)
     common_vertices = indexin(z_neighbors, x_neighbors)
     num_common_vertices = 0
     for i in common_vertices
@@ -123,15 +127,19 @@ function length_common_neighbor(G::CGraph,z::Int64, x::Int64)
         end
     end
     return num_common_vertices
+
 end
+
 
 """
     vertex_degree(G,z)
 
 Find the degree of the vertex z which belongs to the graph G.
 """
-function vertex_degree(G::CGraph,z::Int64)
-    return length(neighbors(G,z))
+function vertex_degree(G::VSafeGraph,z::Int64)
+
+    return length(inneighbors(G,z))
+
 end
 
 
@@ -142,8 +150,9 @@ Contract the vertex y to x, both of which belong to graph G, that is
 delete vertex y and join x with the neighbors of y if they are not
 already connected with an edge.
 """
-function contract!(G::CGraph,y::Int64, x::Int64)
-    for v in neighbors(G,y)
+function contract!(G::VSafeGraph,y::Int64, x::Int64)
+
+    for v in inneighbors(G,y)
         if has_edge(G,v,x) == false
             add_edge!(G,v,x)
         end

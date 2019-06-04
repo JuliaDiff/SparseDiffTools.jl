@@ -2,5 +2,6 @@ using SparseDiffTools
 using Test
 
 
-@testset "Greedy D1 Algorithm" begin include("test_greedy_d1.jl") end
-@testset "Matrix2Graph" begin include("test_matrix2graph.jl") end
+@testset "Exact coloring via contraction" begin include("test_contraction.jl") end
+@testset "Greedy distance-1 coloring" begin include("test_greedy_d1.jl") end
+@testset "Matrix to graph conversion" begin include("test_matrix2graph.jl") end

@@ -1,4 +1,4 @@
-include("custom_graph.jl")
+using VertexSafeGraphs
 
 """
 
@@ -10,13 +10,13 @@ color using greedy approach. The number of colors
 used may be equal or greater than the chromatic
 number χ(G) of the graph.
 """
-function greedy_d1(G::CGraph)
-    V = num_vertices(G)
+function greedy_d1(G::VSafeGraph)
+    V = nv(G)
     result = zeros(Int64, V)
     result[1] = 1
     available = zeros(Int64, V)
     for i = 2:V
-        for j in neighbors(G, i)
+        for j in inneighbors(G, i)
             if result[j] != 0
                 available[result[j]] = 1
             end

@@ -1,5 +1,6 @@
 using SparseArrays
-include("custom_graph.jl")
+using LightGraphs
+using VertexSafeGraphs
 
 """
         matrix2graph(SparseMatrix)
@@ -13,25 +14,19 @@ function matrix2graph(SparseMatrix::SparseMatrixCSC{Int64,Int64})
     dropzeros(SparseMatrix)
     (rows_index, cols_index, val) = findnz(SparseMatrix)
 
-    V = col = size(SparseMatrix, 2)
-    row = size(SparseMatrix, 1)
+    V = cols = size(SparseMatrix, 2)
+    rows = size(SparseMatrix, 1)
 
-    vertices = zeros(Int64, 0)
-    edges = [Vector{Int64}() for _ in 1:V]
-
-    graph = CGraph(vertices, edges)
-    for i = 1:V
-        push!(vertices, i)
-    end
+    inner = SimpleGraph(V)
+    graph = VSafeGraph(inner)
 
     for i = 1:length(cols_index)
         cur_col = cols_index[i]
         for j = 1:(i-1)
             next_col = cols_index[j]
             if cur_col != next_col
-                if row_index[i] == row_index[j]
-                    #add edge
-                    add_edge!(graph, i, j)
+                if rows_index[i] == rows_index[j]
+                    add_edge!(graph, cur_col, next_col)
                 end
             end
         end

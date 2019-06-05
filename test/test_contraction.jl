@@ -23,7 +23,7 @@ end
 
 for i in 1:20
     g = test_graphs[i]
-    out_colors = greedy_d1(g)
+    out_colors = contract_color(g)
     for v = 1:nv(g)
         color = out_colors[v]
         for j in inneighbors(g, v)

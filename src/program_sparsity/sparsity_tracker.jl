@@ -1,5 +1,6 @@
 using Cassette
 import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
+import Core: SSAValue
 
 """
 The sparsity pattern.
@@ -66,46 +67,20 @@ function ismetatype(x, ctx, T)
 end
 
 
-"""
-`sparsity!(f, Y, X, S=Sparsity(length(X), length(Y)))`
-
-Execute the program that figures out the sparsity pattern of
-the jacobian of the function `f`.
-
-# Arguments:
-- `f`: the function
-- `Y`: the output array
-- `X`: the input array
-- `S`: (optional) the sparsity pattern
-
-Returns a `Sparsity`
-"""
-function sparsity!(f!, Y, X, S=Sparsity(length(Y), length(X)))
-
-    ctx = SparsityContext(metadata=S)
-    ctx = Cassette.enabletagging(ctx, f!)
-    ctx = Cassette.disablehooks(ctx)
-
-    val = Cassette.overdub(ctx,
-                           f!,
-                           tag(Y, ctx, Output()),
-                           tag(X, ctx, Input()))
-    untag(val, ctx), S
-end
-
 # getindex on the input
 function Cassette.overdub(ctx::SparsityContext,
                           f::typeof(getindex),
                           X::Tagged,
                           idx::Int...)
     if ismetatype(X, ctx, Input)
-        val = Cassette.fallback(ctx, f, X, idx...)
         i = LinearIndices(untag(X, ctx))[idx...]
-        tag(val, ctx, ProvinanceSet(i))
+        tag(Tainted(), ctx, ProvinanceSet(i))
     else
         Cassette.recurse(ctx, f, X, idx...)
     end
 end
+
+struct Tainted end
 
 # setindex! on the output
 function Cassette.overdub(ctx::SparsityContext,
@@ -113,16 +88,17 @@ function Cassette.overdub(ctx::SparsityContext,
                           Y::Tagged,
                           val::Tagged,
                           idx::Int...)
-    S = ctx.metadata
+    S, path = ctx.metadata
     if ismetatype(Y, ctx, Output)
         set = metadata(val, ctx)
         if set isa ProvinanceSet
             i = LinearIndices(untag(Y, ctx))[idx...]
             push!(S, i, set)
         end
-        return Cassette.fallback(ctx, f, Y, val, idx...)
+        #Cassette.fallback(ctx, f, Y, val, idx...)
+        val
     else
-        return Cassette.recurse(ctx, f, Y, val, idx...)
+        Cassette.recurse(ctx, f, Y, val, idx...)
     end
 end
 
@@ -143,8 +119,8 @@ function _overdub_union_provinance(ctx::SparsityContext, f, args...)
         Cassette.fallback(ctx, f, args...)
     else
         provinance = union(map(arg->get_provinance(ctx, arg), args[idxs])...)
-        val = Cassette.fallback(ctx, f, args...)
-        tag(val, ctx, provinance)
+        # val = Cassette.fallback(ctx, f, args...)
+        tag(Tainted(), ctx, provinance)
     end
 end
 

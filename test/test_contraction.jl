@@ -23,14 +23,13 @@ end
 
 for i in 1:20
     g = test_graphs[i]
-    out_colors = contract_color(g)
+    coloring = contract_color(copy(g))
+    out_colors = coloring.colors
     for v = 1:nv(g)
         color = out_colors[v]
+        @test color <= coloring.num_colors
         for j in inneighbors(g, v)
-            if out_colors[j] == color
-                 @test false
-            end
+            @test out_colors[j] != color
         end
     end
-    @test true
 end

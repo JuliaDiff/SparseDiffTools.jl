@@ -29,5 +29,12 @@ function greedy_d1(G::VSafeGraph)
         end
         available = zeros(Int64, V)
     end
-    return result
+    max_color = 0
+    for i = 1:length(result)
+        if result[i] > max_color
+            max_color = result[i]
+        end
+    end
+    cl = Coloring{Int64}(max_color, result)
+    return cl
 end

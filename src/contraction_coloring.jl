@@ -39,7 +39,15 @@ function contract_color(G::VSafeGraph)
         rem_vertex!(G,x)
         V = nv(G)
     end
-    return colors
+
+    max_color = 0
+    for i = 1:length(colors)
+        if colors[i] > max_color
+            max_color = colors[i]
+        end
+    end
+    cl = Coloring{Int64}(max_color, colors)
+    return cl
 
 end
 

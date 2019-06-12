@@ -62,10 +62,14 @@ Cassette.@context SparsityContext
 
 const TagType = Union{Input, Output, ProvinanceSet}
 Cassette.metadatatype(::Type{<:SparsityContext}, ::DataType) = TagType
+
+metatype(x, ctx) = hasmetadata(x, ctx) && istagged(x, ctx) && typeof(metadata(x, ctx))
 function ismetatype(x, ctx, T)
     hasmetadata(x, ctx) && istagged(x, ctx) && (metadata(x, ctx) isa T)
 end
 
+# Dummy type when you getindex
+struct Tainted end
 
 # getindex on the input
 function Cassette.overdub(ctx::SparsityContext,
@@ -79,8 +83,6 @@ function Cassette.overdub(ctx::SparsityContext,
         Cassette.recurse(ctx, f, X, idx...)
     end
 end
-
-struct Tainted end
 
 # setindex! on the output
 function Cassette.overdub(ctx::SparsityContext,
@@ -101,6 +103,16 @@ function Cassette.overdub(ctx::SparsityContext,
         Cassette.recurse(ctx, f, Y, val, idx...)
     end
 end
+
+# This is for reflection-based code, such as that to figure out eltype of a broadcast
+function Cassette.overdub(ctx::SparsityContext, f::typeof(eltype), X::Tagged)
+    if ismetatype(X, ctx, Input)
+        Tainted
+    else
+        Cassette.fallback(ctx, f, X)
+    end
+end
+
 
 function get_provinance(ctx, arg::Tagged)
     if metadata(arg, ctx) isa ProvinanceSet
@@ -124,8 +136,7 @@ function _overdub_union_provinance(ctx::SparsityContext, f, args...)
     end
 end
 
-function Cassette.overdub(ctx::SparsityContext,
-                          f, args...) where {A, B, D<:Output}
+function Cassette.overdub(ctx::SparsityContext, f, args...)
     if any(x->ismetatype(x, ctx, ProvinanceSet), args)
         _overdub_union_provinance(ctx, f, args...)
     else

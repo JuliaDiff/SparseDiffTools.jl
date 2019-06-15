@@ -10,7 +10,7 @@ sparse matrix, columns are represented with vertices
 and 2 vertices are connected with an edge only if
 the two columns are mutually orthogonal.
 """
-function matrix2graph(SparseMatrix::SparseMatrixCSC{Int64,Int64})
+function matrix2graph(SparseMatrix::SparseMatrixCSC{T,Int64}) where T<:Number
     dropzeros(SparseMatrix)
     (rows_index, cols_index, val) = findnz(SparseMatrix)
 

@@ -15,17 +15,14 @@ function rewrite_branch(ctx, stmt, extraslot, i)
 
     # insert a check to see if SSAValue(i) isa Tainted
     istainted_ssa = Core.SSAValue(i)
-    ist = GlobalRef(Main, :istainted) # FIXME, put in a module
-    push!(exprs, :($ist($cond)))
+    push!(exprs, :($istainted($cond)))
 
     # not tainted? jump to the penultimate statement
     push!(exprs, Expr(:gotoifnot, istainted_ssa, i+5))
 
     # tainted? then use this_here_predicate!(SSAValue(1))
-    predref = GlobalRef(Main, :this_here_predicate!)
     current_pred = i+2
-    predcall = Expr(:call, predref)
-    push!(exprs, predcall)
+    push!(exprs, :($this_here_predicate!()))
 
     # Store the interpreter-provided predicate in the slot
     push!(exprs, Expr(:(=), extraslot, SSAValue(i+2)))

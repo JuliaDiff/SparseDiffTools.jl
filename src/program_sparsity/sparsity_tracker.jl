@@ -1,6 +1,9 @@
 using Cassette
 import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
 import Core: SSAValue
+using SparseArrays
+
+export Sparsity, sparsity!
 
 """
 The sparsity pattern.
@@ -18,7 +21,6 @@ struct Sparsity
     J::Vector{Int} # Output
 end
 
-using SparseArrays
 SparseArrays.sparse(s::Sparsity) = sparse(s.I, s.J, true, s.m, s.n)
 
 Sparsity(m, n) = Sparsity(m, n, Int[], Int[])
@@ -144,7 +146,9 @@ function _overdub_union_provinance(ctx::SparsityContext, f, args...)
 end
 
 function Cassette.overdub(ctx::SparsityContext, f, args...)
-    if any(x->ismetatype(x, ctx, ProvinanceSet), args)
+    haspsets = any(x->ismetatype(x, ctx, ProvinanceSet), args)
+    hasinput = any(x->ismetatype(x, ctx, Input), args)
+    if haspsets && !hasinput
         _overdub_union_provinance(ctx, f, args...)
     else
         Cassette.recurse(ctx, f, args...)

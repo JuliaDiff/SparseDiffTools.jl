@@ -16,6 +16,9 @@ function default_chunk_size(maxcolor)
     end
 end
 
+getsize(::Val{N}) where N = N
+getsize(N::Integer) = N
+
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
                               color=1:length(x))
@@ -26,13 +29,13 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    t = zeros(Dual{typeof(f), eltype(x), maximum(color)},length(x))
+    t = zeros(Dual{typeof(f), eltype(x), getsize(chunksize)},length(x))
 
     if dx === nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        fx = zeros(Dual{typeof(f), eltype(dx), maximum(color)},length(dx))
+        fx = zeros(Dual{typeof(f), eltype(dx), getsize(chunksize)},length(dx))
         _dx = dx
     end
 

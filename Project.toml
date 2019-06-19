@@ -4,6 +4,7 @@ authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"

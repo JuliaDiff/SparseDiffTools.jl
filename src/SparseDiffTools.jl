@@ -3,7 +3,8 @@ module SparseDiffTools
 export  contract_color,
         greedy_d1,
         matrix2graph,
-        compute_jacobian!
+        forwarddiff_color_jacobian!,
+        ForwardColorJacCache
 
 include("contraction_coloring.jl")
 include("greedy_d1_coloring.jl")

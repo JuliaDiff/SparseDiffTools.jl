@@ -66,7 +66,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 f,
                 x::AbstractArray{<:Number};
                 dx = nothing,
-                color = 1:length(x))
+                color = eachindex(x))
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color))
 end
 

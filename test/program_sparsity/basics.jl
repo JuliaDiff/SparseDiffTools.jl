@@ -12,6 +12,7 @@ f(y,x) = x .+ 1
 @test testval(f, [1], [2]) == [Tainted()]
 @test sparse(testmeta(f, [1], [2])[1]) == sparse([], [], true, 1, 1)
 
-g(y,x) = y .= x .+ 1
+g(y,x) = y[:] .= x .+ 1
+#g(y,x) = y .= x .+ 1 -- memove
 
 @test sparse(testmeta(g, [1], [2])[1]) == sparse([1], [1], true)

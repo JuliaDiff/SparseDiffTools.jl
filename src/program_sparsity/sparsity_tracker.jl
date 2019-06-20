@@ -1,5 +1,5 @@
 using Cassette
-import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
+import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
 import Core: SSAValue
 using SparseArrays
 
@@ -148,7 +148,7 @@ end
 function Cassette.overdub(ctx::SparsityContext, f, args...)
     haspsets = any(x->ismetatype(x, ctx, ProvinanceSet), args)
     hasinput = any(x->ismetatype(x, ctx, Input), args)
-    if haspsets && !hasinput
+    if haspsets && !hasinput # && !canrecurse(ctx, f, args...)
         _overdub_union_provinance(ctx, f, args...)
     else
         Cassette.recurse(ctx, f, args...)

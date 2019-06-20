@@ -6,9 +6,9 @@ export  contract_color,
         forwarddiff_color_jacobian!,
         ForwardColorJacCache
 
-include("contraction_coloring.jl")
-include("greedy_d1_coloring.jl")
-include("matrix2graph.jl")
-include("compute_jacobian_ad.jl")
+include("coloring/contraction_coloring.jl")
+include("coloring/greedy_d1_coloring.jl")
+include("differentiation/matrix2graph.jl")
+include("differentiation/compute_jacobian_ad.jl")
 
 end # module

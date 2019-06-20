@@ -49,7 +49,7 @@ function generate_chunked_partials(x,color,::Val{N}) where N
     # TODO: should only go up to the chunksize each time, and should
     # generate p[i] different parts, each with less than the chunksize
 
-    partials_array = BitMatrix{Bool}(undef, length(x), maximum(color))
+    partials_array = BitMatrix(undef, length(x), maximum(color))
     for color_i in 1:maximum(color)
         for i in eachindex(x)
             if color[i]==color_i

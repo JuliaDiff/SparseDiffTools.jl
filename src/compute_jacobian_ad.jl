@@ -51,7 +51,7 @@ function generate_chunked_partials(x,color,::Val{N}) where N
 
     partials_array = BitMatrix{Bool}(undef, length(x), maximum(color))
     for color_i in 1:maximum(color)
-        for i in 1:length(x)
+        for i in eachindex(x)
             if color[i]==color_i
                 partials_array[i,color_i] = true
             else

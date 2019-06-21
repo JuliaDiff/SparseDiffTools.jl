@@ -17,8 +17,22 @@ function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(
     color_graph(A_graph,alg)
 end
 
-function matrix_colors(A::Array)
+"""
+    matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
+
+    The color vector for dense matrix and triangular matrix is simply 
+    `[1,2,3,...,size(A,2)]`
+"""
+function matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
     eachindex(1:size(A,2)) # Vector size matches number of rows
+end
+
+function matrix_colors(A::Diagonal)
+    repeat(1,size(A,2))
+end
+
+function matrix_colors(A::Bidiagonal)
+    repeat(1:2,div(size(A,2),2)+1)[1:size(A,2)]
 end
 
 function matrix_colors(A::Tridiagonal)

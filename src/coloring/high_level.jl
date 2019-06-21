@@ -35,6 +35,6 @@ function matrix_colors(A::Bidiagonal)
     repeat(1:2,div(size(A,2),2)+1)[1:size(A,2)]
 end
 
-function matrix_colors(A::Tridiagonal)
+function matrix_colors(A::Union{Tridiagonal,SymTridiagonal})
     repeat(1:3,div(size(A,2),3)+1)[1:size(A,2)]
 end

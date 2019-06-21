@@ -9,6 +9,7 @@ diagonal=Diagonal(dense)
 bidiagonalU=Bidiagonal(dense,:U)
 bidiagonalL=Bidiagonal(dense,:L)
 tridiagonal=Tridiagonal(dense)
+symtridiagonal=SymTridiagonal(dense)
 
 @test matrix_colors(dense)==1:n
 @test matrix_colors(uptri)==1:n
@@ -18,3 +19,4 @@ tridiagonal=Tridiagonal(dense)
 @test matrix_colors(bidiagonalU)==[1,2,1,2,1,2,1,2,1,2]
 @test matrix_colors(bidiagonalL)==[1,2,1,2,1,2,1,2,1,2]
 @test matrix_colors(tridiagonal)==[1,2,3,1,2,3,1,2,3,1]
+@test matrix_colors(symtridiagonal)==[1,2,3,1,2,3,1,2,3,1]

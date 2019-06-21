@@ -1,6 +1,6 @@
 module SparseDiffTools
 
-using SparseArrays, LinearAlgebra, LightGraphs, VertexSafeGraphs
+using SparseArrays, LinearAlgebra, BandedMatrices, LightGraphs, VertexSafeGraphs
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 
 export  contract_color,

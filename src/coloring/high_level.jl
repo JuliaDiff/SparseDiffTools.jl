@@ -27,14 +27,24 @@ function matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
     eachindex(1:size(A,2)) # Vector size matches number of rows
 end
 
+function _cycle(repetend,len)
+    repeat(repetend,div(len,length(repetend))+1)[1:len]
+end
+
 function matrix_colors(A::Diagonal)
     fill(1,size(A,2))
 end
 
 function matrix_colors(A::Bidiagonal)
-    repeat(1:2,div(size(A,2),2)+1)[1:size(A,2)]
+    _cycle(1:2,size(A,2))
 end
 
 function matrix_colors(A::Union{Tridiagonal,SymTridiagonal})
-    repeat(1:3,div(size(A,2),3)+1)[1:size(A,2)]
+    _cycle(1:3,size(A,2))
+end
+
+function matrix_colors(A::BandedMatrix)
+    u,l=bandwidths(A)
+    width=u+l+1
+    _cycle(1:width,size(A,2))
 end

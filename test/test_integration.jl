@@ -1,4 +1,4 @@
-using SparseDiffTools
+using SparseDiffTools, SparseArrays
 using LinearAlgebra
 using DiffEqDiffTools
 using Test
@@ -30,11 +30,9 @@ function generate_sparsity_pattern(N::Integer)
     return Tridiagonal(dl,d,du)
 end
 
-sparsity_pattern = sparse(generate_sparsity_pattern(30))
-
-_graph = matrix2graph(sparsity_pattern)
-coloring_vector = greedy_d1(_graph)
-@test coloring_vector == repeat(1:3,10)
+true_jac = sparse(generate_sparsity_pattern(30))
+colors = matrix_colors(true_jac)
+@test colors == repeat(1:3,10)
 
 #Jacobian computed without coloring vector
 J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30))
@@ -43,7 +41,7 @@ J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30))
 
 #Jacobian computed with coloring vectors
 fcalls = 0
-_J = sparsity_pattern
-DiffEqDiffTools.finite_difference_jacobian!(_J, f, rand(30), color = coloring_vector)
+_J = 200 .* true_jac
+DiffEqDiffTools.finite_difference_jacobian!(_J, f, rand(30), color = colors)
 @test fcalls == 4
 @test _J ≈ J

@@ -1,7 +1,3 @@
-using SparseArrays
-using LightGraphs
-using VertexSafeGraphs
-
 """
         matrix2graph(SparseMatrix)
 

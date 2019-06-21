@@ -1,13 +1,10 @@
-using VertexSafeGraphs
-using LightGraphs
-
 """
-    colorGraph(g)
+    ColorContraction
 
 Find a coloring of the graph g such that no two vertices connected
 by an edge have the same color.
 """
-function contract_color(G::VSafeGraph)
+function color_graph(G::VSafeGraph,::ContractionColor)
 
     colornumber = 0
     V = nv(G)

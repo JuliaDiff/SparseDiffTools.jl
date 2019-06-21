@@ -1,5 +1,3 @@
-using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
-
 struct ForwardColorJacCache{T,T2,T3,T4,T5}
     t::T
     fx::T2

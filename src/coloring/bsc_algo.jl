@@ -1,7 +1,9 @@
-#Backtracking Sequential Coloring algorithm
-using VertexSafeGraphs
+"""
+    BSCColor
 
-function bsc_color(G::VSafeGraph)
+    Backtracking Sequential Coloring algorithm
+"""
+function color_graph(G::VSafeGraph,::BSCColor)
     V = nv(G)
     F = zeros(Int64, V)
     freeColors = [Vector{Int64}() for _ in 1:V] #set of free colors for each vertex

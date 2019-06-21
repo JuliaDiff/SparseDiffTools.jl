@@ -18,7 +18,7 @@ function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(
 end
 
 function matrix_colors(A::Array)
-    eachindex(size(A,2)) # Vector size matches number of rows
+    eachindex(1:size(A,2)) # Vector size matches number of rows
 end
 
 function matrix_colors(A::Tridiagonal)

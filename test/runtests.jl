@@ -7,3 +7,4 @@ using Test
 @testset "Matrix to graph conversion" begin include("test_matrix2graph.jl") end
 @testset "AD using color vector" begin include("test_ad.jl") end
 @testset "Integration test" begin include("test_integration.jl") end
+@testset "Special matrices" begin include("test_specialmatrices.jl") end

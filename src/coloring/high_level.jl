@@ -28,7 +28,7 @@ function matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
 end
 
 function matrix_colors(A::Diagonal)
-    repeat(1,size(A,2))
+    fill(1,size(A,2))
 end
 
 function matrix_colors(A::Bidiagonal)

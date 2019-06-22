@@ -146,7 +146,7 @@ end
 
 ### Operator Forms
 
-mutable struct JacVec{F,T1,T2,uType}
+struct JacVec{F,T1,T2,uType}
     f::F
     cache1::T1
     cache2::T2
@@ -177,7 +177,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::JacVec,v::AbstractVector)
     end
 end
 
-mutable struct HesVec{F,T1,T2,uType}
+struct HesVec{F,T1,T2,uType}
     f::F
     cache1::T1
     cache2::T2
@@ -211,7 +211,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::HesVec,v::AbstractVector)
     end
 end
 
-mutable struct HesVecGrad{G,T1,T2,uType}
+struct HesVecGrad{G,T1,T2,uType}
     g::G
     cache1::T1
     cache2::T2
@@ -219,7 +219,7 @@ mutable struct HesVecGrad{G,T1,T2,uType}
     autodiff::Bool
 end
 
-function HesVecGrad(g,u::AbstractArray;autodiff=true)
+function HesVecGrad(g,u::AbstractArray;autodiff=false)
     if autodiff
         cache1 = ForwardDiff.Dual{DeivVecTag}.(u, u)
         cache2 = ForwardDiff.Dual{DeivVecTag}.(u, u)

@@ -68,7 +68,7 @@ example:
 ```julia
 v = rand(30)
 res = similar(v)
-mul!(res,J,v)
+mul!(res,J,v) # Does 1 f evaluation
 ```
 
 makes `res = J*v`. Additional operators for `HesVec` exists, including

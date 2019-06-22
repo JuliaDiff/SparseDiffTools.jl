@@ -1,6 +1,7 @@
 module SparseDiffTools
 
-using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices, LightGraphs, VertexSafeGraphs
+using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices,
+      LightGraphs, VertexSafeGraphs, DiffEqDiffTools, ForwardDiff
 using BlockBandedMatrices:blocksize,nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 
@@ -9,12 +10,21 @@ export  contract_color,
         matrix2graph,
         matrix_colors,
         forwarddiff_color_jacobian!,
-        ForwardColorJacCache
+        ForwardColorJacCache,
+        auto_jacvec,auto_jacvec!,
+        num_jacvec,num_jacvec!,
+        num_hesvec,num_hesvec!,
+        numauto_hesvec,numauto_hesvec!,
+        autonum_hesvec,autonum_hesvec!,
+        num_hesvecgrad,num_hesvecgrad!,
+        auto_hesvecgrad,auto_hesvecgrad!,
+        JacVec,HesVec,HesVecGrad
 
 include("coloring/high_level.jl")
 include("coloring/contraction_coloring.jl")
 include("coloring/greedy_d1_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
+include("differentiation/jaches_products.jl")
 
 end # module

@@ -8,3 +8,4 @@ using Test
 @testset "AD using color vector" begin include("test_ad.jl") end
 @testset "Integration test" begin include("test_integration.jl") end
 @testset "Special matrices" begin include("test_specialmatrices.jl") end
+@testset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end

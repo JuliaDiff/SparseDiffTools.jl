@@ -31,6 +31,20 @@ f(u) = sum(u.^2)
 @test autonum_hesvec!(du, f, x, v, similar(v), cache1, cache2) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
 @test autonum_hesvec(f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
 
+function g(x)
+      DiffEqDiffTools.finite_difference_gradient(f,x)
+end
+function g(dx,x)
+      DiffEqDiffTools.finite_difference_gradient!(dx,f,x)
+end
+@test num_hesvecgrad!(du, g, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+@test num_hesvecgrad!(du, g, x, v, similar(v), similar(v)) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+@test num_hesvecgrad(g, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+
+@test auto_hesvecgrad!(du, g, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+@test auto_hesvecgrad!(du, g, x, v, cache1, cache2) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+@test auto_hesvecgrad(g, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
+
 f(du,u) = mul!(du,A,u)
 f(u) = A*u
 L = JacVec(f,x)
@@ -72,3 +86,17 @@ L.u .= v
 ### Integration test with IterativeSolvers
 out = similar(v)
 gmres!(out, L, v)
+
+L = HesVecGrad(g,x,autodiff=false)
+@test L*x ≈ num_hesvec(f, x, x)
+@test L*v ≈ num_hesvec(f, x, v)
+@test mul!(du,L,v) ≈ num_hesvec(f, x, v) rtol=1e-2
+L.u .= v
+@test mul!(du,L,v) ≈ num_hesvec(f, v, v) rtol=1e-2
+
+L = HesVecGrad(g,x)
+@test L*x ≈ numauto_hesvec(f, x, x)
+@test L*v ≈ numauto_hesvec(f, x, v)
+@test mul!(du,L,v) ≈ numauto_hesvec(f, x, v) rtol=1e-8
+L.u .= v
+@test mul!(du,L,v) ≈ numauto_hesvec(f, v, v) rtol=1e-8

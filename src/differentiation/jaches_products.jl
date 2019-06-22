@@ -108,6 +108,42 @@ function autonum_hesvec(f,x,v)
     partials.(g(Dual{DeivVecTag}.(x, v)), 1)
 end
 
+function num_hesvecgrad!(du,g,x,v,
+                     cache2 = similar(v),
+                     cache3 = similar(v))
+    T = eltype(x)
+    # Should it be min? max? mean?
+    ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
+    @. x += ϵ*v
+    g(cache2,x)
+    @. x -= 2ϵ*v
+    g(cache3,x)
+    @. du = (cache2 - cache3)/(2ϵ)
+end
+
+function num_hesvecgrad(g,x,v)
+    T = eltype(x)
+    # Should it be min? max? mean?
+    ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
+    x += ϵ*v
+    gxp = g(x)
+    x -= 2ϵ*v
+    gxm = g(x)
+    (gxp - gxm)/(2ϵ)
+end
+
+function auto_hesvecgrad!(du,g,x,v,
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+    cache2 .= Dual{DeivVecTag}.(x, v)
+    g(cache3,cache2)
+    du .= partials.(cache3, 1)
+end
+
+function auto_hesvecgrad(g,x,v)
+    partials.(g(Dual{DeivVecTag}.(x, v)), 1)
+end
+
 ### Operator Forms
 
 mutable struct JacVec{F,T1,T2,uType}
@@ -172,5 +208,36 @@ function LinearAlgebra.mul!(du::AbstractVector,L::HesVec,v::AbstractVector)
         numauto_hesvec!(du,L.f,L.u,v,L.cache1,L.cache2,L.cache3)
     else
         num_hesvec!(du,L.f,L.u,v,L.cache1,L.cache2,L.cache3)
+    end
+end
+
+mutable struct HesVecGrad{G,T1,T2,uType}
+    g::G
+    cache1::T1
+    cache2::T2
+    u::uType
+    autodiff::Bool
+end
+
+function HesVecGrad(g,u::AbstractArray;autodiff=true)
+    if autodiff
+        cache1 = ForwardDiff.Dual{DeivVecTag}.(u, u)
+        cache2 = ForwardDiff.Dual{DeivVecTag}.(u, u)
+    else
+        cache1 = similar(u)
+        cache2 = similar(u)
+    end
+    HesVecGrad(g,cache1,cache2,u,autodiff)
+end
+
+Base.size(L::HesVecGrad) = (length(L.cache2),length(L.cache2))
+Base.size(L::HesVecGrad,i::Int) = length(L.cache2)
+Base.:*(L::HesVecGrad,x::AbstractVector) = L.autodiff ? auto_hesvecgrad(L.g,L.u,x) : num_hesvecgrad(L.g,L.u,x)
+
+function LinearAlgebra.mul!(du::AbstractVector,L::HesVecGrad,v::AbstractVector)
+    if L.autodiff
+        auto_hesvecgrad!(du,L.g,L.u,v,L.cache1,L.cache2)
+    else
+        num_hesvecgrad!(du,L.g,L.u,v,L.cache1,L.cache2)
     end
 end

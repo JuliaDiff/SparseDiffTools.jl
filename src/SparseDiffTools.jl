@@ -16,7 +16,9 @@ export  contract_color,
         num_hesvec,num_hesvec!,
         numauto_hesvec,numauto_hesvec!,
         autonum_hesvec,autonum_hesvec!,
-        JacVec,HesVec
+        num_hesvecgrad,num_hesvecgrad!,
+        auto_hesvecgrad,auto_hesvecgrad!,
+        JacVec,HesVec,HesVecGrad
 
 include("coloring/high_level.jl")
 include("coloring/contraction_coloring.jl")

@@ -9,12 +9,15 @@ export  contract_color,
         matrix2graph,
         matrix_colors,
         forwarddiff_color_jacobian!,
-        ForwardColorJacCache
+        ForwardColorJacCache,
+        auto_jacvec,auto_jacvec!,
+        num_jacvec,num_jacvec!
 
 include("coloring/high_level.jl")
 include("coloring/contraction_coloring.jl")
 include("coloring/greedy_d1_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
+include("differentiation/jaches_products.jl")
 
 end # module

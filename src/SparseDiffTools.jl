@@ -14,6 +14,8 @@ export  contract_color,
         auto_jacvec,auto_jacvec!,
         num_jacvec,num_jacvec!,
         num_hesvec,num_hesvec!,
+        numauto_hesvec,numauto_hesvec!,
+        autonum_hesvec,autonum_hesvec!,
         JacVec,HesVec
 
 include("coloring/high_level.jl")

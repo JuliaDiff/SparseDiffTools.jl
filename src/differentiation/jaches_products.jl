@@ -35,11 +35,12 @@ end
 
 function num_hesvec!(du,f,x,v,
                      cache1 = similar(v),
-                     cache2 = similar(v),
                      cache3 = similar(v),
                      cache4 = similar(v))
-    cache = DiffEqDiffTools.GradientCache(cache1,cache2,Val{:central})
-    g = (dx,x) -> DiffEqDiffTools.finite_difference_gradient!(dx,f,x,cache)
+    cache = DiffEqDiffTools.GradientCache(v[1],cache1,Val{:central})
+    g = let f=f,cache=cache
+        (dx,x) -> DiffEqDiffTools.finite_difference_gradient!(dx,f,x,cache)
+    end
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
@@ -62,6 +63,50 @@ function num_hesvec(f,x,v)
     (gxp - gxm)/(2ϵ)
 end
 
+function numauto_hesvec!(du,f,x,v,
+                     cache = ForwardDiff.GradientConfig(f,v),
+                     cache1 = similar(v),
+                     cache2 = similar(v))
+    g = let f=f,x=x,cache=cache
+        g = (dx,x) -> ForwardDiff.gradient!(dx,f,x,cache)
+    end
+    T = eltype(x)
+    # Should it be min? max? mean?
+    ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
+    @. x += ϵ*v
+    g(cache1,x)
+    @. x -= 2ϵ*v
+    g(cache2,x)
+    @. du = (cache1 - cache2)/(2ϵ)
+end
+
+function numauto_hesvec(f,x,v)
+    g = (x) -> ForwardDiff.gradient(f,x)
+    T = eltype(x)
+    # Should it be min? max? mean?
+    ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
+    x += ϵ*v
+    gxp = g(x)
+    x -= 2ϵ*v
+    gxm = g(x)
+    (gxp - gxm)/(2ϵ)
+end
+
+function autonum_hesvec!(du,f,x,v,
+                     cache1 = similar(v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache4 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+    cache = DiffEqDiffTools.GradientCache(v[1],cache1,Val{:central})
+    g = (dx,x) -> DiffEqDiffTools.finite_difference_gradient!(dx,f,x,cache)
+    cache3 .= Dual{DeivVecTag}.(x, v)
+    g(cache4,cache3)
+    du .= partials.(cache4, 1)
+end
+
+function autonum_hesvec(f,x,v)
+    g = (x) -> DiffEqDiffTools.finite_difference_gradient(f,x)
+    partials.(g(Dual{DeivVecTag}.(x, v)), 1)
+end
 
 ### Operator Forms
 
@@ -99,46 +144,33 @@ end
 mutable struct HesVec{F,T1,T2,uType}
     f::F
     cache1::T1
-    cache2::T1
+    cache2::T2
     cache3::T2
-    cache4::T2
     u::uType
     autodiff::Bool
 end
 
-function HesVec(f;autodiff=false)
-    HesVec(f,nothing,nothing,nothing,autodiff)
-end
-
-function HesVec(f,u::AbstractArray;autodiff=false)
+function HesVec(f,u::AbstractArray;autodiff=true)
     if autodiff
-        cache1 = ForwardDiff.Dual{DeivVecTag}.(u, u)
-        cache2 = ForwardDiff.Dual{DeivVecTag}.(u, u)
+        cache1 = ForwardDiff.GradientConfig(f,u)
+        cache2 = similar(u)
+        cache3 = similar(u)
     else
         cache1 = similar(u)
         cache2 = similar(u)
         cache3 = similar(u)
-        cache4 = similar(u)
     end
-    HesVec(f,cache1,cache2,cache3,cache4,u,autodiff)
+    HesVec(f,cache1,cache2,cache3,u,autodiff)
 end
 
-Base.size(L::HesVec) = (length(L.cache1),length(L.cache1))
-Base.size(L::HesVec,i::Int) = length(L.cache1)
-Base.:*(L::HesVec,x::AbstractVector) = L.autodiff ? @error("Autodiff HesVec is not implemented yet") : num_hesvec(_u->L.f(_u),L.u,x)
+Base.size(L::HesVec) = (length(L.cache2),length(L.cache2))
+Base.size(L::HesVec,i::Int) = length(L.cache2)
+Base.:*(L::HesVec,x::AbstractVector) = L.autodiff ? numauto_hesvec(L.f,L.u,x) : num_hesvec(L.f,L.u,x)
 
 function LinearAlgebra.mul!(du::AbstractVector,L::HesVec,v::AbstractVector)
-    if L.cache1 === nothing
-        if L.autodiff
-            @error "Autodiff HesVec is not implemented yet"
-        else
-            num_hesvec!(du,L.f,L.u,v;compute_f0=false)
-        end
+    if L.autodiff
+        numauto_hesvec!(du,L.f,L.u,v,L.cache1,L.cache2,L.cache3)
     else
-        if L.autodiff
-            @error "Autodiff HesVec is not implemented yet"
-        else
-            num_hesvec!(du,L.f,L.u,v,L.cache1,L.cache2,L.cache3,L.cache4)
-        end
+        num_hesvec!(du,L.f,L.u,v,L.cache1,L.cache2,L.cache3)
     end
 end

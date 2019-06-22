@@ -1,4 +1,5 @@
-using ForwardDiff, SparseDiffTools, LinearAlgebra, DiffEqDiffTools, Test
+using ForwardDiff, SparseDiffTools, LinearAlgebra, DiffEqDiffTools,
+      IterativeSolvers, Test
 
 const A = rand(300,300)
 f(du,u) = mul!(du,A,u)
@@ -39,6 +40,10 @@ L.u == x
 L.u .= v
 @test mul!(du,L,v) ≈ num_jacvec(f, v, v) rtol=1e-6
 
+### Integration test with IterativeSolvers
+out = similar(v)
+gmres!(out, L, v)
+
 f(u) = sum(u.^2)
 L = HesVec(f,x)
 @test L*x ≈ num_hesvec(f, x, x)
@@ -46,3 +51,7 @@ L = HesVec(f,x)
 @test mul!(du,L,v) ≈ num_hesvec(f, x, v) rtol=1e-2
 L.u .= v
 @test mul!(du,L,v) ≈ num_hesvec(f, v, v) rtol=1e-2
+
+### Integration test with IterativeSolvers
+out = similar(v)
+gmres!(out, L, v)

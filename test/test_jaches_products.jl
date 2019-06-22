@@ -53,6 +53,8 @@ out = similar(v)
 gmres!(out, L, v)
 
 f(u) = sum(u.^2)
+x = rand(300)
+v = rand(300)
 L = HesVec(f,x,autodiff=false)
 @test L*x ≈ num_hesvec(f, x, x)
 @test L*v ≈ num_hesvec(f, x, v)

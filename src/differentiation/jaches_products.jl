@@ -35,8 +35,8 @@ end
 
 function num_hesvec!(du,f,x,v,
                      cache1 = similar(v),
-                     cache3 = similar(v),
-                     cache4 = similar(v))
+                     cache2 = similar(v),
+                     cache3 = similar(v))
     cache = DiffEqDiffTools.GradientCache(v[1],cache1,Val{:central})
     g = let f=f,cache=cache
         (dx,x) -> DiffEqDiffTools.finite_difference_gradient!(dx,f,x,cache)
@@ -45,10 +45,10 @@ function num_hesvec!(du,f,x,v,
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
     @. x += ϵ*v
-    g(cache3,x)
+    g(cache2,x)
     @. x -= 2ϵ*v
-    g(cache4,x)
-    @. du = (cache3 - cache4)/(2ϵ)
+    g(cache3,x)
+    @. du = (cache2 - cache3)/(2ϵ)
 end
 
 function num_hesvec(f,x,v)
@@ -94,13 +94,13 @@ end
 
 function autonum_hesvec!(du,f,x,v,
                      cache1 = similar(v),
-                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache4 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
     cache = DiffEqDiffTools.GradientCache(v[1],cache1,Val{:central})
     g = (dx,x) -> DiffEqDiffTools.finite_difference_gradient!(dx,f,x,cache)
-    cache3 .= Dual{DeivVecTag}.(x, v)
-    g(cache4,cache3)
-    du .= partials.(cache4, 1)
+    cache2 .= Dual{DeivVecTag}.(x, v)
+    g(cache3,cache2)
+    du .= partials.(cache3, 1)
 end
 
 function autonum_hesvec(f,x,v)

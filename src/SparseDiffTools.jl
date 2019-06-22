@@ -1,6 +1,7 @@
 module SparseDiffTools
 
-using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices, LightGraphs, VertexSafeGraphs
+using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices,
+      LightGraphs, VertexSafeGraphs
 using BlockBandedMatrices:blocksize,nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 

@@ -87,6 +87,8 @@ L.u .= v
 out = similar(v)
 gmres!(out, L, v)
 
+x = rand(300)
+v = rand(300)
 L = HesVecGrad(g,x,autodiff=false)
 @test L*x ≈ num_hesvec(f, x, x)
 @test L*v ≈ num_hesvec(f, x, v)
@@ -100,3 +102,7 @@ L = HesVecGrad(g,x)
 @test mul!(du,L,v) ≈ numauto_hesvec(f, x, v) rtol=1e-8
 L.u .= v
 @test mul!(du,L,v) ≈ numauto_hesvec(f, v, v) rtol=1e-8
+
+### Integration test with IterativeSolvers
+out = similar(v)
+gmres!(out, L, v)

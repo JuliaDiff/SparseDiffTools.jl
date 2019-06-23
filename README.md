@@ -190,10 +190,30 @@ autonum_hesvec!(du,f,x,v,
                  cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
 
 autonum_hesvec(f,x,v)
+
+
+numback_hesvec!(du,f,x,v,
+                     cache1 = similar(v),
+                     cache2 = similar(v))
+                     
+numback_hesvec(f,x,v)
+
+# Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
+autoback_hesvec!(du,f,x,v,
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+                     
+autoback_hesvec(f,x,v)
 ```
 
 `numauto` and `autonum` both mix numerical and automatic differentiation, with
-the former almost always being more efficient and is thus recommended. In addition,
+the former almost always being more efficient and is thus recommended. `numback` and
+`autoback` methods are numerical/ForwardDiff over reverse mode automatic differentiation
+respectively, where the reverse-mode AD is provided by Zygote.jl. Currently these methods
+are not competitive against `numauto`, but as Zygote.jl gets optimized these will likely
+be the fastest. 
+
+In addition,
 the following forms allow you to provide a gradient function `g(dx,x)` or `dx=g(x)`
 respectively:
 

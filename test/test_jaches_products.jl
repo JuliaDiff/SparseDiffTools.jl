@@ -96,8 +96,8 @@ L = HesVecGrad(g,x,autodiff=false)
 L.u .= v
 @test mul!(du,L,v) ≈ num_hesvec(f, v, v) rtol=1e-2
 
-L = HesVecGrad(g,x)
-@test L*x ≈ numauto_hesvec(f, x, x)
+L = HesVecGrad(g,x,autodiff=true)
+@test L*x ≈ autonum_hesvec(f, x, x)
 @test L*v ≈ numauto_hesvec(f, x, v)
 @test mul!(du,L,v) ≈ numauto_hesvec(f, x, v) rtol=1e-8
 L.u .= v

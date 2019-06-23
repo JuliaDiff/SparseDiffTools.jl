@@ -8,6 +8,7 @@ x = rand(300)
 v = rand(300)
 du = similar(x)
 
+
 cache1 = ForwardDiff.Dual{SparseDiffTools.DeivVecTag}.(x, v)
 cache2 = ForwardDiff.Dual{SparseDiffTools.DeivVecTag}.(x, v)
 @test num_jacvec!(du, f, x, v) ≈ ForwardDiff.jacobian(f,similar(x),x)*v rtol=1e-6
@@ -30,6 +31,14 @@ f(u) = sum(u.^2)
 @test autonum_hesvec!(du, f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
 @test autonum_hesvec!(du, f, x, v, similar(v), cache1, cache2) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-2
 @test autonum_hesvec(f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+
+@test numback_hesvec!(du, f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+@test numback_hesvec!(du, f, x, v, similar(v), similar(v)) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+@test numback_hesvec(f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+
+@test_broken autoback_hesvec!(du, f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+@test_broken autoback_hesvec!(du, f, x, v, similar(v), similar(v)) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
+@test_broken autoback_hesvec(f, x, v) ≈ ForwardDiff.hessian(f,x)*v rtol=1e-8
 
 function g(x)
       DiffEqDiffTools.finite_difference_gradient(f,x)

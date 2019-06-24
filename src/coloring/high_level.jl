@@ -50,8 +50,8 @@ function matrix_colors(A::BandedMatrix)
 end
 
 function matrix_colors(A::BlockBandedMatrix)
-    u,l=blockbandwidths(A)
-    blockwidth=u+l+1
+    l,u=blockbandwidths(A)
+    blockwidth=l+u+1
     nblock=nblocks(A,2)
     cols=[blocksize(A,(1,i))[2] for i in 1:nblock]
     blockcolors=_cycle(1:blockwidth,nblock)
@@ -60,5 +60,21 @@ function matrix_colors(A::BlockBandedMatrix)
     endinds=cumsum(ncolors)
     startinds=[endinds[i]-ncolors[i]+1 for i in 1:blockwidth]
     colors=[(startinds[blockcolors[i]]:endinds[blockcolors[i]])[1:cols[i]] for i in 1:nblock]
+    vcat(colors...)
+end
+
+function matrix_colors(A::BandedBlockBandedMatrix)
+    l,u=blockbandwidths(A)
+    lambda,mu=subblockbandwidths(A)
+    blockwidth=l+u+1
+    subblockwidth=lambda+mu+1
+    nblock=nblocks(A,2)
+    cols=[blocksize(A,(1,i))[2] for i in 1:nblock]
+    blockcolors=_cycle(1:blockwidth,nblock)
+    #the reserved number of colors of a block is the min of subblockwidth and the largest length of columns of blocks with the same block color
+    ncolors=[min(subblockwidth,maximum(cols[i:blockwidth:nblock])) for i in 1:blockwidth]
+    endinds=cumsum(ncolors)
+    startinds=[endinds[i]-ncolors[i]+1 for i in 1:blockwidth]
+    colors=[_cycle(startinds[blockcolors[i]]:endinds[blockcolors[i]],cols[i]) for i in 1:nblock]
     vcat(colors...)
 end

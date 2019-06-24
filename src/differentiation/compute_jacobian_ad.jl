@@ -44,20 +44,37 @@ end
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
 function generate_chunked_partials(x,color,::Val{N}) where N
 
-    # TODO: should only go up to the chunksize each time, and should
-    # generate p[i] different parts, each with less than the chunksize
+    partials_array = Vector{Array{Tuple{Bool,Bool,Bool},1}}(undef, 0)
+    chunksize = getsize(default_chunk_size(maximum(color)))
+    print("chunksize = $chunksize")
+    num_of_passes = Int64(ceil(length(x) / chunksize))
 
-    partials_array = BitMatrix(undef, length(x), maximum(color))
-    for color_i in 1:maximum(color)
-        for i in eachindex(x)
-            if color[i]==color_i
-                partials_array[i,color_i] = true
-            else
-                partials_array[i,color_i] = false
+    start_iter = 0
+    end_iter = 0
+
+    for pass_i in 1:num_of_passes
+            partial = BitMatrix(undef, length(x), maximum(color))
+
+            start_iter = (pass_i-1) * chunksize + 1
+            end_iter = pass_i * chunksize
+
+            (pass_i == num_of_passes) && (end_iter = length(x))
+
+            for color_i in 1:maximum(color)
+                for j in start_iter:end_iter
+                    if color[j]==color_i
+                        partial[j,color_i] = true
+                    else
+                        partial[j,color_i] = false
+                    end
+                end
             end
-        end
+
+            p_tuple = Tuple.(eachrow(partial))
+            push!(partials_array, deepcopy(p_tuple))
     end
-    p = Tuple.(eachrow(partials_array))
+
+    partials_array
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},

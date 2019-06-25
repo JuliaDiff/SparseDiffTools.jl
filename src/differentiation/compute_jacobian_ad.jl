@@ -1,3 +1,4 @@
+using SparseArrays
 struct ForwardColorJacCache{T,T2,T3,T4,T5}
     t::T
     fx::T2
@@ -44,37 +45,38 @@ end
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
 function generate_chunked_partials(x,color,::Val{N}) where N
 
-    partials_array = Vector{Array{Tuple{Bool,Bool,Bool},1}}(undef, 0)
     chunksize = getsize(default_chunk_size(maximum(color)))
-    print("chunksize = $chunksize")
-    num_of_passes = Int64(ceil(length(x) / chunksize))
+    num_of_chunks = Int64(ceil(maximum(color) / chunksize))
 
-    start_iter = 0
-    end_iter = 0
+    padding_size = (chunksize - (maximum(color) % chunksize)) % chunksize
 
-    for pass_i in 1:num_of_passes
-            partial = BitMatrix(undef, length(x), maximum(color))
+    partials = BitMatrix(undef, length(x), maximum(color))
+    partial = BitMatrix(undef, length(x), chunksize)
+    chunked_partials = Array{Array{NTuple,1},1}(undef, num_of_chunks)
 
-            start_iter = (pass_i-1) * chunksize + 1
-            end_iter = pass_i * chunksize
-
-            (pass_i == num_of_passes) && (end_iter = length(x))
-
-            for color_i in 1:maximum(color)
-                for j in start_iter:end_iter
-                    if color[j]==color_i
-                        partial[j,color_i] = true
-                    else
-                        partial[j,color_i] = false
-                    end
-                end
+    for color_i in 1:maximum(color)
+        for j in 1:length(x)
+            if color[j]==color_i
+                partials[j,color_i] = true
+            else
+                partials[j,color_i] = false
             end
-
-            p_tuple = Tuple.(eachrow(partial))
-            push!(partials_array, deepcopy(p_tuple))
+        end
     end
 
-    partials_array
+    padding_matrix = BitMatrix(undef, length(x), padding_size)
+    partials = hcat(partials, padding_matrix)
+
+    for i in 1:num_of_chunks
+        partial[:,1] .= partials[:,(i-1)*chunksize+1]
+        for j in 2:chunksize
+            partial[:,j] .= partials[:,(i-1)*chunksize+j]
+        end
+        chunked_partials[i] = Tuple.(eachrow(partial))
+    end
+
+    chunked_partials
+
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
@@ -96,7 +98,34 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     p = jac_cache.p
     color = jac_cache.color
 
-    # TODO: Should compute on each p[i] and decompress
+    color_i = 1
+    chunksize = getsize(default_chunk_size(maximum(color)))
+
+    for i in 1:length(p)
+        partial_i = p[i]
+        t .= Dual{typeof(f)}.(x, partial_i)
+        f(fx,t)
+
+        if J isa SparseMatrixCSC
+            rows_index, cols_index, val = findnz(J)
+            for j in 1:chunksize
+                dx .= partials.(fx, j)
+                for k in 1:length(cols_index)
+                    if color[cols_index[k]] == color_i
+                        J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
+                    end
+                end
+                color_i += 1
+                if color_i == maximum(color) + 1
+                    color_i = 1
+                end
+            end
+        end
+
+    end
+
+    nothing
+    #=
     t .= Dual{typeof(f)}.(x, p)
     f(fx, t)
 
@@ -116,4 +145,5 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         end
     end
     nothing
+    =#
 end

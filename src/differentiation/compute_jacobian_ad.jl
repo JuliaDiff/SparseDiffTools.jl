@@ -1,4 +1,3 @@
-using SparseArrays
 struct ForwardColorJacCache{T,T2,T3,T4,T5}
     t::T
     fx::T2
@@ -123,27 +122,5 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         end
 
     end
-
     nothing
-    #=
-    t .= Dual{typeof(f)}.(x, p)
-    f(fx, t)
-
-    if J isa SparseMatrixCSC
-        rows_index, cols_index, val = findnz(J)
-        for color_i in 1:maximum(color)
-            dx .= partials.(fx,color_i)
-            for i in 1:length(cols_index)
-                if color[cols_index[i]]==color_i
-                    J[rows_index[i],cols_index[i]] = dx[rows_index[i]]
-                end
-            end
-        end
-    else # Compute the compressed version
-        for color_i in 1:maximum(color)
-            J[:,i] .= partials.(fx,color_i)
-        end
-    end
-    nothing
-    =#
 end

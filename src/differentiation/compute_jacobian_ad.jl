@@ -128,6 +128,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     color_i = 1
                 end
             end
+        end
     end
     nothing
 end

@@ -118,7 +118,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                J[:, col_index] .= partials(fx, color_i)
+                J[:, col_index] .= partials.(fx, color_i)
                 color_i += 1
                 if color_i == maximum(color) + 1
                     color_i = 1

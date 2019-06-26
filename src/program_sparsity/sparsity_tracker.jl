@@ -107,23 +107,6 @@ function Cassette.overdub(ctx::SparsityContext,
     end
 end
 
-# This is for reflection-based code, such as that to figure out eltype of a broadcast
-function Cassette.overdub(ctx::SparsityContext, f::typeof(eltype), X::Tagged)
-    if ismetatype(X, ctx, Input)
-        Tainted
-    else
-        Cassette.fallback(ctx, f, X)
-    end
-end
-
-function Cassette.overdub(ctx::SparsityContext, f::typeof(typeof), x::Tagged)
-    if untag(x, ctx) isa Tainted && ismetatype(x, ctx, ProvinanceSet)
-        Tainted
-    else
-        Cassette.fallback(ctx, f, x)
-    end
-end
-
 function get_provinance(ctx, arg::Tagged)
     if metadata(arg, ctx) isa ProvinanceSet
         metadata(arg, ctx)

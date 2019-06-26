@@ -1,8 +1,5 @@
-using VertexSafeGraphs
-
 """
-
-        greedy_d1(G)
+        GreedyD1 Coloring
 
 Find a coloring of a given input graph such that
 no two vertices connected by an edge have the same
@@ -10,7 +7,7 @@ color using greedy approach. The number of colors
 used may be equal or greater than the chromatic
 number χ(G) of the graph.
 """
-function greedy_d1(G::VSafeGraph)
+function color_graph(G::VSafeGraph,alg::GreedyD1Color)
     V = nv(G)
     result = zeros(Int64, V)
     result[1] = 1

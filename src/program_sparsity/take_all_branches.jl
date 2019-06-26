@@ -1,4 +1,4 @@
-istainted(x) = x isa Tainted
+istainted(ctx, x) = ismetatype(x, ctx, ProvinanceSet)
 
 # Must return 5 exprs
 function rewrite_branch(ctx, stmt, extraslot, i)
@@ -15,14 +15,14 @@ function rewrite_branch(ctx, stmt, extraslot, i)
 
     # insert a check to see if SSAValue(i) isa Tainted
     istainted_ssa = Core.SSAValue(i)
-    push!(exprs, :($istainted($cond)))
+    push!(exprs, :($(Expr(:nooverdub, istainted))($(Expr(:contextslot)), $cond)))
 
     # not tainted? jump to the penultimate statement
     push!(exprs, Expr(:gotoifnot, istainted_ssa, i+5))
 
     # tainted? then use this_here_predicate!(SSAValue(1))
     current_pred = i+2
-    push!(exprs, :($this_here_predicate!()))
+    push!(exprs, :($(Expr(:nooverdub, this_here_predicate!))()))
 
     # Store the interpreter-provided predicate in the slot
     push!(exprs, Expr(:(=), extraslot, SSAValue(i+2)))

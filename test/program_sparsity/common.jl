@@ -4,7 +4,8 @@ using SparseArrays
 import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
 using SparseDiffTools
 import SparseDiffTools: Path, BranchesPass, SparsityContext, Fixed,
-                        Input, Output, ProvinanceSet, Tainted, istainted
+                        Input, Output, ProvinanceSet, Tainted, istainted,
+                        alldone, reset!
 
 function tester(f, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
 
@@ -13,11 +14,19 @@ function tester(f, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
     ctx = Cassette.enabletagging(ctx, f)
     ctx = Cassette.disablehooks(ctx)
 
-    val = Cassette.overdub(ctx,
-                        f,
-                        tag(Y, ctx, Output()),
-                        tag(X, ctx, Input()),
-                        map(arg -> arg isa Fixed ? arg.value : tag(arg, ctx, ProvinanceSet(())), args)...)
+    val = nothing
+    while true
+        val = Cassette.overdub(ctx,
+                            f,
+                            tag(Y, ctx, Output()),
+                            tag(X, ctx, Input()),
+                            map(arg -> arg isa Fixed ?
+                                arg.value :
+                                tag(arg, ctx, ProvinanceSet(())), args)...)
+        println("Explored path: ", path)
+        alldone(path) && break
+        reset!(path)
+    end
     return ctx, val
 end
 

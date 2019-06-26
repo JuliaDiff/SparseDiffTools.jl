@@ -22,7 +22,7 @@ function rewrite_branch(ctx, stmt, extraslot, i)
 
     # tainted? then use this_here_predicate!(SSAValue(1))
     current_pred = i+2
-    push!(exprs, :($(Expr(:nooverdub, this_here_predicate!))()))
+    push!(exprs, :($(Expr(:nooverdub, this_here_predicate!))($(Expr(:contextslot)))))
 
     # Store the interpreter-provided predicate in the slot
     push!(exprs, Expr(:(=), extraslot, SSAValue(i+2)))

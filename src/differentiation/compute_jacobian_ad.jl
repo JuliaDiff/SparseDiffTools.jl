@@ -111,9 +111,6 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     end
                 end
                 color_i += 1
-                if color_i == maximum(color) + 1
-                    color_i = 1
-                end
             end
         else
             for j in 1:chunksize

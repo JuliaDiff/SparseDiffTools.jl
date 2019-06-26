@@ -55,11 +55,7 @@ function generate_chunked_partials(x,color,::Val{N}) where N
 
     for color_i in 1:maximum(color)
         for j in 1:length(x)
-            if color[j]==color_i
-                partials[j,color_i] = true
-            else
-                partials[j,color_i] = false
-            end
+            partials[j, color_i] = color[j] == color_i
         end
     end
 

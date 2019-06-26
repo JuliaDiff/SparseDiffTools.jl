@@ -80,7 +80,8 @@ function Cassette.overdub(ctx::SparsityContext,
                           idx::Int...)
     if ismetatype(X, ctx, Input)
         i = LinearIndices(untag(X, ctx))[idx...]
-        tag(Tainted(), ctx, ProvinanceSet(i))
+        val = Cassette.fallback(ctx, f, X, idx...)
+        tag(val, ctx, ProvinanceSet(i))
     else
         Cassette.recurse(ctx, f, X, idx...)
     end
@@ -134,14 +135,18 @@ end
 get_provinance(ctx, arg) = ProvinanceSet(())
 
 # Any function acting on a value tagged with ProvinanceSet
-function _overdub_union_provinance(ctx::SparsityContext, f, args...)
+function _overdub_union_provinance(::Val{eval}, ctx::SparsityContext, f, args...) where {eval}
     idxs = findall(x->ismetatype(x, ctx, ProvinanceSet), args)
     if isempty(idxs)
         Cassette.fallback(ctx, f, args...)
     else
         provinance = union(map(arg->get_provinance(ctx, arg), args[idxs])...)
-        # val = Cassette.fallback(ctx, f, args...)
-        tag(Tainted(), ctx, provinance)
+        if eval
+            val = Cassette.fallback(ctx, f, args...)
+            tag(val, ctx, provinance)
+        else
+            tag(Tainted(), ctx, provinance)
+        end
     end
 end
 
@@ -149,7 +154,7 @@ function Cassette.overdub(ctx::SparsityContext, f, args...)
     haspsets = any(x->ismetatype(x, ctx, ProvinanceSet), args)
     hasinput = any(x->ismetatype(x, ctx, Input), args)
     if haspsets && !hasinput # && !canrecurse(ctx, f, args...)
-        _overdub_union_provinance(ctx, f, args...)
+        _overdub_union_provinance(Val{true}(), ctx, f, args...)
     else
         Cassette.recurse(ctx, f, args...)
     end

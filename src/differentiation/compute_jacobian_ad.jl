@@ -131,6 +131,14 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                         @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                     end
                 end
+
+                or
+
+                J[rows_index, cols_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+
+                += means requires a zero'd out start
+                =#
+                @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                 color_i += 1
                 (color_i > maximum(color)) && continue
             end

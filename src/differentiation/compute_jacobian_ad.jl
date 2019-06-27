@@ -55,7 +55,7 @@ function generate_chunked_partials(x,color,::Val{N}) where N
 
     for color_i in 1:maximum(color)
         for j in 1:length(x)
-            partials[j, color_i] = color[j] == color_i
+            partials[j,color_i] = color[j]==color_i
         end
     end
 
@@ -100,7 +100,6 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-
         if J isa SparseMatrixCSC
             rows_index, cols_index, val = findnz(J)
             for j in 1:chunksize
@@ -111,15 +110,12 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     end
                 end
                 color_i += 1
+                (color_i > maximum(color)) && continue
             end
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                J[:, col_index] .= partials.(fx, color_i)
-                color_i += 1
-                if color_i == maximum(color) + 1
-                    color_i = 1
-                end
+                J[:, col_index] .= partials.(fx, j)
             end
         end
     end

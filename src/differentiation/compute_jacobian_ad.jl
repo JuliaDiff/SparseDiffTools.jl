@@ -42,16 +42,16 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
 end
 
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
-function generate_chunked_partials(x,color,::Val{N}) where N
+function generate_chunked_partials(x,color,::Val{chunksize}) where chunksize
 
-    chunksize = getsize(default_chunk_size(maximum(color)))
     num_of_chunks = Int64(ceil(maximum(color) / chunksize))
 
     padding_size = (chunksize - (maximum(color) % chunksize)) % chunksize
 
     partials = BitMatrix(undef, length(x), maximum(color))
     partial = BitMatrix(undef, length(x), chunksize)
-    chunked_partials = Array{Array{NTuple,1},1}(undef, num_of_chunks)
+    chunked_partials = Array{Array{Tuple{Vararg{Bool,chunksize}},1},1}(
+                                                          undef, num_of_chunks)
 
     for color_i in 1:maximum(color)
         for j in 1:length(x)
@@ -92,9 +92,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     dx = jac_cache.dx
     p = jac_cache.p
     color = jac_cache.color
-
     color_i = 1
-    chunksize = getsize(default_chunk_size(maximum(color)))
+    chunksize = length(first(first(jac_cache.p)))
 
     for i in 1:length(p)
         partial_i = p[i]

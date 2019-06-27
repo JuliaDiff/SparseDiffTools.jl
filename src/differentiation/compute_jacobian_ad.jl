@@ -98,6 +98,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     color_i = 1
     chunksize = length(first(first(jac_cache.p)))
+    fill!(J,zero(eltype(J)))
 
     for i in 1:length(p)
         partial_i = p[i]
@@ -107,11 +108,20 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
+                #=
                 for k in 1:length(cols_index)
                     if color[cols_index[k]] == color_i
                         J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
                     end
                 end
+
+                or
+
+                J[rows_index, cols_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+
+                += means requires a zero'd out start
+                =#
+                @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                 color_i += 1
                 (color_i > maximum(color)) && continue
             end

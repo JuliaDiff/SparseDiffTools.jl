@@ -30,6 +30,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = generate_chunked_partials(x,color,chunksize)
+    # Replace cu for adapt from Adapt.jl
     t = Dual{typeof(f)}.(x, cu(first(p)))
 
     if dx === nothing
@@ -40,6 +41,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         _dx = dx
     end
 
+    # Replace cu with adapt from Adapt.jl
     p = generate_chunked_partials(x,color,chunksize)
     ForwardColorJacCache(t,fx,_dx,cu.(p),color,sparsity)
 end

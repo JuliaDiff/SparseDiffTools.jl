@@ -12,6 +12,7 @@ using LinearAlgebra
 using SparseArrays, ArrayInterface
 
 using BlockBandedMatrices: blocksize, nblocks
+using CuArrays
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 
 using ArrayInterface: matrix_colors

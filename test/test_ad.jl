@@ -46,7 +46,6 @@ forwarddiff_color_jacobian!(_J1, f, x, jac_cache)
 fcalls = 0
 _J1 = similar(_J)
 _denseJ1 = collect(_J1)
-forwarddiff_color_jacobian!(_denseJ1, f, x, color = repeat(1:3,10), sparsity = _J1)
 @test _denseJ1 ≈ J
 @test fcalls == 1
 

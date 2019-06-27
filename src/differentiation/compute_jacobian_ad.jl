@@ -29,18 +29,19 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    t = zeros(Dual{typeof(f), eltype(x), getsize(chunksize)},length(x))
+    p = generate_chunked_partials(x,color,chunksize)
+    t = Dual{typeof(f)}.(x, cu(first(p)))
 
     if dx === nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        fx = zeros(Dual{typeof(f), eltype(dx), getsize(chunksize)},length(dx))
+        fx = t = Dual{typeof(f)}.(dx, first(p))
         _dx = dx
     end
 
     p = generate_chunked_partials(x,color,chunksize)
-    ForwardColorJacCache(t,fx,_dx,p,color,sparsity)
+    ForwardColorJacCache(t,fx,_dx,cu.(p),color,sparsity)
 end
 
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))

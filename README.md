@@ -100,7 +100,7 @@ The first argument is the abstract matrix which represents the sparsity pattern
 of the Jacobian. The second argument is the optional choice of coloring algorithm.
 It will default to a greedy distance 1 coloring, though if your special matrix
 type has more information, like is a `Tridiagonal` or `BlockBandedMatrix`, the
-color vector will be analytically calculated instead. The variable argument
+color vector will be analytically calculated instead. The keyword argument
 `partition_by_rows` allows you to partition the Jacobian on the basis of rows instead
 of columns and generate a corresponding coloring vector which can be used for
 reverse-mode AD. Default value is false.

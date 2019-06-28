@@ -11,16 +11,16 @@ struct ContractionColor <: ColoringAlgorithm end
     The coloring defaults to a greedy distance-1 coloring.
 
 """
-function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color())
+function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
-    A_graph = matrix2graph(_A)
+    A_graph = matrix2graph(_A, partition_by_rows)
     color_graph(A_graph,alg)
 end
 
 """
     matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
 
-    The color vector for dense matrix and triangular matrix is simply 
+    The color vector for dense matrix and triangular matrix is simply
     `[1,2,3,...,size(A,2)]`
 """
 function matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})

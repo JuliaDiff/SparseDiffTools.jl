@@ -93,7 +93,7 @@ this can be significant savings.
 The API for computing the color vector is:
 
 ```julia
-matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows = false)
+matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
 ```
 
 The first argument is the abstract matrix which represents the sparsity pattern

@@ -11,7 +11,7 @@ struct ContractionColor <: ColoringAlgorithm end
     The coloring defaults to a greedy distance-1 coloring.
 
 """
-function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows = false)
+function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
     A_graph = matrix2graph(_A, partition_by_rows)
     color_graph(A_graph,alg)

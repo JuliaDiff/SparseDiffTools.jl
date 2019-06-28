@@ -105,7 +105,7 @@ color vector will be analytically calculated instead. The variable argument
 of columns and generate a corresponding coloring vector which can be used for
 reverse-mode AD. Default value is false.
 
-The result is a vector which assigns a color to each row of the matrix.
+The result is a vector which assigns a color to each column (or row) of the matrix.
 
 ### Color-Assisted Differentiation
 

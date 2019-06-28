@@ -93,16 +93,19 @@ this can be significant savings.
 The API for computing the color vector is:
 
 ```julia
-matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color())
+matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
 ```
 
 The first argument is the abstract matrix which represents the sparsity pattern
 of the Jacobian. The second argument is the optional choice of coloring algorithm.
 It will default to a greedy distance 1 coloring, though if your special matrix
 type has more information, like is a `Tridiagonal` or `BlockBandedMatrix`, the
-color vector will be analytically calculated instead.
+color vector will be analytically calculated instead. The variable argument
+`partition_by_rows` allows you to partition the Jacobian on the basis of rows instead
+of columns and generate a corresponding coloring vector which can be used for
+reverse-mode AD. Default value is false.
 
-The result is a vector which assigns a color to each row of the matrix.
+The result is a vector which assigns a color to each column (or row) of the matrix.
 
 ### Color-Assisted Differentiation
 
@@ -195,14 +198,14 @@ autonum_hesvec(f,x,v)
 numback_hesvec!(du,f,x,v,
                      cache1 = similar(v),
                      cache2 = similar(v))
-                     
+
 numback_hesvec(f,x,v)
 
 # Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
 autoback_hesvec!(du,f,x,v,
                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                      cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
-                     
+
 autoback_hesvec(f,x,v)
 ```
 
@@ -211,7 +214,7 @@ the former almost always being more efficient and is thus recommended. `numback`
 `autoback` methods are numerical/ForwardDiff over reverse mode automatic differentiation
 respectively, where the reverse-mode AD is provided by Zygote.jl. Currently these methods
 are not competitive against `numauto`, but as Zygote.jl gets optimized these will likely
-be the fastest. 
+be the fastest.
 
 In addition,
 the following forms allow you to provide a gradient function `g(dx,x)` or `dx=g(x)`

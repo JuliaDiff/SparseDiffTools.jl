@@ -1,11 +1,12 @@
 istainted(ctx, x) = ismetatype(x, ctx, ProvinanceSet)
 
-# Must return 5 exprs
+
+# Must return 7 exprs
 function rewrite_branch(ctx, stmt, extraslot, i)
     # turn
     #   gotoifnot %p #g 
     # into
-    #   %t = %p isa Tainted
+    #   %t = istainted(%p)
     #   gotoifnot %t #orig
     #   %rec = this_here_predicate!(path)
     #   gotoifnot %rec #orig+1 (the next statement after gotoifnot)
@@ -39,25 +40,11 @@ function rewrite_branch(ctx, stmt, extraslot, i)
     exprs
 end
 
-function rewrite_tainted_branches(ctx, ref)
-    rewrite_ir(ctx, ref.code_info)
-end
-
-function insertat!(j, code, codelocs, exprs)
-    if exprs isa Expr
-        exprs = [exprs]
-    end
-    n = length(exprs) + 1
-    Cassette.insert_statements!(code, codelocs,
-        (stmt, i) -> i==j ? n : nothing,
-        (stmt, i) -> vcat(exprs, stmt))
-end
-
 function rewrite_ir(ctx, ir)
     # turn
     #   <val> ? t : f
     # into
-    #   <val> isa Tainted ? this_here_predicate!(p) : <val> ? t : f
+    #   istainted(<val>) ? this_here_predicate!(p) : <val> ? t : f
 
     ir = copy(ir)
 
@@ -74,13 +61,9 @@ function rewrite_ir(ctx, ir)
     # Core.Compiler.validate_code(ir)
     return ir
 end
+
+function rewrite_tainted_branches(ctx, ref)
+    rewrite_ir(ctx, ref.code_info)
+end
+
 const BranchesPass = Cassette.@pass rewrite_tainted_branches
-
-# Some nooverdubs:
-function Cassette.overdub(ctx::SparsityContext, f::typeof(istainted), args...)
-    Cassette.fallback(ctx, f, args...)
-end
-
-function Cassette.overdub(ctx::SparsityContext, f::typeof(this_here_predicate!))
-    this_here_predicate!(ctx)
-end

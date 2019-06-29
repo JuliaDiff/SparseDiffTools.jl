@@ -100,8 +100,7 @@ function Cassette.overdub(ctx::SparsityContext,
             i = LinearIndices(untag(Y, ctx))[idx...]
             push!(S, i, set)
         end
-        #Cassette.fallback(ctx, f, Y, val, idx...)
-        val
+        Cassette.fallback(ctx, f, Y, val, idx...)
     else
         Cassette.recurse(ctx, f, Y, val, idx...)
     end

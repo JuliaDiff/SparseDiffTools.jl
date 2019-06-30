@@ -22,11 +22,13 @@ export  contract_color,
         autoback_hesvec,autoback_hesvec!,
         JacVec,HesVec,HesVecGrad
 
+
 include("coloring/high_level.jl")
 include("coloring/contraction_coloring.jl")
 include("coloring/greedy_d1_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
+include("program_sparsity/program_sparsity.jl")
 
 end # module

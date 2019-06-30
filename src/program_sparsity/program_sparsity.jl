@@ -3,7 +3,7 @@ struct Fixed
 end
 
 """
-`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verboase=true)`
+`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verbose=true)`
 
 Execute the program that figures out the sparsity pattern of
 the jacobian of the function `f`.

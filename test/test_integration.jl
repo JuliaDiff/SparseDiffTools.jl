@@ -23,18 +23,13 @@ function second_derivative_stencil(N)
   A
 end
 
-function generate_sparsity_pattern(N::Integer)
-    dl = repeat([1.0],N-1)
-    du = repeat([1.0],N-1)
-    d = repeat([-2.0],N)
-    return Tridiagonal(dl,d,du)
-end
-
-true_jac = sparse(generate_sparsity_pattern(30))
+sparsity_pattern = sparsity!(f,ones(30),ones(30))
+true_jac = Float64.(sparse(sparsity_pattern))
 colors = matrix_colors(true_jac)
 @test colors == repeat(1:3,10)
 
 #Jacobian computed without coloring vector
+fcalls = 0
 J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30))
 @test J ≈ second_derivative_stencil(30)
 @test fcalls == 31

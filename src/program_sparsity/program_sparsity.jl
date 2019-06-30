@@ -3,7 +3,7 @@ struct Fixed
 end
 
 """
-`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)))`
+`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verboase=true)`
 
 Execute the program that figures out the sparsity pattern of
 the jacobian of the function `f`.
@@ -14,10 +14,12 @@ the jacobian of the function `f`.
 - `X`: the input array
 - `args`: trailing arguments to `f`. They are considered subject to change, unless wrapped as `Fixed(arg)`
 - `S`: (optional) the sparsity pattern
+- `verbose`: (optional) whether to describe the paths taken by the sparsity detection.
 
 Returns a `Sparsity`
 """
-function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
+function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)),
+                                      verbose = true)
     path = Path()
     ctx = SparsityContext(metadata=(sparsity, path), pass=BranchesPass)
     ctx = Cassette.enabletagging(ctx, f!)
@@ -32,7 +34,7 @@ function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
                          map(arg -> arg isa Fixed ?
                              arg.value : tag(arg, ctx, ProvinanceSet(())), args)...)
 
-        println("Explored path: ", path)
+        verbose && println("Explored path: ", path)
         alldone(path) && break
         reset!(path)
     end

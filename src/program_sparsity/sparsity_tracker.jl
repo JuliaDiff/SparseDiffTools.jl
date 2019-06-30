@@ -1,10 +1,3 @@
-using Cassette
-import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
-import Core: SSAValue
-using SparseArrays
-
-export Sparsity, sparsity!
-
 """
 The sparsity pattern.
 

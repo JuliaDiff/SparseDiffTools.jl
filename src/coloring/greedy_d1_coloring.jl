@@ -7,7 +7,7 @@ color using greedy approach. The number of colors
 used may be equal or greater than the chromatic
 number χ(G) of the graph.
 """
-function color_graph(G::VSafeGraph,alg::GreedyD1Color)
+function color_graph(G::VSafeGraph, alg::GreedyD1Color)
     V = nv(G)
     result = zeros(Int64, V)
     result[1] = 1

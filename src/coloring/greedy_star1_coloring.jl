@@ -18,6 +18,8 @@
     involving v and three other vertices  is  impermissible  for  v.
     In other words, every path on four vertices uses at least three
     colors.
+
+    reference: What Color is your Jacobian?, pg 662
 """
 function greedy_star1_coloring(G::VertexSafeGraph, alg::GreedyStar1Coloring)
     V = nv(G), color = zeros(Int64, V)

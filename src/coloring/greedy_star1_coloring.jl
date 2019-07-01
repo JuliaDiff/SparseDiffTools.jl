@@ -1,5 +1,4 @@
 """
-
         greedy_star1_coloring
 
     Find a coloring of a given input graph such that
@@ -52,6 +51,3 @@ function find_min_color(forbiddenColors::AbstractVector, vertex_i::Integer)
 
     c
 end
-
-
-"""hello world this is a test message to checkout branching in git"""

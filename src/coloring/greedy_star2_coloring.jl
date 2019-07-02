@@ -24,7 +24,7 @@
     TODO: add text explaining the difference between star1 and
     star2
 """
-function greedy_star1_coloring(G::VSafeGraph)
+function greedy_star2_coloring(G::VSafeGraph)
     V = nv(G)
     color = zeros(Int64, V)
 

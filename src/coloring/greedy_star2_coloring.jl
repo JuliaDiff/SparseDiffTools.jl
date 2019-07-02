@@ -24,7 +24,7 @@
     TODO: add text explaining the difference between star1 and
     star2
 """
-function greedy_star2_coloring(G::LightGraphs.AbstractGraph)
+function greedy_star2_coloring(g::LightGraphs.AbstractGraph)
     v = nv(g)
     color = zeros(Int64, v)
 
@@ -54,12 +54,4 @@ function greedy_star2_coloring(G::LightGraphs.AbstractGraph)
     end
 
     color
-end
-
-function find_min_color(forbiddenColors::AbstractVector, vertex_i::Integer)
-    c = 1
-    while (forbiddenColors[c] == vertex_i)
-        c+=1
-    end
-    c
 end

@@ -13,6 +13,8 @@ import Core: SSAValue
 
 export  contract_color,
         greedy_d1,
+        greedy_star1_coloring,
+        greedy_star2_coloring,
         matrix2graph,
         matrix_colors,
         forwarddiff_color_jacobian!,
@@ -33,6 +35,8 @@ export  contract_color,
 include("coloring/high_level.jl")
 include("coloring/contraction_coloring.jl")
 include("coloring/greedy_d1_coloring.jl")
+include("coloring/greedy_star1_coloring.jl")
+include("coloring/greedy_star2_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")

@@ -5,7 +5,7 @@ using Random
 Random.seed!(123)
 
 #= Test data =#
-test_graphs = Array{VSafeGraph, 1}(undef, 0)
+test_graphs = Array{SimpleGraph, 1}(undef, 0)
 
 for _ in 1:5
     nv = rand(5:20)
@@ -44,7 +44,7 @@ for i in 1:5
     for v = vertices(g)
         color = out_colors1[v]
         for j in inneighbors(g, v)
-            @test out_color[j] != color
+            @test out_colors1[j] != color
         end
     end
 
@@ -52,11 +52,31 @@ for i in 1:5
     for j = vertices(g)
         walk = saw(g, j, 4)
         walk_colors = zeros(Int64, 0)
-        if length(saw) >= 4
+        if length(walk) >= 4
             for t in walk
                 push!(walk_colors, out_colors1[t])
             end
-            @test unique(walk_colors) >= 3
+            @test length(unique(walk_colors)) >= 3
+        end
+    end
+
+    #test condition 1
+    for v = vertices(g)
+        color = out_colors2[v]
+        for j in inneighbors(g, v)
+            @test out_colors2[j] != color
+        end
+    end
+
+    #test condition 2
+    for j = vertices(g)
+        walk = saw(g, j, 4)
+        walk_colors = zeros(Int64, 0)
+        if length(walk) >= 4
+            for t in walk
+                push!(walk_colors, out_colors2[t])
+            end
+            @test length(unique(walk_colors)) >= 3
         end
     end
 

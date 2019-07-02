@@ -36,7 +36,7 @@ function greedy_star1_coloring(G::VSafeGraph)
 
             for x in inneighbors(G, w)
                 if color[x] != 0
-                    if color[w] != 0
+                    if color[w] == 0
                         forbiddenColors[color[x]] = vertex_i
                     else
                         for y in inneighbors(G, x)

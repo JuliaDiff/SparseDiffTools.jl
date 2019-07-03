@@ -21,7 +21,7 @@
 
     Reference: Gebremedhin AH, Manne F, Pothen A. **What color is your Jacobian? Graph coloring for computing derivatives.** SIAM review. 2005;47(4):629-705.
 """
-function greedy_star1_coloring(g::LightGraphs.AbstractGraph)
+function color_graph(g::LightGraphs.AbstractGraph, ::GreedyStar1Color)
     v = nv(g)
     color = zeros(Int64, v)
 

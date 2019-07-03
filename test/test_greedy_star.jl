@@ -37,8 +37,8 @@ colors.
 for i in 1:5
     g = test_graphs[i]
 
-    out_colors1 = SparseDiffTools.greedy_star1_coloring(g)
-    out_colors2 = SparseDiffTools.greedy_star2_coloring(g)
+    out_colors1 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar1Color())
+    out_colors2 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar2Color())
 
     #test condition 1
     for v = vertices(g)

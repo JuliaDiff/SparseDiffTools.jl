@@ -24,7 +24,7 @@
     TODO: add text explaining the difference between star1 and
     star2
 """
-function greedy_star2_coloring(g::LightGraphs.AbstractGraph)
+function color_graph(g::LightGraphs.AbstractGraph, :: GreedyStar2Color)
     v = nv(g)
     color = zeros(Int64, v)
 

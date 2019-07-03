@@ -11,7 +11,7 @@ function color_graph(g::VSafeGraph, alg::GreedyD1Color)
     v = nv(g)
     result = zeros(Int64, v)
     result[1] = 1
-    available = BitArray{1}(undef, v)
+    available = BitArray(undef, v)
     for i = 2:v
         for j in inneighbors(g, i)
             if result[j] != 0

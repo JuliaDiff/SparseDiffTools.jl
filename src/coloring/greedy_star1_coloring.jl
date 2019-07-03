@@ -25,24 +25,24 @@ function greedy_star1_coloring(g::LightGraphs.AbstractGraph)
     v = nv(g)
     color = zeros(Int64, v)
 
-    forbiddenColors = zeros(Int64, v+1)
+    forbidden_colors = zeros(Int64, v+1)
 
     for vertex_i = vertices(g)
 
         for w in inneighbors(g, vertex_i)
             if color[w] != 0
-                forbiddenColors[color[w]] = vertex_i
+                forbidden_colors[color[w]] = vertex_i
             end
 
             for x in inneighbors(g, w)
                 if color[x] != 0
                     if color[w] == 0
-                        forbiddenColors[color[x]] = vertex_i
+                        forbidden_colors[color[x]] = vertex_i
                     else
                         for y in inneighbors(g, x)
                            if color[y] != 0
                                 if y != w && color[y] == color[w]
-                                    forbiddenColors[color[x]] = vertex_i
+                                    forbidden_colors[color[x]] = vertex_i
                                     break
                                 end
                             end
@@ -52,15 +52,15 @@ function greedy_star1_coloring(g::LightGraphs.AbstractGraph)
             end
         end
 
-        color[vertex_i] = find_min_color(forbiddenColors, vertex_i)
+        color[vertex_i] = find_min_color(forbidden_colors, vertex_i)
     end
 
     color
 end
 
-function find_min_color(forbiddenColors::AbstractVector, vertex_i::Integer)
+function find_min_color(forbidden_colors::AbstractVector, vertex_i::Integer)
     c = 1
-    while (forbiddenColors[c] == vertex_i)
+    while (forbidden_colors[c] == vertex_i)
         c+=1
     end
     c

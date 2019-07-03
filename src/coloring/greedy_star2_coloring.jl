@@ -28,29 +28,29 @@ function greedy_star2_coloring(g::LightGraphs.AbstractGraph)
     v = nv(g)
     color = zeros(Int64, v)
 
-    forbiddenColors = zeros(Int64, v+1)
+    forbidden_colors = zeros(Int64, v+1)
 
     for vertex_i = vertices(g)
 
         for w in inneighbors(g, vertex_i)
             if color[w] != 0
-                forbiddenColors[color[w]] = vertex_i
+                forbidden_colors[color[w]] = vertex_i
             end
 
             for x in inneighbors(g, w)
                 if color[x] != 0
                     if color[w] == 0
-                        forbiddenColors[color[x]] = vertex_i
+                        forbidden_colors[color[x]] = vertex_i
                     else
                         if color[x] < color[w]
-                            forbiddenColors[color[x]] = vertex_i
+                            forbidden_colors[color[x]] = vertex_i
                         end
                     end
                 end
             end
         end
 
-        color[vertex_i] = find_min_color(forbiddenColors, vertex_i)
+        color[vertex_i] = find_min_color(forbidden_colors, vertex_i)
     end
 
     color

@@ -1,6 +1,9 @@
 include("sparsity_tracker.jl")
+include("hessian.jl")
 include("path.jl")
 include("take_all_branches.jl")
+
+export Sparsity, sparsity, hsparsity
 
 struct Fixed
     value
@@ -41,4 +44,19 @@ function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
         reset!(path)
     end
     sparsity
+end
+
+function hsparsity(f, X, args...)
+    ctx = HessianSparsityContext()
+    ctx = Cassette.enabletagging(ctx, f)
+    ctx = Cassette.disablehooks(ctx)
+
+    val = Cassette.recurse(ctx,
+                     f,
+                     tag(X, ctx, Input()),
+                     # TODO: make this recursive
+                     map(arg -> arg isa Fixed ?
+                         arg.value : tag(arg, ctx, TermCombination([[]])), args)...)
+
+    metadata(val, ctx), untag(val, ctx)
 end

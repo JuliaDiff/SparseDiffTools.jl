@@ -43,24 +43,23 @@ function combine_terms(::Val{linearity}, term1, term2) where linearity
     linear11, linear22, linear12 = linearity
     term = zero(TermCombination)
     if linear11
-        term += term1
+        if !linear12
+            term += term1
+        end
     else
         term += term1 * term1
     end
 
     if linear22
-        term += term2
+        if !linear12
+            term += term2
+        end
     else
         term += term2 * term2
     end
 
     if linear12
-        if !linear11
-            term += term1
-        end
-        if !linear22
-            term += term2
-        end
+        term += term1 + term2
     else
         term += term1 * term2
     end

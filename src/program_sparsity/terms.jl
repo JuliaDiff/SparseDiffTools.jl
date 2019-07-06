@@ -25,3 +25,24 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
 end
 Base.:*(comb1::TermCombination) = comb1
 
+function Sparsity(t::TermCombination, n)
+    I = Int[]
+    J = Int[]
+    for dict in t.terms
+        kv = collect(pairs(dict))
+        for i in 1:length(kv)
+            k, v = kv[i]
+            if v>=2
+                push!(I, k)
+                push!(J, k)
+            end
+            for j in i+1:length(kv)
+                if v >= 1 && kv[j][2] >= 1
+                    push!(I, k)
+                    push!(J, kv[j][1])
+                end
+            end
+        end
+    end
+    Sparsity(n,n,I,J)
+end

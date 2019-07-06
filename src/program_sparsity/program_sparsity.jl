@@ -58,5 +58,5 @@ function hsparsity(f, X, args...)
                      map(arg -> arg isa Fixed ?
                          arg.value : tag(arg, ctx, TermCombination([[]])), args)...)
 
-    metadata(val, ctx), untag(val, ctx)
+    Sparsity(metadata(val, ctx), length(X))
 end

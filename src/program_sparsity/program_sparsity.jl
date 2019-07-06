@@ -43,7 +43,7 @@ function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
         alldone(path) && break
         reset!(path)
     end
-    sparsity
+    sparse(sparsity)
 end
 
 function hsparsity(f, X, args...)
@@ -58,5 +58,5 @@ function hsparsity(f, X, args...)
                      map(arg -> arg isa Fixed ?
                          arg.value : tag(arg, ctx, TermCombination([[]])), args)...)
 
-    Sparsity(metadata(val, ctx), length(X))
+    sparse(metadata(val, ctx), length(X))
 end

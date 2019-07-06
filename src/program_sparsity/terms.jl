@@ -40,7 +40,7 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
 end
 Base.:*(comb1::TermCombination) = comb1
 
-function Sparsity(t::TermCombination, n)
+function sparse(t::TermCombination, n)
     I = Int[]
     J = Int[]
     for dict in t.terms
@@ -59,5 +59,6 @@ function Sparsity(t::TermCombination, n)
             end
         end
     end
-    Sparsity(n,n,I,J)
+    s1 = sparse(I,J,true,n,n)
+    s1 .| s1'
 end

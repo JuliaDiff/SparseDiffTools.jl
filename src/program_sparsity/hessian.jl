@@ -23,6 +23,23 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     end
 end
 
+function Cassette.overdub(ctx::HessianSparsityContext,
+                          f::typeof(Base.unsafe_copyto!),
+                          X::Tagged,
+                          xstart::Int,
+                          Y::Tagged,
+                          ystart::Int,
+                          len::Int)
+    if ismetatype(Y, ctx, Input)
+        val = Cassette.fallback(ctx, f, X, xstart, Y, ystart, len)
+        nometa = Cassette.NoMetaMeta()
+        X.meta.meta[xstart:xstart+len-1] .= (i->Cassette.Meta(TermCombination([Dict(i=>1)]), nometa)).(ystart:ystart+len-1)
+        val
+    else
+        Cassette.recurse(ctx, f, X, xstart, Y, ystart, len)
+    end
+end
+
 # 1-arg functions
 combine_terms(::Val{true}, term) = term
 combine_terms(::Val{false}, term) = term * term

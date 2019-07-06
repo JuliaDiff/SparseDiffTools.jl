@@ -19,9 +19,24 @@ function _merge(dict1, dict2)
 end
 
 function Base.:*(comb1::TermCombination, comb2::TermCombination)
-    vec([_merge(dict1, dict2)
-           for dict1 in comb1.terms,
-           dict2 in comb2.terms]) |> TermCombination
+    if comb1 === comb2 # squaring optimization
+        terms = comb1.terms
+        # square each term
+        t1 = [Dict(k=>2 for (k,_) in dict)
+              for dict in comb1.terms]
+        # multiply each term
+        t2 = Dict{Int,Int}[]
+        for i in 1:length(terms)
+            for j in i+1:length(terms)
+                push!(t2, _merge(terms[i], terms[j]))
+            end
+        end
+        TermCombination(vcat(t1, t2))
+    else
+        vec([_merge(dict1, dict2)
+               for dict1 in comb1.terms,
+               dict2 in comb2.terms]) |> TermCombination
+    end
 end
 Base.:*(comb1::TermCombination) = comb1
 

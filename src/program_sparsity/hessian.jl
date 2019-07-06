@@ -59,27 +59,28 @@ end
 
 # Hessian overdub
 #
-function getterms(ctx, x::Tagged)
+function getterms(ctx, x)
     ismetatype(x, ctx, TermCombination) ? metadata(x, ctx) : one(TermCombination)
 end
 
 function hessian_overdub(ctx::HessianSparsityContext, f, linearity, args...)
-    if any(x->ismetatype(x, ctx, TermCombination), args)
-        t = combine_terms(linearity, map(x->getterms(ctx, x), args)...)
-        val = Cassette.fallback(ctx, f, args...)
-        tag(val, ctx, t)
-    else
-        Cassette.recurse(ctx, f, args...)
-    end
+    t = combine_terms(linearity, map(x->getterms(ctx, x), args)...)
+    val = Cassette.fallback(ctx, f, args...)
+    tag(val, ctx, t)
 end
 
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f,
                           args...)
-    if haslinearity(f, Val{nfields(args)}())
+    tainted = any(x->ismetatype(x, ctx, TermCombination), args)
+    if tainted && haslinearity(f, Val{nfields(args)}())
         l = linearity(f, Val{nfields(args)}())
         return hessian_overdub(ctx, f, l, args...)
     else
-        return Cassette.recurse(ctx, f, args...)
+        val = Cassette.recurse(ctx, f, args...)
+        if tainted && !ismetatype(val, ctx, TermCombination)
+            error("Don't know the linearity of function $f")
+        end
+        return val
     end
 end

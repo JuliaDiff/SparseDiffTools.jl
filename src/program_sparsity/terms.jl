@@ -40,7 +40,7 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
 end
 Base.:*(comb1::TermCombination) = comb1
 
-function sparse(t::TermCombination, n)
+function _sparse(t::TermCombination, n)
     I = Int[]
     J = Int[]
     for dict in t.terms
@@ -59,6 +59,6 @@ function sparse(t::TermCombination, n)
             end
         end
     end
-    s1 = sparse(I,J,true,n,n)
+    s1 = sparse(I,J,fill!(BitVector(undef, length(I)), true),n,n)
     s1 .| s1'
 end

@@ -1,9 +1,15 @@
 module SparseDiffTools
 
 using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices,
-      LightGraphs, VertexSafeGraphs, DiffEqDiffTools, ForwardDiff, Zygote
+      LightGraphs, VertexSafeGraphs, DiffEqDiffTools, ForwardDiff, Zygote,
+      SparseArrays
 using BlockBandedMatrices:blocksize,nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
+
+using Cassette
+import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
+import Cassette: tagged_new_tuple, ContextTagged, BindingMeta, DisableHooks, nametype
+import Core: SSAValue
 
 export  contract_color,
         greedy_d1,
@@ -20,7 +26,8 @@ export  contract_color,
         auto_hesvecgrad,auto_hesvecgrad!,
         numback_hesvec,numback_hesvec!,
         autoback_hesvec,autoback_hesvec!,
-        JacVec,HesVec,HesVecGrad
+        JacVec,HesVec,HesVecGrad,
+        Sparsity, sparsity!, hsparsity
 
 
 include("coloring/high_level.jl")
@@ -30,5 +37,11 @@ include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("program_sparsity/program_sparsity.jl")
+include("program_sparsity/sparsity_tracker.jl")
+include("program_sparsity/path.jl")
+include("program_sparsity/take_all_branches.jl")
+include("program_sparsity/terms.jl")
+include("program_sparsity/linearity.jl")
+include("program_sparsity/hessian.jl")
 
 end # module

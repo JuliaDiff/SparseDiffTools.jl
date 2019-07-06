@@ -137,19 +137,19 @@ function autonum_hesvec(f,x,v)
 end
 
 function autoback_hesvec!(du,f,x,v,
-                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+                     cache2 = ForwardDiff.Dual{Nothing}.(x, v),
+                     cache3 = ForwardDiff.Dual{Nothing}.(x, v))
     g = let f=f
         g = (dx,x) -> dx .= first(Zygote.gradient(f,x))
     end
-    cache2 .= Dual{DeivVecTag}.(x, v)
+    cache2 .= Dual{Nothing}.(x, v)
     g(cache3,cache2)
     du .= partials.(cache3, 1)
 end
 
 function autoback_hesvec(f,x,v)
     g = (x) -> first(Zygote.gradient(f,x))
-    partials.(g(Dual{DeivVecTag}.(x, v)), 1)
+    ForwardDiff.partials.(g(ForwardDiff.Dual{Nothing}.(x, v)), 1)
 end
 
 function num_hesvecgrad!(du,g,x,v,

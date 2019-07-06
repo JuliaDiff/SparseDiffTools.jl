@@ -1,8 +1,15 @@
 using SpecialFunctions
 
+# linearity of a single input function is either
+# Val{true}() or Val{false}()
+#
 const monadic_linear = [deg2rad, +, rad2deg, transpose, -]
 const monadic_nonlinear = [asind, log1p, acsch, erfc, digamma, acos, asec, acosh, airybiprime, acsc, cscd, log, tand, log10, csch, asinh, airyai, abs2, gamma, lgamma, erfcx, bessely0, cosh, sin, cos, atan, cospi, cbrt, acosd, bessely1, acoth, erfcinv, erf, dawson, inv, acotd, airyaiprime, erfinv, trigamma, asecd, besselj1, exp, acot, sqrt, sind, sinpi, asech, log2, tan, invdigamma, airybi, exp10, sech, erfi, coth, asin, cotd, cosd, sinh, abs, besselj0, csc, tanh, secd, atand, sec, acscd, cot, exp2, expm1, atanh]
 
+# linearity of a 2-arg function is:
+# Val{(linear11, linear22, linear12)}()
+#
+# linearIJ refers to the zeroness of d^2/dxIxJ
 diadic_of_linearity(::Val{(true, true, true)}) = [+, rem2pi, -]
 diadic_of_linearity(::Val{(true, true, false)}) = [*]
 diadic_of_linearity(::Val{(true, false, true)}) = []

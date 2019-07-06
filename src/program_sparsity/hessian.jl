@@ -6,7 +6,6 @@ using SparseArrays
 # Tags:
 Cassette.@context HessianSparsityContext
 
-include("terms.jl")
 const HTagType = Union{Input, TermCombination}
 Cassette.metadatatype(::Type{<:HessianSparsityContext}, ::DataType) = HTagType
 
@@ -24,15 +23,6 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     end
 end
 
-# linearity of a single input function is either
-# Val{true}() or Val{false}()
-#
-# linearity of a 2-arg function is:
-# Val{(linear11, linear22, linear12)}()
-#
-# linearIJ refers to the zeroness of d^2/dxIxJ
-
-include("linearity.jl")
 # 1-arg functions
 combine_terms(::Val{true}, term) = term
 combine_terms(::Val{false}, term) = term * term

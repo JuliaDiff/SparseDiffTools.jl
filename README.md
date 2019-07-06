@@ -29,30 +29,35 @@ end
 ```
 
 For this function, we know that the sparsity pattern of the Jacobian is a
-`Tridiagonal` matrix. We represent our sparsity by that matrix:
+`Tridiagonal` matrix. However, if we didn't know the sparsity pattern for
+the Jacobian, we could use the `sparsity!` function to automatically
+detect the sparsity pattern. We declare that it outputs a length 30 vector
+and takes in a length 30 vector, and it spits out a `Sparsity` object
+which we can turn into a `SparseMatrixCSC`:
 
 ```julia
-sparsity_pattern = Tridiagonal(ones(29),ones(30),ones(29))
+sparsity_pattern = sparsity!(f,output,input)
+jac = Float64.(sparse(sparsity_pattern))
 ```
 
 Now we call `matrix_colors` to get the color vector for that matrix:
 
 ```julia
-colors = matrix_colors(sparsity_pattern)
+colors = matrix_colors(jac)
 ```
 
 Since `maximum(colors)` is 3, this means that finite differencing can now
 compute the Jacobian in just 4 `f`-evaluations:
 
 ```julia
-J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30), color=colors)
+DiffEqDiffTools.finite_difference_jacobian!(jac, f, rand(30), color=colors)
 @show fcalls # 4
 ```
 
 In addition, a faster forward-mode autodiff call can be utilized as well:
 
 ```julia
-forwarddiff_color_jacobian!(sparsity_pattern, f, x, color = colors)
+forwarddiff_color_jacobian!(jac, f, x, color = colors)
 ```
 
 If one only need to compute products, one can use the operators. For example,
@@ -83,6 +88,36 @@ gmres!(res,J,v)
 
 ## Documentation
 
+### Automated Sparsity Detection
+
+Automated sparsity detection is provided by the `sparsity!` function whose
+syntax is:
+
+```julia
+`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verbose=true)`
+```
+
+The arguments are:
+
+- `f`: the function
+- `Y`: the output array
+- `X`: the input array
+- `args`: trailing arguments to `f`. They are considered subject to change, unless wrapped as `Fixed(arg)`
+- `S`: (optional) the sparsity pattern
+- `verbose`: (optional) whether to describe the paths taken by the sparsity detection.
+
+The function `f` is assumed to take arguments of the form `f(dx,x,args...)`.
+`sparsity!` returns a `Sparsity` object which describes where the non-zeros
+of the Jacobian occur. `sparse(::Sparsity)` transforms the pattern into
+a sparse matrix.
+
+This function utilizes non-standard interpretation, which we denote
+combinatoric concolic analysis, to directly realize the sparsity pattern from the program's AST. It requires that the function `f` is a Julia function. It does not
+work numerically, meaning that it is not prone to floating point error or
+cancelation. It allows for branching and will automatically check all of the
+branches. However, a while loop of indeterminate length which is dependent
+on the input argument is not allowed.
+
 ### Matrix Coloring
 
 Matrix coloring allows you to reduce the number of times finite differencing
@@ -93,16 +128,19 @@ this can be significant savings.
 The API for computing the color vector is:
 
 ```julia
-matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color())
+matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
 ```
 
 The first argument is the abstract matrix which represents the sparsity pattern
 of the Jacobian. The second argument is the optional choice of coloring algorithm.
 It will default to a greedy distance 1 coloring, though if your special matrix
 type has more information, like is a `Tridiagonal` or `BlockBandedMatrix`, the
-color vector will be analytically calculated instead.
+color vector will be analytically calculated instead. The keyword argument
+`partition_by_rows` allows you to partition the Jacobian on the basis of rows instead
+of columns and generate a corresponding coloring vector which can be used for
+reverse-mode AD. Default value is false.
 
-The result is a vector which assigns a color to each row of the matrix.
+The result is a vector which assigns a color to each column (or row) of the matrix.
 
 ### Color-Assisted Differentiation
 
@@ -195,14 +233,14 @@ autonum_hesvec(f,x,v)
 numback_hesvec!(du,f,x,v,
                      cache1 = similar(v),
                      cache2 = similar(v))
-                     
+
 numback_hesvec(f,x,v)
 
 # Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
 autoback_hesvec!(du,f,x,v,
                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                      cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
-                     
+
 autoback_hesvec(f,x,v)
 ```
 
@@ -211,7 +249,7 @@ the former almost always being more efficient and is thus recommended. `numback`
 `autoback` methods are numerical/ForwardDiff over reverse mode automatic differentiation
 respectively, where the reverse-mode AD is provided by Zygote.jl. Currently these methods
 are not competitive against `numauto`, but as Zygote.jl gets optimized these will likely
-be the fastest. 
+be the fastest.
 
 In addition,
 the following forms allow you to provide a gradient function `g(dx,x)` or `dx=g(x)`

@@ -42,22 +42,36 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
 end
 
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
-function generate_chunked_partials(x,color,::Val{N}) where N
+function generate_chunked_partials(x,color,::Val{chunksize}) where chunksize
 
-    # TODO: should only go up to the chunksize each time, and should
-    # generate p[i] different parts, each with less than the chunksize
+    num_of_chunks = Int64(ceil(maximum(color) / chunksize))
 
-    partials_array = BitMatrix(undef, length(x), maximum(color))
+    padding_size = (chunksize - (maximum(color) % chunksize)) % chunksize
+
+    partials = BitMatrix(undef, length(x), maximum(color))
+    partial = BitMatrix(undef, length(x), chunksize)
+    chunked_partials = Array{Array{Tuple{Vararg{Bool,chunksize}},1},1}(
+                                                          undef, num_of_chunks)
+
     for color_i in 1:maximum(color)
-        for i in eachindex(x)
-            if color[i]==color_i
-                partials_array[i,color_i] = true
-            else
-                partials_array[i,color_i] = false
-            end
+        for j in 1:length(x)
+            partials[j,color_i] = color[j]==color_i
         end
     end
-    p = Tuple.(eachrow(partials_array))
+
+    padding_matrix = BitMatrix(undef, length(x), padding_size)
+    partials = hcat(partials, padding_matrix)
+
+    for i in 1:num_of_chunks
+        partial[:,1] .= partials[:,(i-1)*chunksize+1]
+        for j in 2:chunksize
+            partial[:,j] .= partials[:,(i-1)*chunksize+j]
+        end
+        chunked_partials[i] = Tuple.(eachrow(partial))
+    end
+
+    chunked_partials
+
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
@@ -78,24 +92,31 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     dx = jac_cache.dx
     p = jac_cache.p
     color = jac_cache.color
+    color_i = 1
+    chunksize = length(first(first(jac_cache.p)))
 
-    # TODO: Should compute on each p[i] and decompress
-    t .= Dual{typeof(f)}.(x, p)
-    f(fx, t)
-
-    if J isa SparseMatrixCSC
-        rows_index, cols_index, val = findnz(J)
-        for color_i in 1:maximum(color)
-            dx .= partials.(fx,color_i)
-            for i in 1:length(cols_index)
-                if color[cols_index[i]]==color_i
-                    J[rows_index[i],cols_index[i]] = dx[rows_index[i]]
+    for i in 1:length(p)
+        partial_i = p[i]
+        t .= Dual{typeof(f)}.(x, partial_i)
+        f(fx,t)
+        if J isa SparseMatrixCSC
+            rows_index, cols_index, val = findnz(J)
+            for j in 1:chunksize
+                dx .= partials.(fx, j)
+                for k in 1:length(cols_index)
+                    if color[cols_index[k]] == color_i
+                        J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
+                    end
                 end
+                color_i += 1
+                (color_i > maximum(color)) && continue
             end
-        end
-    else # Compute the compressed version
-        for color_i in 1:maximum(color)
-            J[:,i] .= partials.(fx,color_i)
+        else
+            for j in 1:chunksize
+                col_index = (i-1)*chunksize + j
+                (col_index > maximum(color)) && continue
+                J[:, col_index] .= partials.(fx, j)
+            end
         end
     end
     nothing

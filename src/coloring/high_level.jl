@@ -11,16 +11,16 @@ struct ContractionColor <: ColoringAlgorithm end
     The coloring defaults to a greedy distance-1 coloring.
 
 """
-function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color())
+function matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
-    A_graph = matrix2graph(_A)
+    A_graph = matrix2graph(_A, partition_by_rows)
     color_graph(A_graph,alg)
 end
 
 """
     matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
 
-    The color vector for dense matrix and triangular matrix is simply 
+    The color vector for dense matrix and triangular matrix is simply
     `[1,2,3,...,size(A,2)]`
 """
 function matrix_colors(A::Union{Array,UpperTriangular,LowerTriangular})
@@ -72,9 +72,9 @@ function matrix_colors(A::BandedBlockBandedMatrix)
     cols=[blocksize(A,(1,i))[2] for i in 1:nblock]
     blockcolors=_cycle(1:blockwidth,nblock)
     #the reserved number of colors of a block is the min of subblockwidth and the largest length of columns of blocks with the same block color
-    ncolors=[min(subblockwidth,maximum(cols[i:blockwidth:nblock])) for i in 1:blockwidth]
+    ncolors=[min(subblockwidth,maximum(cols[i:blockwidth:nblock])) for i in 1:min(blockwidth,nblock)]
     endinds=cumsum(ncolors)
-    startinds=[endinds[i]-ncolors[i]+1 for i in 1:blockwidth]
+    startinds=[endinds[i]-ncolors[i]+1 for i in 1:min(blockwidth,nblock)]
     colors=[_cycle(startinds[blockcolors[i]]:endinds[blockcolors[i]],cols[i]) for i in 1:nblock]
     vcat(colors...)
 end

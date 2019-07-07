@@ -55,6 +55,16 @@ function Cassette.overdub(ctx::HessianSparsityContext,
         Cassette.recurse(ctx, f, X, xstart, Y, ystart, len)
     end
 end
+function Cassette.overdub(ctx::HessianSparsityContext,
+                          f::typeof(copy),
+                          X::Tagged)
+    if ismetatype(X, ctx, Input)
+        val = Cassette.fallback(ctx, f, X)
+        tag(val, ctx, Input())
+    else
+        Cassette.recurse(ctx, f, X, xstart, Y, ystart, len)
+    end
+end
 
 combine_terms(::Nothing, terms...) = one(TermCombination)
 

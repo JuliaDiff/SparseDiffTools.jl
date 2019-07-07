@@ -10,7 +10,7 @@ const monadic_nonlinear = [asind, log1p, acsch, erfc, digamma, acos, asec, acosh
 # Val{(linear11, linear22, linear12)}()
 #
 # linearIJ refers to the zeroness of d^2/dxIxJ
-diadic_of_linearity(::Val{(true, true, true)}) = [+, rem2pi, -, >, isless, <, isequal]
+diadic_of_linearity(::Val{(true, true, true)}) = [+, rem2pi, -, >, isless, <, isequal, max, min]
 diadic_of_linearity(::Val{(true, true, false)}) = [*]
 diadic_of_linearity(::Val{(true, false, true)}) = []
 #diadic_of_linearit(::(Val{(true, false, true)}) = [besselk, hankelh2, bessely, besselj, besseli, polygamma, hankelh1]
@@ -18,7 +18,7 @@ diadic_of_linearity(::Val{(true, false, false)}) = [/]
 diadic_of_linearity(::Val{(false, true, true)}) = []
 diadic_of_linearity(::Val{(false, true, false)}) = [\]
 diadic_of_linearity(::Val{(false, false, true)}) = []
-diadic_of_linearity(::Val{(false, false, false)}) = [hypot, atan, max, min, mod, rem, lbeta, ^, beta]
+diadic_of_linearity(::Val{(false, false, false)}) = [hypot, atan, mod, rem, lbeta, ^, beta]
 
 haslinearity(f, nargs) = false
 for f in monadic_linear

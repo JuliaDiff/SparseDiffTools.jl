@@ -1,20 +1,19 @@
 using SpecialFunctions
 import Base.Broadcast
 
-const constant_funcs = [typeof, Broadcast.combine_styles, Broadcast.result_style]
+const constant_funcs = []
 
-const monadic_linear = [deg2rad, +, rad2deg, transpose, -, Base.broadcasted]
+const monadic_linear = [deg2rad, +, rad2deg, transpose, -, conj]
+
 const monadic_nonlinear = [asind, log1p, acsch, erfc, digamma, acos, asec, acosh, airybiprime, acsc, cscd, log, tand, log10, csch, asinh, airyai, abs2, gamma, lgamma, erfcx, bessely0, cosh, sin, cos, atan, cospi, cbrt, acosd, bessely1, acoth, erfcinv, erf, dawson, inv, acotd, airyaiprime, erfinv, trigamma, asecd, besselj1, exp, acot, sqrt, sind, sinpi, asech, log2, tan, invdigamma, airybi, exp10, sech, erfi, coth, asin, cotd, cosd, sinh, abs, besselj0, csc, tanh, secd, atand, sec, acscd, cot, exp2, expm1, atanh]
 
-diadic_of_linearity(::Val{(true, true, true)}) = [+, rem2pi, -, >, isless, <, isequal, max, min, convert, conj, Broadcast.broadcasted]
+diadic_of_linearity(::Val{(true, true, true)}) = [+, rem2pi, -, >, isless, <, isequal, max, min, convert]
 diadic_of_linearity(::Val{(true, true, false)}) = [*]
-diadic_of_linearity(::Val{(true, false, true)}) = []
 #diadic_of_linearit(::(Val{(true, false, true)}) = [besselk, hankelh2, bessely, besselj, besseli, polygamma, hankelh1]
 diadic_of_linearity(::Val{(true, false, false)}) = [/]
-diadic_of_linearity(::Val{(false, true, true)}) = []
 diadic_of_linearity(::Val{(false, true, false)}) = [\]
-diadic_of_linearity(::Val{(false, false, true)}) = []
 diadic_of_linearity(::Val{(false, false, false)}) = [hypot, atan, mod, rem, lbeta, ^, beta]
+diadic_of_linearity(::Val) = []
 
 haslinearity(f, nargs) = false
 

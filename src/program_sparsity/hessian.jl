@@ -6,6 +6,8 @@ using SparseArrays
 # Tags:
 Cassette.@context HessianSparsityContext
 
+const TaggedOf{T} = Tagged{A, T} where A
+
 const HTagType = Union{Input, TermCombination}
 Cassette.metadatatype(::Type{<:HessianSparsityContext}, ::DataType) = HTagType
 
@@ -18,10 +20,19 @@ Cassette.overdub(ctx::HessianSparsityContext, f::typeof(this_here_predicate!)) =
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(getindex),
                           X::Tagged,
-                          idx::Int...)
+                          idx::Tagged...)
+    if any(i->ismetatype(i, ctx, TermCombination) && !isone(metadata(i, ctx)), idx)
+        error("getindex call depends on input. Cannot determine Hessian sparsity")
+    end
+    Cassette.overdub(ctx, f, X, map(i->untag(i, ctx), idx)...)
+end
+function Cassette.overdub(ctx::HessianSparsityContext,
+                          f::typeof(getindex),
+                          X::Tagged,
+                          idx::Integer...)
     if ismetatype(X, ctx, Input)
-        i = LinearIndices(untag(X, ctx))[idx...]
         val = Cassette.fallback(ctx, f, X, idx...)
+        i = LinearIndices(untag(X, ctx))[idx...]
         tag(val, ctx, TermCombination([Dict(i=>1)]))
     else
         Cassette.recurse(ctx, f, X, idx...)
@@ -31,10 +42,10 @@ end
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(Base.unsafe_copyto!),
                           X::Tagged,
-                          xstart::Int,
+                          xstart,
                           Y::Tagged,
-                          ystart::Int,
-                          len::Int)
+                          ystart,
+                          len)
     if ismetatype(Y, ctx, Input)
         val = Cassette.fallback(ctx, f, X, xstart, Y, ystart, len)
         nometa = Cassette.NoMetaMeta()

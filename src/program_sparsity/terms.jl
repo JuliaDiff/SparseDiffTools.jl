@@ -48,6 +48,8 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
     end
 end
 Base.:*(comb1::TermCombination) = comb1
+Base.iszero(c::TermCombination) = isempty(c.terms)
+Base.isone(c::TermCombination) = all(isempty, c.terms)
 
 function _sparse(t::TermCombination, n)
     I = Int[]

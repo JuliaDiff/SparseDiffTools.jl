@@ -45,6 +45,8 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     end
 end
 
+combine_terms(::Nothing, terms...) = one(TermCombination)
+
 # 1-arg functions
 combine_terms(::Val{true}, term) = term
 combine_terms(::Val{false}, term) = term * term
@@ -90,10 +92,23 @@ function hessian_overdub(ctx::HessianSparsityContext, f, linearity, args...)
     val = Cassette.fallback(ctx, f, args...)
     tag(val, ctx, t)
 end
+function Cassette.overdub(ctx::HessianSparsityContext,
+                          f::typeof(getproperty),
+                          x::Tagged, prop)
+    if ismetatype(x, ctx, TermCombination) && !isone(metadata(x, ctx))
+        Cassette.fallback(ctx, f, x, prop)
+        error("property of a non-constant term accessed")
+    else
+        Cassette.fallback(ctx, f, x, prop)
+    end
+end
 
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f,
                           args...)
+    if length(args) > 2
+        return Cassette.recurse(ctx, f, args...)
+    end
     tainted = any(x->ismetatype(x, ctx, TermCombination), args)
     if tainted && haslinearity(f, Val{nfields(args)}())
         l = linearity(f, Val{nfields(args)}())

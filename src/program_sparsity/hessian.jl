@@ -117,28 +117,28 @@ function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(getproperty),
                           x::Tagged, prop)
     if ismetatype(x, ctx, TermCombination) && !isone(metadata(x, ctx))
-        Cassette.fallback(ctx, f, x, prop)
         error("property of a non-constant term accessed")
     else
-        Cassette.fallback(ctx, f, x, prop)
+        Cassette.recurse(ctx, f, x, prop)
     end
 end
+
+haslinearity(ctx::HessianSparsityContext, f, nargs) = haslinearity(untag(f, ctx), nargs)
+linearity(ctx::HessianSparsityContext, f, nargs) = linearity(untag(f, ctx), nargs)
 
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f,
                           args...)
-    if length(args) > 2
-        return Cassette.recurse(ctx, f, args...)
-    end
     tainted = any(x->ismetatype(x, ctx, TermCombination), args)
-    if tainted && haslinearity(f, Val{nfields(args)}())
-        l = linearity(f, Val{nfields(args)}())
-        return hessian_overdub(ctx, f, l, args...)
+    val = if tainted && haslinearity(ctx, f, Val{nfields(args)}())
+        l = linearity(ctx, f, Val{nfields(args)}())
+        hessian_overdub(ctx, f, l, args...)
     else
         val = Cassette.recurse(ctx, f, args...)
-        if tainted && !ismetatype(val, ctx, TermCombination)
-            error("Don't know the linearity of function $f")
-        end
-        return val
+       #if tainted && !ismetatype(val, ctx, TermCombination)
+       #    @warn("Don't know the linearity of function $f")
+       #end
+        val
     end
+    val
 end

@@ -9,6 +9,11 @@ Cassette.@context HessianSparsityContext
 const HTagType = Union{Input, TermCombination}
 Cassette.metadatatype(::Type{<:HessianSparsityContext}, ::DataType) = HTagType
 
+istainted(ctx::HessianSparsityContext, x) = ismetatype(x, ctx, TermCombination)
+
+Cassette.overdub(ctx::HessianSparsityContext, f::typeof(istainted), x) = istainted(ctx, x)
+Cassette.overdub(ctx::HessianSparsityContext, f::typeof(this_here_predicate!)) = this_here_predicate!(ctx.metadata)
+
 # getindex on the input
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(getindex),

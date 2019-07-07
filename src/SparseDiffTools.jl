@@ -43,5 +43,6 @@ include("program_sparsity/take_all_branches.jl")
 include("program_sparsity/terms.jl")
 include("program_sparsity/linearity.jl")
 include("program_sparsity/hessian.jl")
+include("program_sparsity/blas.jl")
 
 end # module

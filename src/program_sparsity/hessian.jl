@@ -27,6 +27,13 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     Cassette.overdub(ctx, f, X, map(i->untag(i, ctx), idx)...)
 end
 
+# plugs an ambiguity
+function Cassette.overdub(ctx::HessianSparsityContext,
+                          f::typeof(getindex),
+                          X::Tagged)
+    Cassette.recurse(ctx, f, X)
+end
+
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(getindex),
                           X::Tagged,

@@ -27,7 +27,8 @@ export  contract_color,
         numback_hesvec,numback_hesvec!,
         autoback_hesvec,autoback_hesvec!,
         JacVec,HesVec,HesVecGrad,
-        Sparsity, sparsity!, hsparsity
+        Sparsity, sparsity!, jacobian_sparsity,
+        hessian_sparsity
 
 
 include("coloring/high_level.jl")
@@ -36,13 +37,12 @@ include("coloring/greedy_d1_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
-include("program_sparsity/program_sparsity.jl")
-include("program_sparsity/sparsity_tracker.jl")
-include("program_sparsity/path.jl")
-include("program_sparsity/take_all_branches.jl")
-include("program_sparsity/terms.jl")
-include("program_sparsity/linearity.jl")
-include("program_sparsity/hessian.jl")
-include("program_sparsity/blas.jl")
+
+# control-flow analysis and tag propagation
+include("ps2/util.jl")
+include("ps2/controlflow.jl")
+include("ps2/propagate_tags.jl")
+
+include("ps2/jacobian.jl")
 
 end # module

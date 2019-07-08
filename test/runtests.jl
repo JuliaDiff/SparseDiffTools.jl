@@ -9,4 +9,4 @@ using Test
 @testset "Integration test" begin include("test_integration.jl") end
 @testset "Special matrices" begin include("test_specialmatrices.jl") end
 @testset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
-@testset "Jacobian sparsity computation" begin include("program_sparsity/testall.jl") end
+@testset "Program sparsity computation" begin include("program_sparsity/testall.jl") end

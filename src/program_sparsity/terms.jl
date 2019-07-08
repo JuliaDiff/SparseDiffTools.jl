@@ -1,13 +1,31 @@
 struct TermCombination
-    terms::Vector{Dict{Int, Int}} # idx => pow
+    terms::Set{Dict{Int, Int}} # idx => pow
 end
 
-Base.zero(::Type{TermCombination}) = TermCombination([])
-Base.one(::Type{TermCombination}) = TermCombination([Dict{Int,Int}()])
+@eval Base.zero(::Type{TermCombination}) = $(TermCombination(Set{Dict{Int,Int}}()))
+@eval Base.one(::Type{TermCombination}) = $(TermCombination(Set([Dict{Int,Int}()])))
+
+function Base.:(==)(comb1::TermCombination, comb2::TermCombination)
+    comb1.terms == comb2.terms && return true
+
+    n1 = reduce(max, (k for (k,_) in Iterators.flatten(comb1.terms)), init=0)
+    n2 = reduce(max, (k for (k,_) in Iterators.flatten(comb2.terms)), init=0)
+    n = max(n1, n2)
+
+    _sparse(comb1, n) == _sparse(comb2, n)
+end
 
 function Base.:+(comb1::TermCombination, comb2::TermCombination)
-    TermCombination(vcat(comb1.terms, comb2.terms))
+    if isone(comb1) && !iszero(comb2)
+        return comb2
+    elseif isone(comb2) && !iszero(comb1)
+        return comb1
+    elseif comb1 === comb2
+        return comb1
+    end
+    TermCombination(union(comb1.terms, comb2.terms))
 end
+
 Base.:+(comb1::TermCombination) = comb1
 
 function _merge(dict1, dict2)
@@ -19,7 +37,11 @@ function _merge(dict1, dict2)
 end
 
 function Base.:*(comb1::TermCombination, comb2::TermCombination)
-    if comb1 === comb2 # squaring optimization
+    if isone(comb1)
+        return comb2
+    elseif isone(comb2)
+        return comb1
+    elseif comb1 === comb2 # squaring optimization
         terms = comb1.terms
         # turns out it's enough to track
         # a^2*b^2
@@ -27,7 +49,7 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
         # have the same hessian sparsity
         t = Dict(k=>2 for (k,_) in
                  Iterators.flatten(terms))
-        TermCombination([t])
+        TermCombination(Set([t]))
         #=
         # square each term
         t1 = [Dict(k=>2 for (k,_) in dict)
@@ -39,12 +61,12 @@ function Base.:*(comb1::TermCombination, comb2::TermCombination)
                 push!(t2, _merge(terms[i], terms[j]))
             end
         end
-        TermCombination(vcat(t1, t2))
+        TermCombination(union(t1, t2))
         =#
     else
-        vec([_merge(dict1, dict2)
-               for dict1 in comb1.terms,
-               dict2 in comb2.terms]) |> TermCombination
+        Set([_merge(dict1, dict2)
+             for dict1 in comb1.terms,
+             dict2 in comb2.terms]) |> TermCombination
     end
 end
 Base.:*(comb1::TermCombination) = comb1

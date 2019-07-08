@@ -33,7 +33,7 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     if ismetatype(X, ctx, Input)
         val = Cassette.fallback(ctx, f, X, idx...)
         i = LinearIndices(untag(X, ctx))[idx...]
-        tag(val, ctx, TermCombination([Dict(i=>1)]))
+        tag(val, ctx, TermCombination(Set([Dict(i=>1)])))
     else
         Cassette.recurse(ctx, f, X, idx...)
     end
@@ -49,7 +49,7 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     if ismetatype(Y, ctx, Input)
         val = Cassette.fallback(ctx, f, X, xstart, Y, ystart, len)
         nometa = Cassette.NoMetaMeta()
-        X.meta.meta[xstart:xstart+len-1] .= (i->Cassette.Meta(TermCombination([Dict(i=>1)]), nometa)).(ystart:ystart+len-1)
+        X.meta.meta[xstart:xstart+len-1] .= (i->Cassette.Meta(TermCombination(Set([Dict(i=>1)])), nometa)).(ystart:ystart+len-1)
         val
     else
         Cassette.recurse(ctx, f, X, xstart, Y, ystart, len)

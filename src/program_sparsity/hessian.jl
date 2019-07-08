@@ -26,6 +26,7 @@ function Cassette.overdub(ctx::HessianSparsityContext,
     end
     Cassette.overdub(ctx, f, X, map(i->untag(i, ctx), idx)...)
 end
+
 function Cassette.overdub(ctx::HessianSparsityContext,
                           f::typeof(getindex),
                           X::Tagged,
@@ -62,7 +63,7 @@ function Cassette.overdub(ctx::HessianSparsityContext,
         val = Cassette.fallback(ctx, f, X)
         tag(val, ctx, Input())
     else
-        Cassette.recurse(ctx, f, X, xstart, Y, ystart, len)
+        Cassette.recurse(ctx, f, X)
     end
 end
 

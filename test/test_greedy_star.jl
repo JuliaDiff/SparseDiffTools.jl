@@ -25,7 +25,7 @@ end
 #=
  Coloring needs to satisfy two conditions:
 
-1. every pair of adjacent vertices receives distinct  colors
+1. every pair of adjacent vertices receives distinct colors
 (a distance-1 coloring)
 
 2. For any vertex v, any color that leads to a two-colored path
@@ -34,7 +34,29 @@ In other words, every path on four vertices uses at least three
 colors.
 =#
 
-for i in 1:5
+
+#Sample graph from Gebremedhin AH, Manne F, Pothen A. **What color is your Jacobian? Graph coloring for computing derivatives.**
+
+#=
+     (2)
+    /  \
+   /    \
+ (1)----(3)----(4)
+
+=#
+
+inner = SimpleGraph(4)
+g = VSafeGraph(inner)
+
+add_edge!(g,1,2)
+add_edge!(g,1,3)
+add_edge!(g,2,3)
+add_edge!(g,3,4)
+
+push!(test_graphs, g)
+
+#begin testing
+for i in 1:6
     g = test_graphs[i]
 
     out_colors1 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar1Color())
@@ -50,7 +72,7 @@ for i in 1:5
 
     #test condition 2
     for j = vertices(g)
-        walk = saw(g, j, 4)
+        walk = LightGraphs.saw(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk
@@ -70,7 +92,7 @@ for i in 1:5
 
     #test condition 2
     for j = vertices(g)
-        walk = saw(g, j, 4)
+        walk = LighGraphs.saw(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk

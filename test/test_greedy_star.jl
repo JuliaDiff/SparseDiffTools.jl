@@ -45,15 +45,14 @@ colors.
 
 =#
 
-inner = SimpleGraph(4)
-g = VSafeGraph(inner)
+gx = SimpleGraph(4)
 
-add_edge!(g,1,2)
-add_edge!(g,1,3)
-add_edge!(g,2,3)
-add_edge!(g,3,4)
+add_edge!(gx,1,2)
+add_edge!(gx,1,3)
+add_edge!(gx,2,3)
+add_edge!(gx,3,4)
 
-push!(test_graphs, g)
+push!(test_graphs, gx)
 
 #begin testing
 for i in 1:6
@@ -92,7 +91,7 @@ for i in 1:6
 
     #test condition 2
     for j = vertices(g)
-        walk = LighGraphs.saw(g, j, 4)
+        walk = LightGraphs.saw(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk

@@ -1,92 +1,113 @@
-using OffsetArrays
+#BSC 0-based
 using VertexSafeGraphs
-"""
-    BSCColor
+using OffsetArrays
 
-    Backtracking Sequential Coloring algorithm
-"""
-function color_graph(G::VSafeGraph)
-    V = nv(G)
-    F = zeros(Int64, V)
-    F_opt = zeros(Int64, V)
-    freeColors = [Vector{Int64}() for _ in 1:V] #set of free colors for each vertex
-    colors = zeros(Int64, V)
-    U = zeros(Int64, 0) #stores set of free colors
+function color_graph(g::VSafeGraph)
+    #number of vertices
+    v = nv(g)
+
+    #ordering of vertices of g in non increasing order of degree
+    A_ = sort_by_degree(g)
+    A = OffsetArray(A_, 0:length(A_)-1)
+
+    #starting index
+    start = 0
+
+    #optimal color number
+    opt = v + 1
+
+    #current vertex to be colored
+    x = A[0]
 
 
-    A = sorted_vertices(G)
-    #A = OffsetArray(A0, 0:length(A0)-1)
-
-    start = 1
-    optColorNumber = V + 1
-    x = A[1]
     #colors[-1] = 0
-    push!(U, 1)
+    colors_ = zeros(Int64, v)
+    colors = OffsetArray(colors_, 0:length(colors_)-1)
+
+    #U is set of free colors for current vertex
+    U_ = zeros(Int64, 0)
+    U = OffsetArray(U_, 0:-1)
+    push!(U,1)
+
+    #freeColors[x] is set of free colors for vertex x
+    freeColors_ = [Vector{Int64}() for _ in 1:v]
+    freeColors = OffsetArray(freeColors_, 0:v-1)
     freeColors[x] = copy(U)
 
-    while (start >= 0)
+    while(start >= 0)
         back = false
-        for i = 1:V
+        for i = start:v
             if i > start
-                x = find_uncolored_vertex(A, F)
-                U = free_colors(x,optColorNumber, colors, A, F, g)
+                x = uncolored_vertex_of_max_degree(A, F)
+
+                #set of freeColors for x less than opt
+                U = set_of_free_colors(x,A,colors,g, F, opt)
+
+                #sort U non decreasing order
                 sort(U)
+
             end
+
             if length(U) > 0
-                k = U[1]
+                k = U[0]
                 F[x] = k
-                deleteat!(U,1)
+
+                #remove k from U
+                deleteat!(U, 0)
                 freeColors[x] = copy(U)
-                if i-1==0
+
+                if i-1==-1
                     l = 0
                 else
                     l = colors[i-1]
                 end
+
                 colors[i] = max(k,l)
             else
-                start = i - 1
+                start = i-1
                 back = true
                 break
             end
         end
+
         if back
-            if start >= 1
+            if start >= 0
                 x = A[start]
-                F[x] = 0 #uncolor x
+                F[x] = 0
                 U = freeColors[x]
             end
         else
-            F_opt = F
-            optColorNumber = colors[V-1]
-            i = least_index(A,F,optColorNumber,G)
-            start = i - 1
-            if start < 1
-                break #leave the while loop
+            Fopt = copy(F)
+            opt = colors[v-1]
+
+            #least index with F[A[i]] == opt
+            i = least_index(F,A,opt)
+            start = i-1
+            if start < 0
+                break
             end
-            uncolor_all(F, A, start, G)
-            for i = 1:start
-                x  = A[i]
+
+            #uncolor all vertices A[i] where i >= start
+            uncolor_all!(F,A,start)
+            for i = 0:start
+                x = A[i]
                 U = freeColors[x]
-                U = remove_colors(U, optColorNumber)
+
+                #remove from U all colors > opt
+                U  = remove_from_U(U, opt)
                 freeColors[x] = copy(U)
             end
         end
     end
-    return F_opt
+
+    Fopt
 end
 
-
-"""
-    vertex_degree(G,z)
-
-Find the degree of the vertex z which belongs to the graph G.
-"""
 function degree(G::VSafeGraph,z::Int64)
     return length(inneighbors(G,z))
 end
 
-
-function sorted_vertices(G::VSafeGraph)
+function sort_by_degree(g::VSafeGraph)
     g1 = copy(g)
     g2 = copy(g)
     v = nv(g)
@@ -108,26 +129,29 @@ function sorted_vertices(G::VSafeGraph)
     return sorted
 end
 
-#find uncolored vertex of maximal degree of saturation
-function find_uncolored_vertex(sv::Array{Int64,1}, F::Array{Int64,1})
-    for i in sv
+function uncolored_vertex_of_max_degree(A, F)
+    for i in A
         if F[i] == 0
             return i
         end
     end
 end
 
-#set of free colors of x, which are < optColorNumber
-function free_colors(x, ocn, colors, A, F, g)
+
+
+function set_of_free_colors(x,A,colors,g,F,opt)
     index = -1
-    freecolors = zeros(Int64, 0)
-    for i = 1:length(A)
+
+    freecolors_ = zeros(Int64, 0)
+    freecolors = OffsetArray(freecolors_, 0:-1)
+
+    for i in eachindex(A)
         if A[i] == x
             index = i
             break
         end
     end
-    if index == 1
+    if index == 0
         colors_used = 0
     else
         colors_used = colors[index-1]
@@ -146,31 +170,35 @@ function free_colors(x, ocn, colors, A, F, g)
         end
     end
     freecolors
+
 end
 
-#least index with F(A[i]) = optColorNumber
-function least_index(A::Array{Int64, 1}, F::Array{Int64,1}, optColorNumber::Int64, G::VSafeGraph)
-    for i = 1:nv(G)
-        if F[A[i]] == optColorNumber
+#least index i such that F[A[i]] == opt
+function least_index(F,A,opt)
+    for i in eachindex(A)
+        if F[A[i]] == opt
             return i
         end
     end
 end
 
-#uncolor all vertices A[i] with i >= start
-function uncolor_all(F::Array{Int64,1}, A::Array{Int64,1}, start::Int64, G::VSafeGraph)
-    for i = start:nv(G)
+ #uncolor all vertices A[i] where i >= start
+function uncolor_all!(F,A,start)
+    for i = start:length(A)-1
         F[A[i]] = 0
     end
 end
 
-#remove from U all colors >= optColorNumber
-function remove_colors(U::Array{Int64,1}, optColorNumber::Int64)
-    modified_U = zeros(Int64,0)
-    for i = 1:length(U)
-        if U[i] < optColorNumber
-            push!(modified_U, U[i])
+#remove from U all colors >= opt
+function remove_from_U!(U, opt)
+    u_ = zeros(In64, 0)
+    u = OffsetArray(u_, 0:-1)
+    for i in U
+        if i < opt
+            push!(u, i)
         end
     end
-    return modified_U
+    u
 end
+
+        

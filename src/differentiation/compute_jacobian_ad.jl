@@ -81,7 +81,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 x::AbstractArray{<:Number};
                 dx = nothing,
                 color = eachindex(x),
-                sparsity = nothing)
+                sparsity = J isa SparseMatrixCSC ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color,sparsity=sparsity))
 end
 

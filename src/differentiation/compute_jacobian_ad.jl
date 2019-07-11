@@ -1,9 +1,10 @@
-struct ForwardColorJacCache{T,T2,T3,T4,T5}
+struct ForwardColorJacCache{T,T2,T3,T4,T5,T6}
     t::T
     fx::T2
     dx::T3
     p::T4
     color::T5
+    sparsity::T6
 end
 
 function default_chunk_size(maxcolor)
@@ -19,7 +20,8 @@ getsize(N::Integer) = N
 
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
-                              color=1:length(x))
+                              color=1:length(x),
+                              sparsity::Union{SparseMatrixCSC,Nothing}=nothing)
 
     if _chunksize === nothing
         chunksize = default_chunk_size(maximum(color))
@@ -38,7 +40,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = generate_chunked_partials(x,color,chunksize)
-    ForwardColorJacCache(t,fx,_dx,p,color)
+    ForwardColorJacCache(t,fx,_dx,p,color,sparsity)
 end
 
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
@@ -78,8 +80,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 f,
                 x::AbstractArray{<:Number};
                 dx = nothing,
-                color = eachindex(x))
-    forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color))
+                color = eachindex(x),
+                sparsity = nothing)
+    forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color,sparsity=sparsity))
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
@@ -92,6 +95,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     dx = jac_cache.dx
     p = jac_cache.p
     color = jac_cache.color
+    sparsity = jac_cache.sparsity
     color_i = 1
     chunksize = length(first(first(jac_cache.p)))
 
@@ -99,8 +103,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if J isa SparseMatrixCSC
-            rows_index, cols_index, val = findnz(J)
+        if sparsity isa SparseMatrixCSC
+            rows_index, cols_index, val = findnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 for k in 1:length(cols_index)

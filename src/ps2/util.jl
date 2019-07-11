@@ -1,3 +1,8 @@
+# Don't taint the value enclosed by Fixed
+struct Fixed
+    val
+end
+
 # Get the type of the metadata attached to a value
 function metatype(x, ctx)
     if  istagged(x, ctx) && hasmetadata(x, ctx)

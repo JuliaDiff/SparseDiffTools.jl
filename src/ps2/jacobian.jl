@@ -91,7 +91,7 @@ function propagate_tags(ctx::JacobianSparsityContext,
     else
         tag(result,
             ctx,
-            union(metadata.(args[idxs], (ctx,))...))
+            union(map(x->metadata(x, ctx), args[idxs])...))
     end
 end
 const TaggedOf{T} = Cassette.Tagged{A, T} where A

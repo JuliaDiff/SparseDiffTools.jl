@@ -4,6 +4,7 @@ authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <cont
 version = "0.2.0"
 
 [deps]
+Amb = "c42f9944-9a8f-11e9-2851-1930a3e1c813"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 Cassette = "7057c7e9-c182-5462-911a-8362d720325c"

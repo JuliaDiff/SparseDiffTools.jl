@@ -38,5 +38,28 @@ function sparsity!(f!, Y, X, args...; sparsity=Sparsity(length(Y), length(X)),
         alldone(path) && break
         reset!(path)
     end
-    sparsity
+    sparse(sparsity)
+end
+
+function hsparsity(f, X, args...; verbose=true)
+
+    terms = zero(TermCombination)
+    path = Path()
+    while true
+        ctx = HessianSparsityContext(metadata=path, pass=BranchesPass)
+        ctx = Cassette.enabletagging(ctx, f)
+        ctx = Cassette.disablehooks(ctx)
+        val = Cassette.recurse(ctx,
+                               f,
+                               tag(X, ctx, Input()),
+        # TODO: make this recursive
+        map(arg -> arg isa Fixed ?
+            arg.value : tag(arg, ctx, one(TermCombination)), args)...)
+        terms += metadata(val, ctx)
+        verbose && println("Explored path: ", path)
+        alldone(path) && break
+        reset!(path)
+    end
+
+    _sparse(terms, length(X))
 end

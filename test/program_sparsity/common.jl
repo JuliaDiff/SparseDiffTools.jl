@@ -5,7 +5,7 @@ import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
 using SparseDiffTools
 import SparseDiffTools: Path, BranchesPass, SparsityContext, Fixed,
                         Input, Output, ProvinanceSet, Tainted, istainted,
-                        alldone, reset!
+                        alldone, reset!, HessianSparsityContext
 
 function tester(f, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
 
@@ -33,6 +33,32 @@ end
 testmeta(args...) = tester(args...)[1].metadata
 testval(args...) = tester(args...) |> ((ctx,val),) -> untag(val, ctx)
 testtag(args...) = tester(args...) |> ((ctx,val),) -> metadata(val, ctx)
+
+function htester(f, X, args...)
+
+    path = Path()
+    ctx = HessianSparsityContext(metadata=path, pass=BranchesPass)
+    ctx = Cassette.enabletagging(ctx, f)
+    ctx = Cassette.disablehooks(ctx)
+
+    val = nothing
+    while true
+        val = Cassette.overdub(ctx,
+                            f,
+                            tag(X, ctx, Input()),
+                            map(arg -> arg isa Fixed ?
+                                arg.value :
+                                tag(arg, ctx, one(TermCombination)), args)...)
+        println("Explored path: ", path)
+        alldone(path) && break
+        reset!(path)
+    end
+    return ctx, val
+end
+htestmeta(args...) = htester(args...)[1].metadata
+htestval(args...)  = htester(args...) |> ((ctx,val),) -> untag(val, ctx)
+htesttag(args...)  = htester(args...) |> ((ctx,val),) -> metadata(val, ctx)
+
 
 using Test
 

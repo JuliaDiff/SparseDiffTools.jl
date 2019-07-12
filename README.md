@@ -159,7 +159,8 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             f,
                             x::AbstractArray{<:Number};
                             dx = nothing,
-                            color = eachindex(x))
+                            color = eachindex(x),
+                            sparsity = nothing)
 ```
 
 This call wiil allocate the cache variables each time. To avoid allocating the
@@ -168,7 +169,8 @@ cache, construct the cache in advance:
 ```julia
 ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
-                              color=1:length(x))
+                              color=1:length(x),
+                              sparsity = nothing)
 ```
 
 and utilize the following signature:

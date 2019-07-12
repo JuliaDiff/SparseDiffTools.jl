@@ -21,7 +21,8 @@ julia = "1"
 [extras]
 DiffEqDiffTools = "01453d9d-ee7c-5054-8395-0335cb756afa"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "DiffEqDiffTools", "IterativeSolvers"]
+test = ["Test", "DiffEqDiffTools", "IterativeSolvers", "Random"]

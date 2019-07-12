@@ -39,10 +39,12 @@ include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
 
 # control-flow analysis and tag propagation
-include("ps2/util.jl")
-include("ps2/controlflow.jl")
-include("ps2/propagate_tags.jl")
+include("program_sparsity/util.jl")
+include("program_sparsity/controlflow.jl")
+include("program_sparsity/propagate_tags.jl")
+include("program_sparsity/linearity.jl")
 
-include("ps2/jacobian.jl")
+include("program_sparsity/jacobian.jl")
+include("program_sparsity/hessian.jl")
 
 end # module

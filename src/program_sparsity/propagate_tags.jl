@@ -16,9 +16,8 @@ macro proptagcontext(name)
                 if !(val isa Tagged)
                     return propagate_tags(ctx, f, val, args...)
                 elseif metatype(val, ctx) <: Cassette.NoMetaData
-                    meta = map(x->untag(x, ctx), args)
                     return propagate_tags(ctx, f,
-                                          untag(val, ctx),
+                                          val,
                                           args...)
                 else
                     return val

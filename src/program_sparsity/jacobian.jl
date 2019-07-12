@@ -89,7 +89,7 @@ function propagate_tags(ctx::JacobianSparsityContext,
     if isempty(idxs)
         return result
     else
-        tag(result,
+        tag(untag(result, ctx),
             ctx,
             union(map(x->metadata(x, ctx), args[idxs])...))
     end

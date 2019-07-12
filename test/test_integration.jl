@@ -37,7 +37,14 @@ J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30))
 
 #Jacobian computed with coloring vectors
 fcalls = 0
-_J = 200 .* true_jac
+_J = similar(true_jac)
 DiffEqDiffTools.finite_difference_jacobian!(_J, f, rand(30), color = colors)
 @test fcalls == 4
 @test _J ≈ J
+
+fcalls = 0
+_J = similar(true_jac)
+_denseJ = collect(_J)
+DiffEqDiffTools.finite_difference_jacobian!(_denseJ, f, rand(30), color = colors, sparsity=_J)
+@test fcalls == 4
+@test _denseJ ≈ J

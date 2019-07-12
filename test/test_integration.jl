@@ -24,8 +24,8 @@ function second_derivative_stencil(N)
 end
 
 output = ones(30); input = ones(30)
-sparsity_pattern = sparsity!(f,output,input)
-true_jac = Float64.(sparse(sparsity_pattern))
+sparsity_pattern = jacobian_sparsity(f,output,input)
+true_jac = Float64.(sparsity_pattern)
 colors = matrix_colors(true_jac)
 @test colors == repeat(1:3,10)
 

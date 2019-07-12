@@ -34,10 +34,10 @@ end
 """
 function abstract_run(acc, ctx::Cassette.Context, overdub_fn, args...)
     pass_ctx = Cassette.similarcontext(ctx, pass=AbsintPass)
-    #@ambrun begin
-        acc(Cassette.overdub(ctx, overdub_fn, args...))
-    #    @amb
-    #end
+    @ambrun begin
+        acc(Cassette.overdub(pass_ctx, overdub_fn, args...))
+        @amb
+    end
 end
 
 """
@@ -50,7 +50,7 @@ function istainted(ctx, cond)
           " See docs for `istainted`.")
 end
 
-_choice() = @amb true false
+_choice() = (@amb true false)
 
 # Must return 7 exprs
 function rewrite_branch(ctx, stmt, extraslot, i)

@@ -20,7 +20,7 @@ function _paraboloidproblem(N::Int;
                             mat::AbstractArray{T,2} = sparse(Diagonal(float(1:N))),
                             alpha::T=10.0,
                             x0::AbstractVector{T} = ones(N)) where T <: Number
-    hsparsity(quad,x0,ParaboloidStruct(mat, x0, similar(x0), alpha))
+    hessian_sparsity(quad,x0,ParaboloidStruct(mat, x0, similar(x0), alpha))
 end
 
 @test isdiag(_paraboloidproblem(10))

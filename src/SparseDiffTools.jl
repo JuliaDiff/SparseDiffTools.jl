@@ -6,6 +6,7 @@ using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices,
 using BlockBandedMatrices:blocksize,nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 
+using Requires
 using Cassette
 import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
 import Cassette: tagged_new_tuple, ContextTagged, BindingMeta, DisableHooks, nametype
@@ -40,13 +41,17 @@ include("coloring/greedy_star2_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
-include("program_sparsity/program_sparsity.jl")
-include("program_sparsity/sparsity_tracker.jl")
-include("program_sparsity/path.jl")
-include("program_sparsity/take_all_branches.jl")
-include("program_sparsity/terms.jl")
-include("program_sparsity/linearity.jl")
-include("program_sparsity/hessian.jl")
-include("program_sparsity/blas.jl")
+function __init__()
+    @require Cassette="7057c7e9-c182-5462-911a-8362d720325c" begin
+        include("program_sparsity/program_sparsity.jl")
+        include("program_sparsity/sparsity_tracker.jl")
+        include("program_sparsity/path.jl")
+        include("program_sparsity/take_all_branches.jl")
+        include("program_sparsity/terms.jl")
+        include("program_sparsity/linearity.jl")
+        include("program_sparsity/hessian.jl")
+        include("program_sparsity/blas.jl")
+    end
+end
 
 end # module

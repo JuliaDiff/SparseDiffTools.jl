@@ -5,6 +5,7 @@ using SparseArrays, LinearAlgebra, BandedMatrices, BlockBandedMatrices,
       SparseArrays
 using BlockBandedMatrices:blocksize,nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
+using Requires
 
 using Cassette
 import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
@@ -38,13 +39,16 @@ include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
 
-# control-flow analysis and tag propagation
-include("program_sparsity/util.jl")
-include("program_sparsity/controlflow.jl")
-include("program_sparsity/propagate_tags.jl")
-include("program_sparsity/linearity.jl")
+function __init__()
+    @require Cassette="7057c7e9-c182-5462-911a-8362d720325c" begin
+        include("program_sparsity/util.jl")
+        include("program_sparsity/controlflow.jl")
+        include("program_sparsity/propagate_tags.jl")
+        include("program_sparsity/linearity.jl")
 
-include("program_sparsity/jacobian.jl")
-include("program_sparsity/hessian.jl")
+        include("program_sparsity/jacobian.jl")
+        include("program_sparsity/hessian.jl")
+    end
+end
 
 end # module

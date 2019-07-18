@@ -1,6 +1,3 @@
-using LinearAlgebra
-import LinearAlgebra.BLAS
-
 # generic implementations
 
 macro reroute(f, g)
@@ -19,7 +16,7 @@ macro reroute(f, g)
     end
 end
 
-@reroute BLAS.dot dot(Any, Any)
-@reroute BLAS.axpy! axpy!(Any,
-                          AbstractArray,
-                          AbstractArray)
+@reroute LinearAlgebra.BLAS.dot LinearAlgebra.dot(Any, Any)
+@reroute LinearAlgebra.BLAS.axpy! LinearAlgebra.axpy!(Any,
+                                                      AbstractArray,
+                                                      AbstractArray)

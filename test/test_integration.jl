@@ -1,7 +1,8 @@
-using SparseDiffTools, SparseArrays
-using LinearAlgebra
-using DiffEqDiffTools
-using Test
+using SparseDiffTools
+using DiffEqDiffTools: finite_difference_jacobian, finite_difference_jacobian!
+using Cassette
+
+using LinearAlgebra, SparseArrays, Test
 
 fcalls = 0
 function f(dx,x)
@@ -31,20 +32,20 @@ colors = matrix_colors(true_jac)
 
 #Jacobian computed without coloring vector
 fcalls = 0
-J = DiffEqDiffTools.finite_difference_jacobian(f, rand(30))
+J = finite_difference_jacobian(f, rand(30))
 @test J ≈ second_derivative_stencil(30)
 @test fcalls == 31
 
 #Jacobian computed with coloring vectors
 fcalls = 0
 _J = similar(true_jac)
-DiffEqDiffTools.finite_difference_jacobian!(_J, f, rand(30), color = colors)
+finite_difference_jacobian!(_J, f, rand(30), color = colors)
 @test fcalls == 4
 @test _J ≈ J
 
 fcalls = 0
 _J = similar(true_jac)
 _denseJ = collect(_J)
-DiffEqDiffTools.finite_difference_jacobian!(_denseJ, f, rand(30), color = colors, sparsity=_J)
+finite_difference_jacobian!(_denseJ, f, rand(30), color = colors, sparsity=_J)
 @test fcalls == 4
 @test _denseJ ≈ J

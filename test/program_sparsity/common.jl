@@ -1,11 +1,12 @@
 ### Rules
-using Cassette
-using SparseArrays
-import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
-using SparseDiffTools
-import SparseDiffTools: Path, BranchesPass, SparsityContext, Fixed,
-                        Input, Output, ProvinanceSet, Tainted, istainted,
-                        alldone, reset!, HessianSparsityContext
+using Cassette, SparseDiffTools
+using SparseArrays, Test
+
+using Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged
+using SparseDiffTools: Path, BranchesPass, SparsityContext, Fixed,
+    Input, Output, ProvinanceSet, Tainted, istainted,
+    alldone, reset!, HessianSparsityContext
+using SparseDiffTools: TermCombination
 
 function tester(f, Y, X, args...; sparsity=Sparsity(length(Y), length(X)))
 

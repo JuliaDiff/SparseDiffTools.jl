@@ -23,9 +23,9 @@
 """
 function color_graph(g::LightGraphs.AbstractGraph, ::GreedyStar1Color)
     v = nv(g)
-    color = zeros(Int64, v)
+    color = zeros(Int, v)
 
-    forbidden_colors = zeros(Int64, v+1)
+    forbidden_colors = zeros(Int, v+1)
 
     for vertex_i = vertices(g)
 

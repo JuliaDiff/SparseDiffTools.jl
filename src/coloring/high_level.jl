@@ -1,6 +1,6 @@
 abstract type ColoringAlgorithm end
 struct GreedyD1Color <: ColoringAlgorithm end
-struct BSCColor <: ColoringAlgorithm end
+struct BacktrackingColor <: ColoringAlgorithm end
 struct ContractionColor <: ColoringAlgorithm end
 struct GreedyStar1Color <: ColoringAlgorithm end
 struct GreedyStar2Color <: ColoringAlgorithm end

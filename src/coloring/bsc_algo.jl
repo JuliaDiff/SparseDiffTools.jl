@@ -94,7 +94,12 @@ function color_graph(g::LightGraphs.AbstractGraph)
     F
 end
 
+"""
+    sort_by_degree()
 
+sort and store the vertices of graph g in
+non-increasing order of their degrees
+"""
 function sort_by_degree(g::LightGraphs.AbstractGraph)
     vs = vertices(g)
     degrees = (LightGraphs.degree(g, v) for v in vs)
@@ -103,7 +108,12 @@ function sort_by_degree(g::LightGraphs.AbstractGraph)
     [v[1] for v in vertex_pairs]
 end
 
+"""
+    uncolored_vertex_of_maximal_degree(A,F)
 
+Returns an uncolored vertex from the graph which has maximum
+degree
+"""
 function uncolored_vertex_of_maximal_degree(A,F)
     for v in A
         if F[v] == 0
@@ -113,6 +123,12 @@ function uncolored_vertex_of_maximal_degree(A,F)
 end
 
 
+"""
+    free_colors()
+
+returns set of free colors of x which are less
+than optimal color number (opt)
+"""
 function free_colors(x, A, colors, F, g, opt)
     index = -1
 
@@ -149,6 +165,12 @@ function free_colors(x, A, colors, F, g, opt)
 
 end
 
+"""
+    least_index()
+
+returns least index i such that color of vertex
+A[i] == opt (optimal color number)
+"""
 function least_index(F,A,opt)
     for i in eachindex(A)
         if F[A[i]] == opt
@@ -157,13 +179,24 @@ function least_index(F,A,opt)
     end
 end
 
+"""
+    uncolor_all()
+
+uncolors all vertices A[i] where
+i >= start
+"""
 function uncolor_all!(F, A, start)
     for i = start:length(A)
         F[A[i]] = 0
     end
 end
 
+"""
+    remove_higher_colors()
 
+remove all the colors >= opt (optimal color number)
+from the set of colors U
+"""
 function remove_higher_colors(U, opt)
     u = zeros(Int32, 0)
     for color in U

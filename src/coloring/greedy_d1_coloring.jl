@@ -9,7 +9,7 @@ number χ(G) of the graph.
 """
 function color_graph(g::VSafeGraph, alg::GreedyD1Color)
     v = nv(g)
-    result = zeros(Int64, v)
+    result = zeros(Int, v)
     result[1] = 1
     available = BitArray(undef, v)
     for i = 2:v

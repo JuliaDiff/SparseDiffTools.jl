@@ -5,10 +5,10 @@
 """
 function color_graph(G::VSafeGraph,::BSCColor)
     V = nv(G)
-    F = zeros(Int64, V)
-    freeColors = [Vector{Int64}() for _ in 1:V] #set of free colors for each vertex
-    U = zeros(Int64, 0) #stores set of free colors
-    #F = zeros(Int64, 0) #stores final coloring of vertices
+    F = zeros(Int, V)
+    freeColors = [Vector{Int}() for _ in 1:V] #set of free colors for each vertex
+    U = zeros(Int, 0) #stores set of free colors
+    #F = zeros(Int, 0) #stores final coloring of vertices
 
     sorted_vertices = order_by_degree(G)
     start = 1
@@ -71,15 +71,15 @@ end
 
 Find the degree of the vertex z which belongs to the graph G.
 """
-function degree(G::VSafeGraph,z::Int64)
+function degree(G::VSafeGraph,z::Int)
     return length(inneighbors(G,z))
 end
 
 
 function sorted_vertices(G::VSafeGraph)
     V = nv(G)
-    marked = zeros(Int64,V)
-    sv = zeros(Int64,0)
+    marked = zeros(Int,V)
+    sv = zeros(Int,0)
     max_degree = -1
     max_degree_vertex = -1
     for i = 1:V
@@ -100,8 +100,8 @@ function sorted_vertices(G::VSafeGraph)
 end
 
 #find uncolored vertex of maximal degree of saturation
-function find_uncolored_vertex(sv::Array{Int64,1}, G::VSafeGraph)
-    colors = zeros(Int64,0)
+function find_uncolored_vertex(sv::Array{Int,1}, G::VSafeGraph)
+    colors = zeros(Int,0)
     max_colors = -1
     max_color_index = -1
     for i = 1:nv(G)
@@ -116,7 +116,7 @@ function find_uncolored_vertex(sv::Array{Int64,1}, G::VSafeGraph)
                 max_color_index = i
             end
         end
-        colors = zeros(Int64,0)
+        colors = zeros(Int,0)
     end
     for i = 1:nv(G)
         if A[i] == max_color_index
@@ -127,8 +127,8 @@ function find_uncolored_vertex(sv::Array{Int64,1}, G::VSafeGraph)
 end
 
 #set of free colors of x, which are < optColorNumber
-function free_colors(x::Int64, F::Array{Int64,1}, G::VSafeGraph, max_color::Int64)
-    colors = zeros(Int64,0)
+function free_colors(x::Int, F::Array{Int,1}, G::VSafeGraph, max_color::Int)
+    colors = zeros(Int,0)
     for color in 1:max_color
         present = true
         for y in inneighbors(G,x)
@@ -145,7 +145,7 @@ function free_colors(x::Int64, F::Array{Int64,1}, G::VSafeGraph, max_color::Int6
 end
 
 #least index with F(A[i]) = optColorNumber
-function least_index(A::Array{Int64, 1}, F::Array{Int64,1}, optColorNumber::Int64, G::VSafeGraph)
+function least_index(A::Array{Int, 1}, F::Array{Int,1}, optColorNumber::Int, G::VSafeGraph)
     for i = 1:nv(G)
         if F[A[i]] == optColorNumber
             return i
@@ -154,15 +154,15 @@ function least_index(A::Array{Int64, 1}, F::Array{Int64,1}, optColorNumber::Int6
 end
 
 #uncolor all vertices A[i] with i >= start
-function uncolor_all(F::Array{Int64,1}, A::Array{Int64,1}, start::Int64, G::VSafeGraph)
+function uncolor_all(F::Array{Int,1}, A::Array{Int,1}, start::Int, G::VSafeGraph)
     for i = start:nv(G)
         F[A[i]] = 0
     end
 end
 
 #remove from U all colors >= optColorNumber
-function remove_colors(U::Array{Int64,1}, optColorNumber::Int64)
-    modified_U = zeros(Int64,0)
+function remove_colors(U::Array{Int,1}, optColorNumber::Int)
+    modified_U = zeros(Int,0)
     for i = 1:length(U)
         if U[i] < optColorNumber
             push!(mmodified_U, U[i])

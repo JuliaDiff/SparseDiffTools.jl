@@ -34,6 +34,7 @@ export  contract_color,
 
 
 include("coloring/high_level.jl")
+include("coloring/backtracking_coloring.jl")
 include("coloring/contraction_coloring.jl")
 include("coloring/greedy_d1_coloring.jl")
 include("coloring/greedy_star1_coloring.jl")

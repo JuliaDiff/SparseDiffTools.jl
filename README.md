@@ -234,6 +234,8 @@ Currently these methods are not competitive against `numauto`, but as Zygote.jl 
 optimized these will likely be the fastest.
 
 ```julia
+using Zygote # Required
+
 numback_hesvec!(du,f,x,v,
                      cache1 = similar(v),
                      cache2 = similar(v))
@@ -267,8 +269,8 @@ in the operator, simply mutate the vector `u`: `J.u .= ...`.
 
 ### Automated Sparsity Detection
 
-Optionally, if you load Cassette.jl, automated
-sparsity detection is provided by the `sparsity!` function whose syntax is:
+Automated sparsity detection is provided by the `sparsity!` function. This requires
+`using Cassette` for Requires. The syntax is:
 
 ```julia
 `sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verbose=true)`

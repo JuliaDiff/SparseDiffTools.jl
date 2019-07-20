@@ -7,7 +7,6 @@ using ForwardDiff
 using LightGraphs
 using Requires
 using VertexSafeGraphs
-using Zygote
 
 using LinearAlgebra
 using SparseArrays
@@ -31,8 +30,6 @@ export  contract_color,
         autonum_hesvec,autonum_hesvec!,
         num_hesvecgrad,num_hesvecgrad!,
         auto_hesvecgrad,auto_hesvecgrad!,
-        numback_hesvec,numback_hesvec!,
-        autoback_hesvec,autoback_hesvec!,
         JacVec,HesVec,HesVecGrad
 
 
@@ -69,6 +66,12 @@ function __init__()
 
             include("program_sparsity/linearity_special.jl")
         end
+    end
+
+    @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+        export numback_hesvec, numback_hesvec!, autoback_hesvec, autoback_hesvec!
+
+        include("differentiation/jaches_products_zygote.jl")
     end
 end
 

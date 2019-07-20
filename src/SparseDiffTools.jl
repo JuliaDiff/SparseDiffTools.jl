@@ -63,6 +63,12 @@ function __init__()
         include("program_sparsity/linearity.jl")
         include("program_sparsity/hessian.jl")
         include("program_sparsity/blas.jl")
+
+        @require SpecialFunctions="276daf66-3868-5448-9aa4-cd146d93841b" begin
+            using .SpecialFunctions
+
+            include("program_sparsity/linearity_special.jl")
+        end
     end
 end
 

@@ -6,10 +6,12 @@
 This package is for exploiting sparsity in Jacobians and Hessians to accelerate
 computations. Matrix-free Jacobian-vector product and Hessian-vector product
 operators are provided that are compatible with AbstractMatrix-based libraries
-like IterativeSolvers.jl for easy and efficient Newton-Krylov implementation.
-Automatic and numerical differentiation are utilized and optional. In addition,
-the ability to automatically detect the sparsity of a function, perform matrix
-coloring, and utilize coloring in Jacobian and Hessian construction is provided.
+like IterativeSolvers.jl for easy and efficient Newton-Krylov implementation. It is
+possible to perform matrix coloring, and utilize coloring in Jacobian and Hessian
+construction.
+
+Optionally, automatic and numerical differentiation are utilized and the ability to
+automatically detect the sparsity of a function is provided.
 
 ## Example
 
@@ -31,11 +33,13 @@ end
 For this function, we know that the sparsity pattern of the Jacobian is a
 `Tridiagonal` matrix. However, if we didn't know the sparsity pattern for
 the Jacobian, we could use the `sparsity!` function to automatically
-detect the sparsity pattern. We declare that it outputs a length 30 vector
-and takes in a length 30 vector, and it spits out a `Sparsity` object
-which we can turn into a `SparseMatrixCSC`:
+detect the sparsity pattern. This function is only available if you
+load Cassette.jl as well. We declare that the function `f` outputs a
+vector of length 30 and takes in a vector of length 30, and `sparsity!` spits
+out a `Sparsity` object which we can turn into a `SparseMatrixCSC`:
 
 ```julia
+using Cassette
 sparsity_pattern = sparsity!(f,output,input)
 jac = Float64.(sparse(sparsity_pattern))
 ```
@@ -87,36 +91,6 @@ gmres!(res,J,v)
 ```
 
 ## Documentation
-
-### Automated Sparsity Detection
-
-Automated sparsity detection is provided by the `sparsity!` function whose
-syntax is:
-
-```julia
-`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verbose=true)`
-```
-
-The arguments are:
-
-- `f`: the function
-- `Y`: the output array
-- `X`: the input array
-- `args`: trailing arguments to `f`. They are considered subject to change, unless wrapped as `Fixed(arg)`
-- `S`: (optional) the sparsity pattern
-- `verbose`: (optional) whether to describe the paths taken by the sparsity detection.
-
-The function `f` is assumed to take arguments of the form `f(dx,x,args...)`.
-`sparsity!` returns a `Sparsity` object which describes where the non-zeros
-of the Jacobian occur. `sparse(::Sparsity)` transforms the pattern into
-a sparse matrix.
-
-This function utilizes non-standard interpretation, which we denote
-combinatoric concolic analysis, to directly realize the sparsity pattern from the program's AST. It requires that the function `f` is a Julia function. It does not
-work numerically, meaning that it is not prone to floating point error or
-cancelation. It allows for branching and will automatically check all of the
-branches. However, a while loop of indeterminate length which is dependent
-on the input argument is not allowed.
 
 ### Matrix Coloring
 
@@ -230,28 +204,7 @@ autonum_hesvec!(du,f,x,v,
                  cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
 
 autonum_hesvec(f,x,v)
-
-
-numback_hesvec!(du,f,x,v,
-                     cache1 = similar(v),
-                     cache2 = similar(v))
-
-numback_hesvec(f,x,v)
-
-# Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
-autoback_hesvec!(du,f,x,v,
-                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
-
-autoback_hesvec(f,x,v)
 ```
-
-`numauto` and `autonum` both mix numerical and automatic differentiation, with
-the former almost always being more efficient and is thus recommended. `numback` and
-`autoback` methods are numerical/ForwardDiff over reverse mode automatic differentiation
-respectively, where the reverse-mode AD is provided by Zygote.jl. Currently these methods
-are not competitive against `numauto`, but as Zygote.jl gets optimized these will likely
-be the fastest.
 
 In addition,
 the following forms allow you to provide a gradient function `g(dx,x)` or `dx=g(x)`
@@ -271,6 +224,30 @@ auto_hesvecgrad!(du,g,x,v,
 auto_hesvecgrad(g,x,v)
 ```
 
+The `numauto` and `autonum` methods both mix numerical and automatic differentiation, with
+the former almost always being more efficient and thus being recommended.
+
+Optionally, if you load Zygote.jl, the following `numback`
+and `autoback` methods are available and allow numerical/ForwardDiff over reverse mode 
+automatic differentiation respectively, where the reverse-mode AD is provided by Zygote.jl.
+Currently these methods are not competitive against `numauto`, but as Zygote.jl gets 
+optimized these will likely be the fastest.
+
+```julia
+numback_hesvec!(du,f,x,v,
+                     cache1 = similar(v),
+                     cache2 = similar(v))
+
+numback_hesvec(f,x,v)
+
+# Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
+autoback_hesvec!(du,f,x,v,
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+
+autoback_hesvec(f,x,v)
+```
+
 #### J*v and H*v Operators
 
 The following produce matrix-free operators which are used for calculating
@@ -287,3 +264,33 @@ These all have the same interface, where `J*v` utilizes the out-of-place
 Jacobian-vector or Hessian-vector function, whereas `mul!(res,J,v)` utilizes
 the appropriate in-place versions. To update the location of differentiation
 in the operator, simply mutate the vector `u`: `J.u .= ...`.
+
+### Automated Sparsity Detection
+
+Optionally, if you load Cassette.jl, automated
+sparsity detection is provided by the `sparsity!` function whose syntax is:
+
+```julia
+`sparsity!(f, Y, X, args...; sparsity=Sparsity(length(X), length(Y)), verbose=true)`
+```
+
+The arguments are:
+
+- `f`: the function
+- `Y`: the output array
+- `X`: the input array
+- `args`: trailing arguments to `f`. They are considered subject to change, unless wrapped as `Fixed(arg)`
+- `S`: (optional) the sparsity pattern
+- `verbose`: (optional) whether to describe the paths taken by the sparsity detection.
+
+The function `f` is assumed to take arguments of the form `f(dx,x,args...)`.
+`sparsity!` returns a `Sparsity` object which describes where the non-zeros
+of the Jacobian occur. `sparse(::Sparsity)` transforms the pattern into
+a sparse matrix.
+
+This function utilizes non-standard interpretation, which we denote
+combinatoric concolic analysis, to directly realize the sparsity pattern from the program's AST. It requires that the function `f` is a Julia function. It does not
+work numerically, meaning that it is not prone to floating point error or
+cancelation. It allows for branching and will automatically check all of the
+branches. However, a while loop of indeterminate length which is dependent
+on the input argument is not allowed.

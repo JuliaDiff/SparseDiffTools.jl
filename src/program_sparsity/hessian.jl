@@ -1,8 +1,3 @@
-using Cassette
-import Cassette: tag, untag, Tagged, metadata, hasmetadata, istagged, canrecurse
-import Core: SSAValue
-using SparseArrays
-
 # Tags:
 Cassette.@context HessianSparsityContext
 

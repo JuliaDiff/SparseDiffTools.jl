@@ -1,7 +1,8 @@
 using SparseDiffTools
 using LightGraphs
-using Random
+using Test
 
+using Random
 Random.seed!(123)
 
 #= Test data =#

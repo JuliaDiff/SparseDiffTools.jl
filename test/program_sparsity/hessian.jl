@@ -1,6 +1,3 @@
-import SparseDiffTools: TermCombination
-using Test
-
 Term(i...) = TermCombination(Set([Dict(j=>1 for j in i)]))
 
 @test htesttag(x->x, [1,2]) == Input()

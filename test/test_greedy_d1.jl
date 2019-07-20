@@ -1,7 +1,10 @@
 using SparseDiffTools
 using VertexSafeGraphs
 using LightGraphs
+using Test
+
 using Random
+Random.seed!(123)
 
 test_graphs = Array{VSafeGraph, 1}(undef, 0)
 

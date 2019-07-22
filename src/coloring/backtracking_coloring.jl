@@ -234,5 +234,5 @@ function remove_higher_colors(U::Array{Int,1}, opt::Int)
             push!(u, color)
         end
     end
-    u
+    return u
 end

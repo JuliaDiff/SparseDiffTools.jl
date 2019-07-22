@@ -187,7 +187,7 @@ function free_colors(x::Int,
         end
     end
 
-    freecolors
+    return freecolors
 
 end
 

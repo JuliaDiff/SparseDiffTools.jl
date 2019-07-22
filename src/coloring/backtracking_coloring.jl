@@ -93,11 +93,8 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
                 freeColors[x] = copy(U)
             end
         end
-
     end
-
-    Fopt
-
+    return Fopt
 end
 
 """
@@ -111,7 +108,7 @@ function sort_by_degree(g::LightGraphs.AbstractGraph)
     degrees = (LightGraphs.degree(g, v) for v in vs)
     vertex_pairs = collect(zip(vs, degrees))
     sort!(vertex_pairs, by = p -> p[2], rev = true)
-    [v[1] for v in vertex_pairs]
+    return [v[1] for v in vertex_pairs]
 end
 
 """
@@ -187,7 +184,7 @@ function free_colors(x::Int,
         end
     end
 
-    freecolors
+    return freecolors
 
 end
 
@@ -234,5 +231,5 @@ function remove_higher_colors(U::Array{Int,1}, opt::Int)
             push!(u, color)
         end
     end
-    u
+    return u
 end

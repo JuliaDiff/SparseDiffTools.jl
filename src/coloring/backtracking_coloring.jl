@@ -111,7 +111,7 @@ function sort_by_degree(g::LightGraphs.AbstractGraph)
     degrees = (LightGraphs.degree(g, v) for v in vs)
     vertex_pairs = collect(zip(vs, degrees))
     sort!(vertex_pairs, by = p -> p[2], rev = true)
-    [v[1] for v in vertex_pairs]
+    return [v[1] for v in vertex_pairs]
 end
 
 """

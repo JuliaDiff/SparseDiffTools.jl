@@ -15,8 +15,8 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
     #F is the coloring of vertices, 0 means uncolored
     #Fopt is the optimal coloring of the graph
-    F = zeros(Int, v)
-    Fopt= zeros(Int, v)
+    F = zeros(Integer, v)
+    Fopt= zeros(Integer, v)
 
     start = 1
 
@@ -28,14 +28,14 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
     #colors[j] = number of colors in A[0]...A[j]
     #assume colors[0] = 1
-    colors = zeros(Int, v)
+    colors = zeros(Integer, v)
 
     #set of free colors
-    U = zeros(Int, 0)
+    U = zeros(Integer, 0)
     push!(U, 1)
 
     #set of free colors of x
-    freeColors = [Vector{Int}() for _ in 1:v]
+    freeColors = [Vector{Integer}() for _ in 1:v]
     freeColors[x] = copy(U)
 
     while (start >= 1)
@@ -112,12 +112,12 @@ function sort_by_degree(g::LightGraphs.AbstractGraph)
 end
 
 """
-    uncolored_vertex_of_maximal_degree(A::Array{Int,1},F::Array{Int,1})
+    uncolored_vertex_of_maximal_degree(A::AbstractVector{<:Integer},F::AbstractVector{<:Integer})
 
 Returns an uncolored vertex from the partially
 colored graph which has the highest degree
 """
-function uncolored_vertex_of_maximal_degree(A::Array{Int,1},F::Array{Int,1})
+function uncolored_vertex_of_maximal_degree(A::AbstractVector{<:Integer},F::AbstractVector{<:Integer})
     for v in A
         if F[v] == 0
             return v
@@ -127,12 +127,12 @@ end
 
 
 """
-    free_colors(x::Int,
-                A::Array{Int,1},
-                colors::Array{Int,1},
-                F::Array{Int64,1},
+    free_colors(x::Integer,
+                A::AbstractVector{<:Integer},
+                colors::AbstractVector{<:Integer},
+                F::Array{Integer64,1},
                 g::LightGraphs.AbstractGraph,
-                opt::Int)
+                opt::Integer)
 
 Returns set of free colors of x which are less
 than optimal color number (opt)
@@ -147,15 +147,15 @@ F: F[i] stores the color of vertex i
 g: Graph to be colored
 opt: Current optimal number of colors to be used in the coloring of graph g
 """
-function free_colors(x::Int,
-                    A::Array{Int,1},
-                    colors::Array{Int,1},
-                    F::Array{Int64,1},
+function free_colors(x::Integer,
+                    A::AbstractVector{<:Integer},
+                    colors::AbstractVector{<:Integer},
+                    F::Array{Integer64,1},
                     g::LightGraphs.AbstractGraph,
-                    opt::Int)
+                    opt::Integer)
     index = -1
 
-    freecolors = zeros(Int, 0)
+    freecolors = zeros(Integer, 0)
 
     for i in eachindex(A)
         if A[i] == x
@@ -189,12 +189,12 @@ function free_colors(x::Int,
 end
 
 """
-    least_index(F::Array{Int,1}, A::Array{Int,1}, opt::Int)
+    least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, opt::Integer)
 
 Returns least index i such that color of vertex
 A[i] is equal to `opt` (optimal color number)
 """
-function least_index(F::Array{Int,1}, A::Array{Int,1}, opt::Int)
+function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, opt::Integer)
     for i in eachindex(A)
         if F[A[i]] == opt
             return i
@@ -203,29 +203,29 @@ function least_index(F::Array{Int,1}, A::Array{Int,1}, opt::Int)
 end
 
 """
-    uncolor_all(F::Array{Int,1}, A::Array{Int,1}, start::Int)
+    uncolor_all(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, start::Integer)
 
 Uncolors all vertices A[i] where i is
 greater than or equal to start
 """
-function uncolor_all!(F::Array{Int,1}, A::Array{Int,1}, start::Int)
+function uncolor_all!(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, start::Integer)
     for i = start:length(A)
         F[A[i]] = 0
     end
 end
 
 """
-    remove_higher_colors(U::Array{Int,1}, opt::Int)
+    remove_higher_colors(U::AbstractVector{<:Integer}, opt::Integer)
 
 Remove all the colors which are greater than or
 equal to the `opt` (optimal color number) from
 the set of colors U
 """
-function remove_higher_colors(U::Array{Int,1}, opt::Int)
+function remove_higher_colors(U::AbstractVector{<:Integer}, opt::Integer)
     if length(U) == 0
         return U
     end
-    u = zeros(Int, 0)
+    u = zeros(Integer, 0)
     for color in U
         if color < opt
             push!(u, color)

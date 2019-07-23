@@ -130,7 +130,7 @@ end
     free_colors(x::Integer,
                 A::AbstractVector{<:Integer},
                 colors::AbstractVector{<:Integer},
-                F::Array{Integer64,1},
+                F::Array{Integer,1},
                 g::LightGraphs.AbstractGraph,
                 opt::Integer)
 
@@ -150,7 +150,7 @@ opt: Current optimal number of colors to be used in the coloring of graph g
 function free_colors(x::Integer,
                     A::AbstractVector{<:Integer},
                     colors::AbstractVector{<:Integer},
-                    F::Array{Integer64,1},
+                    F::Array{Integer,1},
                     g::LightGraphs.AbstractGraph,
                     opt::Integer)
     index = -1

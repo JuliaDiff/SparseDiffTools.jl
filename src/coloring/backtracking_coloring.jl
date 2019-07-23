@@ -15,8 +15,8 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
     #F is the coloring of vertices, 0 means uncolored
     #Fopt is the optimal coloring of the graph
-    F = zeros(Integer, v)
-    Fopt= zeros(Integer, v)
+    F = zeros(Int, v)
+    Fopt= zeros(Int, v)
 
     start = 1
 
@@ -28,14 +28,14 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
     #colors[j] = number of colors in A[0]...A[j]
     #assume colors[0] = 1
-    colors = zeros(Integer, v)
+    colors = zeros(Int, v)
 
     #set of free colors
-    U = zeros(Integer, 0)
+    U = zeros(Int, 0)
     push!(U, 1)
 
     #set of free colors of x
-    freeColors = [Vector{Integer}() for _ in 1:v]
+    freeColors = [Vector{Int}() for _ in 1:v]
     freeColors[x] = copy(U)
 
     while (start >= 1)
@@ -155,7 +155,7 @@ function free_colors(x::Integer,
                     opt::Integer)
     index = -1
 
-    freecolors = zeros(Integer, 0)
+    freecolors = zeros(Int, 0)
 
     for i in eachindex(A)
         if A[i] == x
@@ -225,7 +225,7 @@ function remove_higher_colors(U::AbstractVector{<:Integer}, opt::Integer)
     if length(U) == 0
         return U
     end
-    u = zeros(Integer, 0)
+    u = zeros(Int, 0)
     for color in U
         if color < opt
             push!(u, color)

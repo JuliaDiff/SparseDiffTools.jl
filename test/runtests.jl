@@ -8,4 +8,3 @@ using SafeTestsets
 @time @safetestset "Integration test" begin include("test_integration.jl") end
 @time @safetestset "Special matrices" begin include("test_specialmatrices.jl") end
 @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
-@time @safetestset "Program sparsity computation" begin include("program_sparsity/testall.jl") end

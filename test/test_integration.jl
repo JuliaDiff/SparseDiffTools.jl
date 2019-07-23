@@ -1,6 +1,6 @@
 using SparseDiffTools
 using DiffEqDiffTools: finite_difference_jacobian, finite_difference_jacobian!
-using Cassette
+using SparsityDetection
 
 using LinearAlgebra, SparseArrays, Test
 

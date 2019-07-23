@@ -1,5 +1,8 @@
-using ForwardDiff, SparseDiffTools, LinearAlgebra, DiffEqDiffTools,
-      IterativeSolvers, Test
+using SparseDiffTools, ForwardDiff, DiffEqDiffTools, Zygote, IterativeSolvers
+using LinearAlgebra, Test
+
+using Random
+Random.seed!(123)
 
 const A = rand(300,300)
 f(du,u) = mul!(du,A,u)

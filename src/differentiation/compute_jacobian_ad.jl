@@ -46,7 +46,7 @@ end
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
 function generate_chunked_partials(x,color,::Val{chunksize}) where chunksize
 
-    num_of_chunks = Int64(ceil(maximum(color) / chunksize))
+    num_of_chunks = Int(ceil(maximum(color) / chunksize))
 
     padding_size = (chunksize - (maximum(color) % chunksize)) % chunksize
 

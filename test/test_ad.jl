@@ -1,5 +1,6 @@
-using SparseDiffTools, SparseArrays, Test
+using SparseDiffTools
 using ForwardDiff: Dual, jacobian
+using SparseArrays, Test
 
 fcalls = 0
 function f(dx,x)

@@ -8,7 +8,7 @@ function color_graph(G::VSafeGraph,::ContractionColor)
 
     colornumber = 0
     V = nv(G)
-    colors = zeros(Int64,V)
+    colors = zeros(Int,V)
 
     while (V > 0)
         x = max_degree_vertex(G)
@@ -47,7 +47,7 @@ end
 Find the vertex in the group nn of vertices belonging to the
 graph G which has the highest degree.
 """
-function max_degree_vertex(G::VSafeGraph,nn::Array{Int64,1})
+function max_degree_vertex(G::VSafeGraph,nn::Array{Int,1})
 
     max_degree = -1
     max_degree_vertex = -1
@@ -90,9 +90,9 @@ end
 Find the set of vertices belonging to the graph G which do
 not share an edge with the vertex x.
 """
-function non_neighbors(G::VSafeGraph, x::Int64)
+function non_neighbors(G::VSafeGraph, x::Int)
 
-    nn = zeros(Int64, 0)
+    nn = zeros(Int, 0)
     for v in vertices(G)
         if v == x
             continue
@@ -112,7 +112,7 @@ end
 Find the number of vertices that share an edge with both the
 vertices z and x belonging to the graph G.
 """
-function length_common_neighbor(G::VSafeGraph,z::Int64, x::Int64)
+function length_common_neighbor(G::VSafeGraph,z::Int, x::Int)
 
     z_neighbors = inneighbors(G,z)
     x_neighbors = inneighbors(G,x)
@@ -133,7 +133,7 @@ end
 
 Find the degree of the vertex z which belongs to the graph G.
 """
-function vertex_degree(G::VSafeGraph,z::Int64)
+function vertex_degree(G::VSafeGraph,z::Int)
 
     return length(inneighbors(G,z))
 
@@ -147,7 +147,7 @@ Contract the vertex y to x, both of which belong to graph G, that is
 delete vertex y and join x with the neighbors of y if they are not
 already connected with an edge.
 """
-function contract!(G::VSafeGraph,y::Int64, x::Int64)
+function contract!(G::VSafeGraph,y::Int, x::Int)
 
     for v in inneighbors(G,y)
         if has_edge(G,v,x) == false

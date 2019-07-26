@@ -10,6 +10,7 @@ using VertexSafeGraphs
 
 using LinearAlgebra
 using SparseArrays
+using ArrayInterface
 
 using BlockBandedMatrices: blocksize, nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD

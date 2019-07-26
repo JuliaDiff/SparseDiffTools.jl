@@ -1,6 +1,7 @@
 using SparseDiffTools
 using ForwardDiff: Dual, jacobian
 using SparseArrays, Test
+using LinearAlgebra
 
 fcalls = 0
 function f(dx,x)
@@ -56,3 +57,7 @@ jac_cache = ForwardColorJacCache(f,x,color = repeat(1:3,10), sparsity = _J1)
 forwarddiff_color_jacobian!(_denseJ1, f, x, jac_cache)
 @test _denseJ1 ≈ J
 @test fcalls == 1
+
+_Jt = similar(Tridiagonal(J))
+forwarddiff_color_jacobian!(_Jt, f, x, color = repeat(1:3,10), sparsity = _Jt)
+@test _Jt ≈ J

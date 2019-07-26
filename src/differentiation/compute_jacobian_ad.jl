@@ -21,7 +21,7 @@ getsize(N::Integer) = N
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
                               color=1:length(x),
-                              sparsity::Union{SparseMatrixCSC,Nothing}=nothing)
+                              sparsity::Union{AbstractArray,Nothing}=nothing)
 
     if _chunksize === nothing
         chunksize = default_chunk_size(maximum(color))
@@ -103,8 +103,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if sparsity isa SparseMatrixCSC
-            rows_index, cols_index, val = findnz(sparsity)
+        if has_sparsestruct(sparsity)
+            rows_index, cols_index = findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 for k in 1:length(cols_index)

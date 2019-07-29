@@ -81,7 +81,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 x::AbstractArray{<:Number};
                 dx = nothing,
                 color = eachindex(x),
-                sparsity = has_sparsestruct(J) ? J : nothing)
+                sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color,sparsity=sparsity))
 end
 
@@ -103,8 +103,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if has_sparsestruct(sparsity)
-            rows_index, cols_index = findstructralnz(sparsity)
+        if ArrayInterface.has_sparsestruct(sparsity)
+            rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 for k in 1:length(cols_index)

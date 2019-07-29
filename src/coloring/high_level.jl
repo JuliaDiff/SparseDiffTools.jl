@@ -4,6 +4,7 @@ struct BacktrackingColor <: ColoringAlgorithm end
 struct ContractionColor <: ColoringAlgorithm end
 struct GreedyStar1Color <: ColoringAlgorithm end
 struct GreedyStar2Color <: ColoringAlgorithm end
+struct AcyclicColoring <: ColoringAlgorithm end
 
 """
     matrix_colors(A,alg::ColoringAlgorithm = GreedyD1Color())

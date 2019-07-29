@@ -17,6 +17,7 @@ ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 
 [compat]
 julia = "1"
+ArrayInterface = "1"
 
 [extras]
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"

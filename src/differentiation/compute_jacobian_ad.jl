@@ -98,7 +98,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     color_i = 1
     chunksize = length(first(first(jac_cache.p)))
-    fill!(J,zero(eltype(J)))
+    fill!(J, zero(eltype(J)))
 
     for i in 1:length(p)
         partial_i = p[i]

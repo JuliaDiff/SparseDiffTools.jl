@@ -100,7 +100,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     chunksize = length(first(first(jac_cache.p)))
     fill!(J, zero(eltype(J)))
 
-    for i in 1:length(p)
+    for i in eachindex(p)
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)

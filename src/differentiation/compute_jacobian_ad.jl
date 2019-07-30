@@ -109,12 +109,12 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 if ArrayInterface.fast_scalar_indexing(x1)
-                    for j in 1:length(cols_index)
-                        if color[cols_index[j]] == color_i
+                    for k in eachindex(cols_index)
+                        if color[cols_index[k]] == color_i
                             if J isa SparseMatrixCSC
-                                J.nzval[j] = dx[rows_index[j]]
+                                J.nzval[k] = dx[rows_index[k]]
                             else
-                                J[rows_index[j],cols_index[j]] = dx[rows_index[j]]
+                                J[rows_index[k],cols_index[k]] = dx[rows_index[k]]
                             end
                         end
                     end

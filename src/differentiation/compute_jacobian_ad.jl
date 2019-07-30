@@ -108,20 +108,29 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
-                #=
-                for k in 1:length(cols_index)
-                    if color[cols_index[k]] == color_i
-                        J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
+                if ArrayInterface.fast_scalar_indexing(x1)
+                    for i in 1:length(cols_index)
+                        if color[cols_index[i]] == color_i
+                            if J isa SparseMatrixCSC
+                                J.nzval[i] = dx[rows_index[i]]
+                            else
+                                J[rows_index[i],cols_index[i]] = dx[rows_index[i]]
+                            end
+                        end
+                    end
+                else
+                    #=
+                    J.nzval[rows_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+                    or
+                    J[rows_index, cols_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+                    += means requires a zero'd out start
+                    =#
+                    if J isa SparseMatrixCSC
+                        @.. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
+                    else
+                        @.. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                     end
                 end
-
-                or
-
-                J[rows_index, cols_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
-
-                += means requires a zero'd out start
-                =#
-                @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                 color_i += 1
                 (color_i > maximum(color)) && continue
             end

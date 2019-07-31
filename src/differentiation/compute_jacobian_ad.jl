@@ -126,9 +126,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     += means requires a zero'd out start
                     =#
                     if J isa SparseMatrixCSC
-                        @.. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
+                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
                     else
-                        @.. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
+                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1

@@ -5,6 +5,7 @@ struct ForwardColorJacCache{T,T2,T3,T4,T5,T6}
     p::T4
     color::T5
     sparsity::T6
+    chunksize::Int
 end
 
 function default_chunk_size(maxcolor)
@@ -29,18 +30,19 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    t = zeros(Dual{typeof(f), eltype(x), getsize(chunksize)},length(x))
+    p = adapt.(typeof(x),generate_chunked_partials(x,color,chunksize))
+    t = Dual{typeof(f)}.(x,first(p))
 
     if dx === nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        fx = zeros(Dual{typeof(f), eltype(dx), getsize(chunksize)},length(dx))
+        fx = Dual{typeof(f)}.(dx,first(p))
         _dx = dx
     end
 
-    p = generate_chunked_partials(x,color,chunksize)
-    ForwardColorJacCache(t,fx,_dx,p,color,sparsity)
+
+    ForwardColorJacCache(t,fx,_dx,p,color,sparsity,getsize(chunksize))
 end
 
 generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
@@ -96,8 +98,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     p = jac_cache.p
     color = jac_cache.color
     sparsity = jac_cache.sparsity
+    chunksize = jac_cache.chunksize
     color_i = 1
-    chunksize = length(first(first(jac_cache.p)))
     fill!(J, zero(eltype(J)))
 
     for i in eachindex(p)

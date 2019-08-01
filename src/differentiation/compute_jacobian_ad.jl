@@ -21,7 +21,7 @@ getsize(N::Integer) = N
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
                               color=1:length(x),
-                              sparsity::Union{SparseMatrixCSC,Nothing}=nothing)
+                              sparsity::Union{AbstractArray,Nothing}=nothing)
 
     if _chunksize === nothing
         chunksize = default_chunk_size(maximum(color))
@@ -81,7 +81,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 x::AbstractArray{<:Number};
                 dx = nothing,
                 color = eachindex(x),
-                sparsity = J isa SparseMatrixCSC ? J : nothing)
+                sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color,sparsity=sparsity))
 end
 
@@ -98,18 +98,37 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     color_i = 1
     chunksize = length(first(first(jac_cache.p)))
+    fill!(J, zero(eltype(J)))
 
-    for i in 1:length(p)
+    for i in eachindex(p)
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if sparsity isa SparseMatrixCSC
-            rows_index, cols_index, val = findnz(sparsity)
+        if ArrayInterface.has_sparsestruct(sparsity)
+            rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
-                for k in 1:length(cols_index)
-                    if color[cols_index[k]] == color_i
-                        J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
+                if ArrayInterface.fast_scalar_indexing(dx)
+                    for k in 1:length(cols_index)
+                        if color[cols_index[k]] == color_i
+                            if J isa SparseMatrixCSC
+                                J.nzval[k] = dx[rows_index[k]]
+                            else
+                                J[rows_index[k],cols_index[k]] = dx[rows_index[k]]
+                            end
+                        end
+                    end
+                else
+                    #=
+                    J.nzval[rows_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+                    or
+                    J[rows_index, cols_index] .+= (color[cols_index] .== color_i) .* dx[rows_index]
+                    += means requires a zero'd out start
+                    =#
+                    if J isa SparseMatrixCSC
+                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
+                    else
+                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((color,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1

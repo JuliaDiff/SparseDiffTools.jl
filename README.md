@@ -93,6 +93,9 @@ gmres!(res,J,v)
 
 ### Matrix Coloring
 
+This library extends the common `ArrayInterface.matrix_colors` function to allow
+for coloring sparse matrices using graphical techniques.
+
 Matrix coloring allows you to reduce the number of times finite differencing
 requires an `f` call to `maximum(colors)+1`, or reduces automatic differentiation
 to using `maximum(colors)` partials. Since normally these values are `length(x)`,
@@ -101,7 +104,8 @@ this can be significant savings.
 The API for computing the color vector is:
 
 ```julia
-matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
+matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color();
+              partition_by_rows::Bool = false)
 ```
 
 The first argument is the abstract matrix which represents the sparsity pattern

@@ -7,6 +7,7 @@ using ForwardDiff
 using LightGraphs
 using Requires
 using VertexSafeGraphs
+using Adapt
 
 using LinearAlgebra
 using SparseArrays, ArrayInterface

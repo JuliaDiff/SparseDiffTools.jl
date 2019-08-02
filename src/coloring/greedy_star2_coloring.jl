@@ -26,32 +26,32 @@
 """
 function color_graph(g::LightGraphs.AbstractGraph, :: GreedyStar2Color)
     v = nv(g)
-    color = zeros(Int, v)
+    colorvec = zeros(Int, v)
 
     forbidden_colors = zeros(Int, v+1)
 
     for vertex_i = vertices(g)
 
         for w in inneighbors(g, vertex_i)
-            if color[w] != 0
-                forbidden_colors[color[w]] = vertex_i
+            if colorvec[w] != 0
+                forbidden_colors[colorvec[w]] = vertex_i
             end
 
             for x in inneighbors(g, w)
-                if color[x] != 0
-                    if color[w] == 0
-                        forbidden_colors[color[x]] = vertex_i
+                if colorvec[x] != 0
+                    if colorvec[w] == 0
+                        forbidden_colors[colorvec[x]] = vertex_i
                     else
-                        if color[x] < color[w]
-                            forbidden_colors[color[x]] = vertex_i
+                        if colorvec[x] < colorvec[w]
+                            forbidden_colors[colorvec[x]] = vertex_i
                         end
                     end
                 end
             end
         end
 
-        color[vertex_i] = find_min_color(forbidden_colors, vertex_i)
+        colorvec[vertex_i] = find_min_color(forbidden_colors, vertex_i)
     end
 
-    color
+    colorvec
 end

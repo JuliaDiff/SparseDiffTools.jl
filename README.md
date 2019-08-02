@@ -44,7 +44,7 @@ sparsity_pattern = sparsity!(f,output,input)
 jac = Float64.(sparse(sparsity_pattern))
 ```
 
-Now we call `matrix_colors` to get the color vector for that matrix:
+Now we call `matrix_colors` to get the colorvec vector for that matrix:
 
 ```julia
 colors = matrix_colors(jac)
@@ -54,14 +54,14 @@ Since `maximum(colors)` is 3, this means that finite differencing can now
 compute the Jacobian in just 4 `f`-evaluations:
 
 ```julia
-DiffEqDiffTools.finite_difference_jacobian!(jac, f, rand(30), color=colors)
+DiffEqDiffTools.finite_difference_jacobian!(jac, f, rand(30), colorvec=colors)
 @show fcalls # 4
 ```
 
 In addition, a faster forward-mode autodiff call can be utilized as well:
 
 ```julia
-forwarddiff_color_jacobian!(jac, f, x, color = colors)
+forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)
 ```
 
 If one only need to compute products, one can use the operators. For example,
@@ -102,7 +102,7 @@ requires an `f` call to `maximum(colors)+1`, or reduces automatic differentiatio
 to using `maximum(colors)` partials. Since normally these values are `length(x)`,
 this can be significant savings.
 
-The API for computing the color vector is:
+The API for computing the colorvec vector is:
 
 ```julia
 matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color();
@@ -113,23 +113,23 @@ The first argument is the abstract matrix which represents the sparsity pattern
 of the Jacobian. The second argument is the optional choice of coloring algorithm.
 It will default to a greedy distance 1 coloring, though if your special matrix
 type has more information, like is a `Tridiagonal` or `BlockBandedMatrix`, the
-color vector will be analytically calculated instead. The keyword argument
+colorvec vector will be analytically calculated instead. The keyword argument
 `partition_by_rows` allows you to partition the Jacobian on the basis of rows instead
 of columns and generate a corresponding coloring vector which can be used for
 reverse-mode AD. Default value is false.
 
-The result is a vector which assigns a color to each column (or row) of the matrix.
+The result is a vector which assigns a colorvec to each column (or row) of the matrix.
 
-### Color-Assisted Differentiation
+### Colorvec-Assisted Differentiation
 
-Color-assisted differentiation for numerical differentiation is provided by
+Colorvec-assisted differentiation for numerical differentiation is provided by
 DiffEqDiffTools.jl and for automatic differentiation is provided by
 ForwardDiff.jl.
 
-For DiffEqDiffTools.jl, one simply has to use the provided `color` keyword
+For DiffEqDiffTools.jl, one simply has to use the provided `colorvec` keyword
 argument. See [the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiffEq/DiffEqDiffTools.jl#jacobians) for more details.
 
-For forward-mode automatic differentiation, use of a color vector is provided
+For forward-mode automatic differentiation, use of a colorvec vector is provided
 by the following function:
 
 ```julia
@@ -137,7 +137,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             f,
                             x::AbstractArray{<:Number};
                             dx = nothing,
-                            color = eachindex(x),
+                            colorvec = eachindex(x),
                             sparsity = nothing)
 ```
 
@@ -147,7 +147,7 @@ cache, construct the cache in advance:
 ```julia
 ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
-                              color=1:length(x),
+                              colorvec=1:length(x),
                               sparsity = nothing)
 ```
 

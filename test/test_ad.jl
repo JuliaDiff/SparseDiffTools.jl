@@ -33,12 +33,12 @@ _J = sparse(J)
 
 fcalls = 0
 _J1 = similar(_J)
-forwarddiff_color_jacobian!(_J1, f, x, color = repeat(1:3,10))
+forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3,10))
 @test _J1 ≈ J
 @test fcalls == 1
 
 fcalls = 0
-jac_cache = ForwardColorJacCache(f,x,color = repeat(1:3,10), sparsity = _J1)
+jac_cache = ForwardColorJacCache(f,x,colorvec = repeat(1:3,10), sparsity = _J1)
 forwarddiff_color_jacobian!(_J1, f, x, jac_cache)
 @test _J1 ≈ J
 @test fcalls == 1
@@ -46,18 +46,18 @@ forwarddiff_color_jacobian!(_J1, f, x, jac_cache)
 fcalls = 0
 _J1 = similar(_J)
 _denseJ1 = collect(_J1)
-forwarddiff_color_jacobian!(_denseJ1, f, x, color = repeat(1:3,10), sparsity = _J1)
+forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _J1)
 @test _denseJ1 ≈ J
 @test fcalls == 1
 
 fcalls = 0
 _J1 = similar(_J)
 _denseJ1 = collect(_J1)
-jac_cache = ForwardColorJacCache(f,x,color = repeat(1:3,10), sparsity = _J1)
+jac_cache = ForwardColorJacCache(f,x,colorvec = repeat(1:3,10), sparsity = _J1)
 forwarddiff_color_jacobian!(_denseJ1, f, x, jac_cache)
 @test _denseJ1 ≈ J
 @test fcalls == 1
 
 _Jt = similar(Tridiagonal(J))
-forwarddiff_color_jacobian!(_Jt, f, x, color = repeat(1:3,10), sparsity = _Jt)
+forwarddiff_color_jacobian!(_Jt, f, x, colorvec = repeat(1:3,10), sparsity = _Jt)
 @test _Jt ≈ J

@@ -9,6 +9,8 @@ corresponds to a distance-1 coloring, and (2) vertices in every cycle of the
 graph are assigned at least three distinct colors. This variant of coloring is 
 called acyclic since every subgraph induced by vertices assigned any two colors
 is a collection of trees—and hence is acyclic.
+
+Reference: Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 """
 function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
     
@@ -178,8 +180,9 @@ Returns an edge object of the type LightGraphs.Edge which represents the
 edge connecting vertices v and w of the undirected graph g
 """
 function find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
-    for e in edges(g)
-        if (src(e) == v && dst(e) == w)
+    for v1 in outneighbors(g, v)
+        if v1 == w
+            e = LightGraphs.SimpleGraphs.SimpleEdge(v, w)
             return e
         end
     end

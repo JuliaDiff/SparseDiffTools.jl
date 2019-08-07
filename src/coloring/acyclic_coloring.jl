@@ -2,7 +2,7 @@ using LightGraphs
 using DataStructures
 
 """
-        color_graph(g::LightGraphs.AbstractGraphs, :: AcyclicColoring)
+        color_graph(g::LightGraphs.AbstractGraphs, ::AcyclicColoring)
 
 Returns a coloring vector following the acyclic coloring rules (1) the coloring 
 corresponds to a distance-1 coloring, and (2) vertices in every cycle of the 
@@ -10,7 +10,7 @@ graph are assigned at least three distinct colors. This variant of coloring is
 called acyclic since every subgraph induced by vertices assigned any two colors
 is a collection of trees—and hence is acyclic.
 """
-function color_graph(g::LightGraphs.AbstractGraphs, ::AcyclicColoring)
+function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
     
     color = zeros(Int, nv(g))
     forbiddenColors = zeros(Int, nv(g))
@@ -55,7 +55,7 @@ function color_graph(g::LightGraphs.AbstractGraphs, ::AcyclicColoring)
                 for x in outneighbors(g, w)
                     if color[x] != 0 && x != v
                         if color[x] == color[v]
-                            mergeTrees(v, w, x, g, set)
+                            merge_trees(v, w, x, g, set)
                         end
                     end
                 end
@@ -67,17 +67,27 @@ function color_graph(g::LightGraphs.AbstractGraphs, ::AcyclicColoring)
 end
 
 """
-        prevent_cycle()
+        prevent_cycle(v::Integer,
+                    w::Integer, 
+                    x::Integer,
+                    g::LightGraphs.AbstractGraph,
+                    color::AbstractVector{<:Integer}, 
+                    forbiddenColors::AbstractVector{<:Integer},
+                    firstVisitToTree::Array{Tuple{Integer, Integer}, 1},
+                    set::DisjointSets{LightGraphs.Edge})
 
+Subroutine to avoid generation of 2-colored cycle due to coloring of vertex v,
+which is adjacent to vertices w and x in graph g. Disjoint set is used to store
+the induced 2-colored subgraphs/trees where the id of set is a key edge of g
 """
 function prevent_cycle(v::Integer,
                        w::Integer, 
                        x::Integer,
-                       g,
-                       color, 
+                       g::LightGraphs.AbstractGraph,
+                       color::AbstractVector{<:Integer}, 
                        forbiddenColors::AbstractVector{<:Integer},
-                       firstVisitToTree,
-                       set)
+                       firstVisitToTree::Array{Tuple{Integer, Integer}, 1},
+                       set::DisjointSets{LightGraphs.Edge})
     
     edge = find_edge(g, w, x)
     e = find_root(set, edge)
@@ -94,7 +104,8 @@ end
 
 Returns min{i > 0 such that forbiddenColors[i] != v}
 """            
-function min_index(forbiddenColors, v)
+function min_index(forbiddenColors::AbstractVector{<:Integer},
+                   v::Integer)
     for i = 1:length(forbiddenColors)
         if forbiddenColors[i] != v
             return i
@@ -102,11 +113,24 @@ function min_index(forbiddenColors, v)
     end
 end
 
+
+"""
+        grow_star(v::Integer,
+                w::Integer,
+                g::LightGraphs.AbstractGraph,
+                firstNeighbor::Array{Tuple{Integer, Integer}, 1},
+                set::DisjointSets{LightGraphs.Edge})
+
+Subroutine to grow a 2-colored star after assigning a new color to the 
+previously uncolored vertex v, by comparing it with the adjacent vertex w.
+Disjoint set is used to store stars in sets, which are identified through key
+edges present in g. 
+"""
 function grow_star(v::Integer,
-                  w::Integer,
-                  g,
-                  firstNeighbor,
-                  set)
+                   w::Integer,
+                   g::LightGraphs.AbstractGraph,
+                   firstNeighbor::Array{Tuple{Integer, Integer}, 1},
+                   set::DisjointSets{LightGraphs.Edge})
     edge = find_edge(g, v, w)
     push!(set, edge)
     p, q = firstNeighbor[color[w]]
@@ -121,11 +145,22 @@ function grow_star(v::Integer,
     end
 end
 
-function mergeTrees(v::Integer,
+
+"""
+        merge_trees(v::Integer,
+                w::Integer, 
+                x::Integer,
+                g::LightGraphs.AbstractGraph,
+                set::DisjointSets{LightGraphs.Edge})
+
+Subroutine to merge trees present in the disjoint set which have a
+common edge.
+"""
+function merge_trees(v::Integer,
                     w::Integer, 
                     x::Integer,
-                    g,
-                    set)
+                    g::LightGraphs.AbstractGraph,
+                    set::DisjointSets{LightGraphs.Edge})
     edge1 = find_edge(g, v, w)
     edge2 = find_edge(g, w, x)
     e1 = find_root(set, edge1)
@@ -135,7 +170,14 @@ function mergeTrees(v::Integer,
     end
 end
 
-function find_edge(g, v, w)
+
+"""
+        find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
+
+Returns an edge object of the type LightGraphs.Edge which represents the 
+edge connecting vertices v and w of the undirected graph g
+"""
+function find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
     for e in edges(g)
         if (src(e) == v && dst(e) == w)
             return e
@@ -144,7 +186,14 @@ function find_edge(g, v, w)
     throw(error("$v and $w are not connected in graph g"))
 end
 
-function edge_index(g, e)
+"""
+        edge_index(g::LightGraphs.AbstractGraph, e::LightGraphs.Edge)
+
+Returns an Integer value which uniquely identifies the edge e in graph
+g. Used as an index in main function to avoid custom arrays with non-
+numerical indices.
+"""
+function edge_index(g::LightGraphs.AbstractGraph, e::LightGraphs.Edge)
     edge_list = collect(edges(g))
     for i in 1:length(edge_list)
         if edge_list[i] == e

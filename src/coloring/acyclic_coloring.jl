@@ -178,8 +178,9 @@ Returns an edge object of the type LightGraphs.Edge which represents the
 edge connecting vertices v and w of the undirected graph g
 """
 function find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
-    for e in edges(g)
-        if (src(e) == v && dst(e) == w)
+    for v1 in outneighbors(g, v)
+        if v1 == w
+            e = LightGraphs.SimpleGraphs.SimpleEdge(v, w)
             return e
         end
     end

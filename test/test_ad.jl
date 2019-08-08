@@ -2,6 +2,7 @@ using SparseDiffTools
 using ForwardDiff: Dual, jacobian
 using SparseArrays, Test
 using LinearAlgebra
+using BlockBandedMatrices
 
 fcalls = 0
 function f(dx,x)
@@ -61,3 +62,22 @@ forwarddiff_color_jacobian!(_denseJ1, f, x, jac_cache)
 _Jt = similar(Tridiagonal(J))
 forwarddiff_color_jacobian!(_Jt, f, x, colorvec = repeat(1:3,10), sparsity = _Jt)
 @test _Jt ≈ J
+
+#https://github.com/JuliaDiffEq/DiffEqDiffTools.jl/issues/67#issuecomment-516871956
+function f(out, x)
+	x = reshape(x, 100, 100)
+	out = reshape(out, 100, 100)
+	for i in 1:100
+		for j in 1:100
+			out[i, j] = x[i, j] + x[max(i -1, 1), j] + x[min(i+1, size(x, 1)), j] +  x[i, max(j-1, 1)]  + x[i, min(j+1, size(x, 2))]
+		end
+	end
+	return vec(out)
+end
+x = rand(10000)
+J = BandedBlockBandedMatrix(Ones(10000, 10000), (fill(100, 100), fill(100, 100)), (1, 1), (1, 1))
+Jsparse = sparse(J)
+colors = matrix_colors(J)
+forwarddiff_color_jacobian!(J, f, x, colorvec=colors)
+forwarddiff_color_jacobian!(Jsparse, f, x, colorvec=colors)
+@test J ≈ Jsparse

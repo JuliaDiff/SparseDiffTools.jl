@@ -102,24 +102,24 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     color_i = 1
     fill!(J, zero(eltype(J)))
 
+    if DiffEqDiffTools._use_findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+    else
+        rows_index = nothing
+        cols_index = nothing
+    end
+
+    ncols=size(J,2)
+
     for i in eachindex(p)
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if ArrayInterface.has_sparsestruct(sparsity)
-            rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        if !(sparsity isa Nothing)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 if ArrayInterface.fast_scalar_indexing(dx)
-                    for k in 1:length(cols_index)
-                        if colorvec[cols_index[k]] == color_i
-                            if J isa SparseMatrixCSC
-                                J.nzval[k] = dx[rows_index[k]]
-                            else
-                                J[rows_index[k],cols_index[k]] = dx[rows_index[k]]
-                            end
-                        end
-                    end
+                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,dx,colorvec,color_i,ncols)
                 else
                     #=
                     J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
@@ -134,12 +134,12 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     end
                 end
                 color_i += 1
-                (color_i > maximum(colorvec)) && continue
+                (color_i > maximum(colorvec)) && return
             end
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                (col_index > maximum(colorvec)) && continue
+                (col_index > maximum(colorvec)) && return
                 J[:, col_index] .= partials.(fx, j)
             end
         end

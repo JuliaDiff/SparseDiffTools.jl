@@ -56,7 +56,6 @@ colors.
 
 gx = SimpleGraph(13)
 
-
 add_edge!(gx,1,2)
 add_edge!(gx,1,5)
 add_edge!(gx,1,6)
@@ -79,10 +78,8 @@ add_edge!(gx,10,11)
 add_edge!(gx,10,12)
 add_edge!(gx,12,13)
 
-
 push!(test_graphs, gx)
 
-#begin testing
 for i in 1:6
     g = test_graphs[i]
 
@@ -95,4 +92,6 @@ for i in 1:6
             @test out_colors[j] != color
         end
     end
+
+    #TODO: Add tests for condition 2 of acyclic coloring
 end

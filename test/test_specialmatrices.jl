@@ -41,8 +41,8 @@ bandedblockbanded3 = BandedBlockBandedMatrix(Zeros(2 * 4 , 2 * 4), ([4, 4] ,[4, 
 function _testvalidity(A)
     colorvec=matrix_colors(A)
     ncolor=maximum(colorvec)
-    for color in 1:ncolor
-        subA=A[:,findall(x->x==color,colorvec)]
+    for colorvec in 1:ncolor
+        subA=A[:,findall(x->x==colorvec,colorvec)]
         @test maximum(sum(subA,dims=2))<=1.0
     end
 end

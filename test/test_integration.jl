@@ -39,13 +39,13 @@ J = finite_difference_jacobian(f, rand(30))
 #Jacobian computed with coloring vectors
 fcalls = 0
 _J = similar(true_jac)
-finite_difference_jacobian!(_J, f, rand(30), color = colors)
+finite_difference_jacobian!(_J, f, rand(30), colorvec = colors)
 @test fcalls == 4
 @test _J ≈ J
 
 fcalls = 0
 _J = similar(true_jac)
 _denseJ = collect(_J)
-finite_difference_jacobian!(_denseJ, f, rand(30), color = colors, sparsity=_J)
+finite_difference_jacobian!(_denseJ, f, rand(30), colorvec = colors, sparsity=_J)
 @test fcalls == 4
 @test _denseJ ≈ J

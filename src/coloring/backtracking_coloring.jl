@@ -20,7 +20,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
     start = 1
 
-    #optimal color number
+    #optimal chromatic number
     opt = v + 1
 
     #current vertex to be colored
@@ -135,7 +135,7 @@ end
                 opt::Integer)
 
 Returns set of free colors of x which are less
-than optimal color number (opt)
+than optimal chromatic number (opt)
 
 Arguments:
 
@@ -192,7 +192,7 @@ end
     least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, opt::Integer)
 
 Returns least index i such that color of vertex
-A[i] is equal to `opt` (optimal color number)
+A[i] is equal to `opt` (optimal chromatic number)
 """
 function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, opt::Integer)
     for i in eachindex(A)
@@ -218,7 +218,7 @@ end
     remove_higher_colors(U::AbstractVector{<:Integer}, opt::Integer)
 
 Remove all the colors which are greater than or
-equal to the `opt` (optimal color number) from
+equal to the `opt` (optimal chromatic number) from
 the set of colors U
 """
 function remove_higher_colors(U::AbstractVector{<:Integer}, opt::Integer)

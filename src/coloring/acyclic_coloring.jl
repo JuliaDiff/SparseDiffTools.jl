@@ -47,7 +47,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
         #grow star for every edge connecting colored vertices v and w
         for w in outneighbors(g, v)
             if color[w] != 0
-                grow_star(v, w, g, firstNeighbor, set)
+                grow_star(v, w, g, firstNeighbor, set, color)
             end
         end
 
@@ -57,7 +57,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
                 for x in outneighbors(g, w)
                     if color[x] != 0 && x != v
                         if color[x] == color[v]
-                            merge_trees(v, w, x, g, set)
+                            mergeTrees(v, w, x, g, set)
                         end
                     end
                 end
@@ -83,20 +83,20 @@ which is adjacent to vertices w and x in graph g. Disjoint set is used to store
 the induced 2-colored subgraphs/trees where the id of set is a key edge of g
 """
 function prevent_cycle(v::Integer,
-                       w::Integer, 
-                       x::Integer,
-                       g::LightGraphs.AbstractGraph,
-                       color::AbstractVector{<:Integer}, 
-                       forbiddenColors::AbstractVector{<:Integer},
-                       firstVisitToTree::Array{Tuple{Integer, Integer}, 1},
-                       set::DisjointSets{LightGraphs.Edge})
+                        w::Integer, 
+                        x::Integer,
+                        g::LightGraphs.AbstractGraph,
+                        color::AbstractVector{<:Integer}, 
+                        forbiddenColors::AbstractVector{<:Integer},
+                        firstVisitToTree::Array{Tuple{Int64, Int64}, 1},
+                        set::DisjointSets{LightGraphs.Edge})
     
     edge = find_edge(g, w, x)
     e = find_root(set, edge)
     p, q = firstVisitToTree[edge_index(g, e)]
     if p != v
         firstVisitToTree[edge_index(g, e)] = (v, w)
-    else if q != w
+    elseif q != w
         forbiddenColors[color[x]] = v
     end
 end
@@ -105,9 +105,8 @@ end
         min_index(forbiddenColors::AbstractVector{<:Integer}, v::Integer)
 
 Returns min{i > 0 such that forbiddenColors[i] != v}
-"""            
-function min_index(forbiddenColors::AbstractVector{<:Integer},
-                   v::Integer)
+"""             
+function min_index(forbiddenColors::AbstractVector{<:Integer}, v::Integer)
     for i = 1:length(forbiddenColors)
         if forbiddenColors[i] != v
             return i
@@ -115,11 +114,10 @@ function min_index(forbiddenColors::AbstractVector{<:Integer},
     end
 end
 
-
 """
         grow_star(v::Integer,
                 w::Integer,
-                g::LightGraphs.AbstractGraph,
+                g::LightGraphs.AbstractGraph
                 firstNeighbor::Array{Tuple{Integer, Integer}, 1},
                 set::DisjointSets{LightGraphs.Edge})
 
@@ -131,8 +129,9 @@ edges present in g.
 function grow_star(v::Integer,
                    w::Integer,
                    g::LightGraphs.AbstractGraph,
-                   firstNeighbor::Array{Tuple{Integer, Integer}, 1},
-                   set::DisjointSets{LightGraphs.Edge})
+                   firstNeighbor::Array{Tuple{Int64, Int64}, 1},
+                   set::DisjointSets{LightGraphs.Edge},
+                   color::AbstractVector{<: Integer})
     edge = find_edge(g, v, w)
     push!(set, edge)
     p, q = firstNeighbor[color[w]]
@@ -158,7 +157,7 @@ end
 Subroutine to merge trees present in the disjoint set which have a
 common edge.
 """
-function merge_trees(v::Integer,
+function mergeTrees(v::Integer,
                     w::Integer, 
                     x::Integer,
                     g::LightGraphs.AbstractGraph,
@@ -179,10 +178,18 @@ end
 Returns an edge object of the type LightGraphs.Edge which represents the 
 edge connecting vertices v and w of the undirected graph g
 """
+<<<<<<< HEAD
 function find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
     for v1 in outneighbors(g, v)
         if v1 == w
             e = LightGraphs.SimpleGraphs.SimpleEdge(v, w)
+=======
+function find_edge(g::LightGraphs.AbstractGraph, 
+                   v::Integer, 
+                   w::Integer)
+    for e in edges(g)
+        if (src(e) == v && dst(e) == w) || (src(e) == w && dst(e) == v)
+>>>>>>> 7e376444f74a269f101bbd6fa7a65f76c16f4e04
             return e
         end
     end
@@ -196,12 +203,14 @@ Returns an Integer value which uniquely identifies the edge e in graph
 g. Used as an index in main function to avoid custom arrays with non-
 numerical indices.
 """
-function edge_index(g::LightGraphs.AbstractGraph, e::LightGraphs.Edge)
+function edge_index(g::LightGraphs.AbstractGraph, 
+                    e::LightGraphs.Edge)
     edge_list = collect(edges(g))
     for i in 1:length(edge_list)
         if edge_list[i] == e
             return i
         end
     end
-    return -1
+    throw(error("Edge $e is not present in graph g"))
+    #return -1
 end

@@ -1,9 +1,11 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "0.6.0"
+version = "0.8.0"
 
 [deps]
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
@@ -16,6 +18,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
+ArrayInterface = "1.1"
 julia = "1"
 
 [extras]

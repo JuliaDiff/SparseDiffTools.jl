@@ -3,8 +3,9 @@ struct ForwardColorJacCache{T,T2,T3,T4,T5,T6}
     fx::T2
     dx::T3
     p::T4
-    color::T5
+    colorvec::T5
     sparsity::T6
+    chunksize::Int
 end
 
 function default_chunk_size(maxcolor)
@@ -20,44 +21,45 @@ getsize(N::Integer) = N
 
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
-                              color=1:length(x),
-                              sparsity::Union{SparseMatrixCSC,Nothing}=nothing)
+                              colorvec=1:length(x),
+                              sparsity::Union{AbstractArray,Nothing}=nothing)
 
     if _chunksize === nothing
-        chunksize = default_chunk_size(maximum(color))
+        chunksize = default_chunk_size(maximum(colorvec))
     else
         chunksize = _chunksize
     end
 
-    t = zeros(Dual{typeof(f), eltype(x), getsize(chunksize)},length(x))
+    p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
+    t = Dual{typeof(f)}.(x,first(p))
 
     if dx === nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        fx = zeros(Dual{typeof(f), eltype(dx), getsize(chunksize)},length(dx))
+        fx = Dual{typeof(f)}.(dx,first(p))
         _dx = dx
     end
 
-    p = generate_chunked_partials(x,color,chunksize)
-    ForwardColorJacCache(t,fx,_dx,p,color,sparsity)
+
+    ForwardColorJacCache(t,fx,_dx,p,colorvec,sparsity,getsize(chunksize))
 end
 
-generate_chunked_partials(x,color,N::Integer) = generate_chunked_partials(x,color,Val(N))
-function generate_chunked_partials(x,color,::Val{chunksize}) where chunksize
+generate_chunked_partials(x,colorvec,N::Integer) = generate_chunked_partials(x,colorvec,Val(N))
+function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
 
-    num_of_chunks = Int(ceil(maximum(color) / chunksize))
+    num_of_chunks = Int(ceil(maximum(colorvec) / chunksize))
 
-    padding_size = (chunksize - (maximum(color) % chunksize)) % chunksize
+    padding_size = (chunksize - (maximum(colorvec) % chunksize)) % chunksize
 
-    partials = BitMatrix(undef, length(x), maximum(color))
+    partials = BitMatrix(undef, length(x), maximum(colorvec))
     partial = BitMatrix(undef, length(x), chunksize)
     chunked_partials = Array{Array{Tuple{Vararg{Bool,chunksize}},1},1}(
                                                           undef, num_of_chunks)
 
-    for color_i in 1:maximum(color)
+    for color_i in 1:maximum(colorvec)
         for j in 1:length(x)
-            partials[j,color_i] = color[j]==color_i
+            partials[j,color_i] = colorvec[j]==color_i
         end
     end
 
@@ -80,9 +82,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 f,
                 x::AbstractArray{<:Number};
                 dx = nothing,
-                color = eachindex(x),
-                sparsity = J isa SparseMatrixCSC ? J : nothing)
-    forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,color=color,sparsity=sparsity))
+                colorvec = eachindex(x),
+                sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
+    forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
@@ -94,31 +96,50 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     fx = jac_cache.fx
     dx = jac_cache.dx
     p = jac_cache.p
-    color = jac_cache.color
+    colorvec = jac_cache.colorvec
     sparsity = jac_cache.sparsity
+    chunksize = jac_cache.chunksize
     color_i = 1
-    chunksize = length(first(first(jac_cache.p)))
+    fill!(J, zero(eltype(J)))
 
-    for i in 1:length(p)
+    for i in eachindex(p)
         partial_i = p[i]
         t .= Dual{typeof(f)}.(x, partial_i)
         f(fx,t)
-        if sparsity isa SparseMatrixCSC
-            rows_index, cols_index, val = findnz(sparsity)
+        if ArrayInterface.has_sparsestruct(sparsity)
+            rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
-                for k in 1:length(cols_index)
-                    if color[cols_index[k]] == color_i
-                        J[rows_index[k], cols_index[k]] = dx[rows_index[k]]
+                if ArrayInterface.fast_scalar_indexing(dx)
+                    for k in 1:length(cols_index)
+                        if colorvec[cols_index[k]] == color_i
+                            if J isa SparseMatrixCSC
+                                J.nzval[k] = dx[rows_index[k]]
+                            else
+                                J[rows_index[k],cols_index[k]] = dx[rows_index[k]]
+                            end
+                        end
+                    end
+                else
+                    #=
+                    J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
+                    or
+                    J[rows_index, cols_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
+                    += means requires a zero'd out start
+                    =#
+                    if J isa SparseMatrixCSC
+                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
+                    else
+                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1
-                (color_i > maximum(color)) && continue
+                (color_i > maximum(colorvec)) && continue
             end
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                (col_index > maximum(color)) && continue
+                (col_index > maximum(colorvec)) && continue
                 J[:, col_index] .= partials.(fx, j)
             end
         end

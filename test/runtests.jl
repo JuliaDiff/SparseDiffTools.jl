@@ -8,6 +8,7 @@ if GROUP == "All"
     @time @safetestset "Exact coloring via contraction" begin include("test_contraction.jl") end
     @time @safetestset "Greedy distance-1 coloring" begin include("test_greedy_d1.jl") end
     @time @safetestset "Greedy star coloring" begin include("test_greedy_star.jl") end
+    @time @safetestset "Acyclic coloring" begin include("test_acyclic.jl") end
     @time @safetestset "Matrix to graph conversion" begin include("test_matrix2graph.jl") end
     @time @safetestset "AD using colorvec vector" begin include("test_ad.jl") end
     @time @safetestset "Integration test" begin include("test_integration.jl") end

@@ -88,7 +88,7 @@ function prevent_cycle(v::Integer,
                         g::LightGraphs.AbstractGraph,
                         color::AbstractVector{<:Integer}, 
                         forbiddenColors::AbstractVector{<:Integer},
-                        firstVisitToTree::Array{Tuple{Int64, Int64}, 1},
+                        firstVisitToTree::AbstractArray{<: Tuple{Integer, Integer}, 1},
                         set::DisjointSets{LightGraphs.Edge})
     
     edge = find_edge(g, w, x)
@@ -129,7 +129,7 @@ edges present in g.
 function grow_star(v::Integer,
                    w::Integer,
                    g::LightGraphs.AbstractGraph,
-                   firstNeighbor::Array{Tuple{Int64, Int64}, 1},
+                   firstNeighbor::AbstractArray{<: Tuple{Integer, Integer}, 1},
                    set::DisjointSets{LightGraphs.Edge},
                    color::AbstractVector{<: Integer})
     edge = find_edge(g, v, w)
@@ -178,18 +178,11 @@ end
 Returns an edge object of the type LightGraphs.Edge which represents the 
 edge connecting vertices v and w of the undirected graph g
 """
-<<<<<<< HEAD
-function find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
-    for v1 in outneighbors(g, v)
-        if v1 == w
-            e = LightGraphs.SimpleGraphs.SimpleEdge(v, w)
-=======
 function find_edge(g::LightGraphs.AbstractGraph, 
                    v::Integer, 
                    w::Integer)
     for e in edges(g)
         if (src(e) == v && dst(e) == w) || (src(e) == w && dst(e) == v)
->>>>>>> 7e376444f74a269f101bbd6fa7a65f76c16f4e04
             return e
         end
     end

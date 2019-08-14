@@ -186,7 +186,7 @@ function find_edge(g::LightGraphs.AbstractGraph,
             return e
         end
     end
-    throw(error("$v and $w are not connected in graph g"))
+    throw(ArgumentError("$v and $w are not connected in graph g"))
 end
 
 """

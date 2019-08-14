@@ -14,6 +14,7 @@ using SparseArrays, ArrayInterface
 
 using BlockBandedMatrices: blocksize, nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
+using DataStructures: DisjointSets, find_root, union, merge
 
 using ArrayInterface: matrix_colors
 

@@ -17,5 +17,5 @@ struct AcyclicColoring <: SparseDiffToolsColoringAlgorithm end
 function ArrayInterface.matrix_colors(A::AbstractMatrix,alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
     A_graph = matrix2graph(_A, partition_by_rows)
-    color_graph(A_graph,alg)
+    return color_graph(A_graph, alg)
 end

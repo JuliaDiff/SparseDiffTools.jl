@@ -157,7 +157,7 @@ end
 Subroutine to merge trees present in the disjoint set which have a
 common edge.
 """
-function mergeTrees(v::Integer,
+function merge_trees(v::Integer,
                     w::Integer, 
                     x::Integer,
                     g::LightGraphs.AbstractGraph,

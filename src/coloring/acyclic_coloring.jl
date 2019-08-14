@@ -107,7 +107,7 @@ end
 Returns min{i > 0 such that forbiddenColors[i] != v}
 """             
 function min_index(forbiddenColors::AbstractVector{<:Integer}, v::Integer)
-    for i = 1:length(forbiddenColors)
+    for i in eachindex(forbiddenColors)
         if forbiddenColors[i] != v
             return i
         end

@@ -16,8 +16,8 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
 
     set = DisjointSets{LightGraphs.Edge}([])
 
-    firstVisitToTree = Array{Tuple{Int, Int}, 1}(undef, ne(g))
-    firstNeighbor = Array{Tuple{Int, Int}, 1}(undef, nv(g))
+    first_visit_to_tree = Array{Tuple{Int, Int}, 1}(undef, ne(g))
+    first_neighbor = Array{Tuple{Int, Int}, 1}(undef, nv(g))
 
     for v in vertices(g)
         #enforces the first condition of acyclic coloring
@@ -32,7 +32,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
                 for x in outneighbors(g, w)
                     if color[x] != 0 #colored x
                         if forbidden_colors[color[x]] != v
-                            prevent_cycle(v, w, x, g, color, forbidden_colors, firstVisitToTree, set)
+                            prevent_cycle(v, w, x, g, color, forbidden_colors, first_visit_to_tree, set)
                         end
                     end
                 end
@@ -44,7 +44,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
         #grow star for every edge connecting colored vertices v and w
         for w in outneighbors(g, v)
             if color[w] != 0
-                grow_star(v, w, g, firstNeighbor, set, color)
+                grow_star!(set, v, w, g, first_neighbor, color)
             end
         end
 
@@ -54,7 +54,7 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
                 for x in outneighbors(g, w)
                     if color[x] != 0 && x != v
                         if color[x] == color[v]
-                            merge_trees(v, w, x, g, set)
+                            merge_trees!(set, v, w, x, g)
                         end
                     end
                 end
@@ -72,7 +72,7 @@ end
                     g::LightGraphs.AbstractGraph,
                     color::AbstractVector{<:Integer},
                     forbidden_colors::AbstractVector{<:Integer},
-                    firstVisitToTree::Array{Tuple{Integer, Integer}, 1},
+                    first_visit_to_tree::Array{Tuple{Integer, Integer}, 1},
                     set::DisjointSets{LightGraphs.Edge})
 
 Subroutine to avoid generation of 2-colored cycle due to coloring of vertex v,
@@ -85,14 +85,14 @@ function prevent_cycle(v::Integer,
                         g::LightGraphs.AbstractGraph,
                         color::AbstractVector{<:Integer},
                         forbidden_colors::AbstractVector{<:Integer},
-                        firstVisitToTree::AbstractArray{<: Tuple{Integer, Integer}, 1},
+                        first_visit_to_tree::AbstractArray{<: Tuple{Integer, Integer}, 1},
                         set::DisjointSets{LightGraphs.Edge})
 
     edge = find_edge(g, w, x)
     e = find_root(set, edge)
-    p, q = firstVisitToTree[edge_index(g, e)]
+    p, q = first_visit_to_tree[edge_index(g, e)]
     if p != v
-        firstVisitToTree[edge_index(g, e)] = (v, w)
+        first_visit_to_tree[edge_index(g, e)] = (v, w)
     elseif q != w
         forbidden_colors[color[x]] = v
     end
@@ -108,10 +108,10 @@ function min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
 end
 
 """
-        grow_star(v::Integer,
+        grow_star!(v::Integer,
                 w::Integer,
                 g::LightGraphs.AbstractGraph
-                firstNeighbor::Array{Tuple{Integer, Integer}, 1},
+                first_neighbor::Array{Tuple{Integer, Integer}, 1},
                 set::DisjointSets{LightGraphs.Edge})
 
 Subroutine to grow a 2-colored star after assigning a new color to the
@@ -119,17 +119,17 @@ previously uncolored vertex v, by comparing it with the adjacent vertex w.
 Disjoint set is used to store stars in sets, which are identified through key
 edges present in g.
 """
-function grow_star(v::Integer,
+function grow_star!(set::DisjointSets{LightGraphs.Edge},
+                   v::Integer,
                    w::Integer,
                    g::LightGraphs.AbstractGraph,
-                   firstNeighbor::AbstractArray{<: Tuple{Integer, Integer}, 1},
-                   set::DisjointSets{LightGraphs.Edge},
+                   first_neighbor::AbstractArray{<: Tuple{Integer, Integer}, 1},
                    color::AbstractVector{<: Integer})
     edge = find_edge(g, v, w)
     push!(set, edge)
-    p, q = firstNeighbor[color[w]]
+    p, q = first_neighbor[color[w]]
     if p != v
-        firstNeighbor[color[w]] = (v, w)
+        first_neighbor[color[w]] = (v, w)
     else
         edge1 = find_edge(g, v, w)
         edge2 = find_edge(g, p, q)
@@ -142,7 +142,7 @@ end
 
 
 """
-        merge_trees(v::Integer,
+        merge_trees!(v::Integer,
                 w::Integer,
                 x::Integer,
                 g::LightGraphs.AbstractGraph,
@@ -151,11 +151,11 @@ end
 Subroutine to merge trees present in the disjoint set which have a
 common edge.
 """
-function merge_trees(v::Integer,
+function merge_trees!(set::DisjointSets{LightGraphs.Edge},
+                    v::Integer,
                     w::Integer,
                     x::Integer,
-                    g::LightGraphs.AbstractGraph,
-                    set::DisjointSets{LightGraphs.Edge})
+                    g::LightGraphs.AbstractGraph)
     edge1 = find_edge(g, v, w)
     edge2 = find_edge(g, w, x)
     e1 = find_root(set, edge1)
@@ -198,5 +198,4 @@ function edge_index(g::LightGraphs.AbstractGraph,
         end
     end
     throw(ArgumentError("Edge $e is not present in graph g"))
-    #return -1
 end

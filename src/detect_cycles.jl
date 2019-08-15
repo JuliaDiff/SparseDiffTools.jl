@@ -59,7 +59,7 @@ function print_cycles(edges::Integer,
                     cycleNumber::Integer)
 
     cycles = Array{Array{Integer,1}}(undef, 5)
-    
+
     for i in 1:edges
         if mark[i] != 0
             push!(cycles[mark[i]], i)

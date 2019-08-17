@@ -108,11 +108,11 @@ function min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
 end
 
 """
-        grow_star!(v::Integer,
+        grow_star!(set::DisjointSets{LightGraphs.Edge},
+                v::Integer,
                 w::Integer,
                 g::LightGraphs.AbstractGraph
-                first_neighbor::Array{Tuple{Integer, Integer}, 1},
-                set::DisjointSets{LightGraphs.Edge})
+                first_neighbor::Array{Tuple{Integer, Integer}, 1})
 
 Subroutine to grow a 2-colored star after assigning a new color to the
 previously uncolored vertex v, by comparing it with the adjacent vertex w.

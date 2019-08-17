@@ -7,6 +7,7 @@ Random.seed!(123)
 
 #= Test data =#
 test_graphs = Array{SimpleGraph, 1}(undef, 0)
+test_graphs_dir = Array{SimpleDiGraph, 1}(undef, 0)
 
 for _ in 1:5
     nv = rand(5:20)
@@ -39,7 +40,7 @@ colors.
 #Sample graph from Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 
 #=
-  
+
 (1) ----- (2) ----- (3) ---- (4)
  | \      /          |       |
  |   \   /           |       |
@@ -80,18 +81,48 @@ add_edge!(gx,12,13)
 
 push!(test_graphs, gx)
 
+#create directed copies
+for g in test_graphs
+    dg = SimpleDiGraph(nv(g))
+    for e in edges(g)
+        src1 = src(e)
+        dst1 = dst(e)
+        add_edge!(dg, src1, dst1)
+        add_edge!(dg, dst1, src1)
+    end
+    push!(test_graphs_dir, dg)
+end
+
+
 for i in 1:6
     g = test_graphs[i]
-
-    out_colors = SparseDiffTools.color_graph(g,SparseDiffTools.AcyclicColoring())
+    dg = test_graphs_dir[i]
+    out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.AcyclicColoring())
 
     #test condition 1
-    for v = vertices(g)
+    for v in vertices(g)
         color = out_colors[v]
         for j in inneighbors(g, v)
             @test out_colors[j] != color
         end
     end
+end
 
-    #TODO: Add tests for condition 2 of acyclic coloring
+for i in 3:6
+    g = test_graphs[i]
+    dg = test_graphs_dir[i]
+    out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.AcyclicColoring())
+
+    #test condition 2
+    cycles = simplecycles(dg)
+    for c in cycles
+        colors = zeros(Int, 0)
+        if length(c) > 2
+            for v in c
+                push!(colors, out_colors[v])
+            end
+            @test length(unique(colors)) >= 3
+        end
+    end
+
 end

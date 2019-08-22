@@ -85,7 +85,7 @@ function prevent_cycle(v::Integer,
                         g::LightGraphs.AbstractGraph,
                         color::AbstractVector{<:Integer},
                         forbidden_colors::AbstractVector{<:Integer},
-                        first_visit_to_tree::AbstractArray{<: Tuple{Integer, Integer}, 1},
+                        first_visit_to_tree::AbstractVector{<: Tuple{Integer, Integer}},
                         set::DisjointSets{LightGraphs.Edge})
 
     edge = find_edge(g, w, x)

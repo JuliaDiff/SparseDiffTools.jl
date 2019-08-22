@@ -6,7 +6,7 @@ using Random
 Random.seed!(123)
 
 #= Test data =#
-test_graphs = Array{SimpleGraph, 1}(undef, 0)
+test_graphs = Vector{SimpleGraph}(undef, 0)
 test_graphs_dir = Array{SimpleDiGraph, 1}(undef, 0)
 
 for _ in 1:5

@@ -7,7 +7,7 @@ Random.seed!(123)
 
 #= Test data =#
 test_graphs = Vector{SimpleGraph}(undef, 0)
-test_graphs_dir = Array{SimpleDiGraph, 1}(undef, 0)
+test_graphs_dir = Vector{SimpleDiGraph}(undef, 0)
 
 for _ in 1:5
     nv = rand(5:20)

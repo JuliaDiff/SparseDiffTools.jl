@@ -1,5 +1,3 @@
-using LightGraphs
-
 """
     color_graph(g::LightGraphs, ::BacktrackingColor)
 

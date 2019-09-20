@@ -31,13 +31,13 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
-    t = Dual{typeof(f)}.(x,first(p))
+    t = reshape(Dual{typeof(f)}.(vec(x),first(p)),size(x)...)
 
     if dx === nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        fx = Dual{typeof(f)}.(dx,first(p))
+        fx = reshape(Dual{typeof(f)}.(vec(dx),first(p)),size(x)...)
         _dx = dx
     end
 
@@ -109,17 +109,22 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         cols_index = nothing
     end
 
+    vecx = vec(x)
+    vect = vec(t)
+    vecfx= vec(fx)
+    vecdx= vec(dx)
+
     ncols=size(J,2)
 
     for i in eachindex(p)
         partial_i = p[i]
-        t .= Dual{typeof(f)}.(x, partial_i)
+        vect .= Dual{typeof(f)}.(vecx, partial_i)
         f(fx,t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 if ArrayInterface.fast_scalar_indexing(dx)
-                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,dx,colorvec,color_i,ncols)
+                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
                 else
                     #=
                     J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
@@ -128,9 +133,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     += means requires a zero'd out start
                     =#
                     if J isa SparseMatrixCSC
-                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index)
+                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
                     else
-                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((dx,),rows_index),rows_index, cols_index)
+                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1
@@ -140,7 +145,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > maximum(colorvec)) && return
-                J[:, col_index] .= partials.(fx, j)
+                J[:, col_index] .= partials.(vecfx, j)
             end
         end
     end

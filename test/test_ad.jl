@@ -15,6 +15,17 @@ function f(dx,x)
     nothing
 end
 
+function oopf(x)
+    global fcalls += 1
+    dx = zero(x)
+    for i in 2:length(x)-1
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    dx[end] = x[end-1] - 2x[end]
+    dx
+end
+
 function second_derivative_stencil(N)
     A = zeros(N,N)
     for i in 1:N, j in 1:N
@@ -39,6 +50,17 @@ forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3,10))
 @test fcalls == 1
 
 fcalls = 0
+_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
+@test _J1 ≈ J
+@test fcalls == 1
+
+fcalls = 0
+_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J)
+@test _J1 ≈ J
+@test fcalls == 1
+
+fcalls = 0
+_J1 = similar(_J)
 jac_cache = ForwardColorJacCache(f,x,colorvec = repeat(1:3,10), sparsity = _J1)
 forwarddiff_color_jacobian!(_J1, f, x, jac_cache)
 @test _J1 ≈ J

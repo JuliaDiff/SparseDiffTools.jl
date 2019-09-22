@@ -41,48 +41,98 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         _dx = dx
     end
 
-
     ForwardColorJacCache(t,fx,_dx,p,colorvec,sparsity,getsize(chunksize))
 end
 
 generate_chunked_partials(x,colorvec,N::Integer) = generate_chunked_partials(x,colorvec,Val(N))
 function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
-
-    num_of_chunks = Int(ceil(maximum(colorvec) / chunksize))
-
-    padding_size = (chunksize - (maximum(colorvec) % chunksize)) % chunksize
-
-    partials = BitMatrix(undef, length(x), maximum(colorvec))
-    partial = BitMatrix(undef, length(x), chunksize)
-    chunked_partials = Array{Array{Tuple{Vararg{Bool,chunksize}},1},1}(
-                                                          undef, num_of_chunks)
-
-    for color_i in 1:maximum(colorvec)
-        for j in 1:length(x)
-            partials[j,color_i] = colorvec[j]==color_i
-        end
-    end
-
+    maxcolor = maximum(colorvec)
+    num_of_chunks = Int(ceil(maxcolor / chunksize))
+    padding_size = (chunksize - (maxcolor % chunksize)) % chunksize
+    partials = colorvec .== (1:maxcolor)'
     padding_matrix = BitMatrix(undef, length(x), padding_size)
     partials = hcat(partials, padding_matrix)
 
-    for i in 1:num_of_chunks
-        partial[:,1] .= partials[:,(i-1)*chunksize+1]
-        for j in 2:chunksize
-            partial[:,j] .= partials[:,(i-1)*chunksize+j]
-        end
-        chunked_partials[i] = Tuple.(eachrow(partial))
-    end
-
+    chunked_partials = map(i -> Tuple.(eachrow(partials[:,(i-1)*chunksize+1:i*chunksize])),1:num_of_chunks)
     chunked_partials
 
+end
+
+function forwarddiff_color_jacobian(f,
+                x::AbstractArray{<:Number};
+                dx = nothing,
+                colorvec = 1:length(x),
+                sparsity = nothing,
+                jac_prototype = nothing)
+    forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+end
+
+function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
+    t = jac_cache.t
+    fx = jac_cache.fx
+    dx = jac_cache.dx
+    p = jac_cache.p
+    colorvec = jac_cache.colorvec
+    sparsity = jac_cache.sparsity
+    chunksize = jac_cache.chunksize
+    color_i = 1
+    maxcolor = maximum(colorvec)
+
+    vecx = vec(x)
+    vect = vec(t)
+    vecfx= vec(fx)
+    
+    ncols=length(x)
+    J = jac_prototype isa Nothing ? zeros(Float64,ncols,ncols) : zero(jac_prototype)
+
+    if DiffEqDiffTools._use_findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+    else
+        rows_index = nothing
+        cols_index = nothing
+    end
+
+    for i in eachindex(p)
+        partial_i = p[i]
+        vect .= Dual{typeof(f)}.(vecx, partial_i) #t is modified here
+        fx = f(t)
+        if !(sparsity isa Nothing)
+            for j in 1:chunksize
+                vecdx = vec(partials.(fx, j))
+                if ArrayInterface.fast_scalar_indexing(dx)
+                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
+                else
+                    #=
+                    J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
+                    or
+                    J[rows_index, cols_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
+                    += means requires a zero'd out start
+                    =#
+                    if J isa SparseMatrixCSC
+                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
+                    else
+                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
+                    end
+                end
+                color_i += 1
+                (color_i > maxcolor) && return J
+            end
+        else
+            for j in 1:chunksize
+                col_index = (i-1)*chunksize + j
+                (col_index > maxcolor) && return J
+                J[:, col_index] .= partials.(vecfx, j)
+            end
+        end
+    end
+    J
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 f,
                 x::AbstractArray{<:Number};
                 dx = nothing,
-                colorvec = eachindex(x),
+                colorvec = 1:length(x),
                 sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
@@ -100,6 +150,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     chunksize = jac_cache.chunksize
     color_i = 1
+    maxcolor = maximum(colorvec)
     fill!(J, zero(eltype(J)))
 
     if DiffEqDiffTools._use_findstructralnz(sparsity)
@@ -124,6 +175,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
                 dx .= partials.(fx, j)
                 if ArrayInterface.fast_scalar_indexing(dx)
+                    #dx is implicitly used in vecdx
                     DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
                 else
                     #=
@@ -139,12 +191,12 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     end
                 end
                 color_i += 1
-                (color_i > maximum(colorvec)) && return
+                (color_i > maxcolor) && return
             end
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                (col_index > maximum(colorvec)) && return
+                (col_index > maxcolor) && return
                 J[:, col_index] .= partials.(vecfx, j)
             end
         end

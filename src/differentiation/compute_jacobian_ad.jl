@@ -81,6 +81,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
     vecx = vec(x)
     vect = vec(t)
     vecfx= vec(fx)
+    vecdx= vec(dx)
     
     ncols=length(x)
     J = jac_prototype isa Nothing ? zeros(Float64,ncols,ncols) : zero(jac_prototype)
@@ -98,8 +99,9 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
-                vecdx = vec(partials.(fx, j))
+                dx .= vec(partials.(fx, j))
                 if ArrayInterface.fast_scalar_indexing(dx)
+                    #dx is implicitly used in vecdx
                     DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
                 else
                     #=

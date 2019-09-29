@@ -81,7 +81,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
     vecx = vec(x)
     
     ncols=length(x)
-    J = jac_prototype isa Nothing ? zeros(Float64,ncols,ncols) : zero(jac_prototype)
+    J = jac_prototype isa Nothing ? false .* x .* x' : zero(jac_prototype)
 
     if !(sparsity isa Nothing)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)

@@ -85,6 +85,8 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     if !(sparsity isa Nothing)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index = [rows_index[i] for i in 1:length(rows_index)]
+        cols_index = [cols_index[i] for i in 1:length(cols_index)]
     end
 
     for i in eachindex(p)
@@ -94,12 +96,13 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
         if !(sparsity isa Nothing)
             for j in 1:chunksize
                 dx = vec(partials.(fx, j))
-                coords = [(rows_index[i],cols_index[i]) for i in 1:length(cols_index) if colorvec[cols_index[i]] == color_i ]
-                rows_index_c = [coord[1] for coord in coords]
-                len_rows = length(rows_index_c)
+                pick_inds = [i for i in 1:length(rows_index) if colorvec[cols_index[i]] == color_i]
+                rows_index_c = rows_index[pick_inds]
+                cols_index_c = cols_index[pick_inds]
+                len_rows = length(pick_inds)
                 unused_rows = setdiff(1:ncols,rows_index_c)
                 perm_rows = sortperm([i<=len_rows ? rows_index_c[i] : unused_rows[i-len_rows] for i in 1:ncols])
-                cols_index_c = [i<=len_rows ? coords[i][2] : false for i in 1:ncols][perm_rows]
+                cols_index_c = [i<=len_rows ? cols_index_c[i] : false for i in 1:ncols][perm_rows]
                 Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:ncols, j in 1:ncols]
                 J = J + Ji
                 color_i += 1

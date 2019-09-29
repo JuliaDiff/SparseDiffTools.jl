@@ -96,9 +96,12 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
                 dx = vec(partials.(fx, j))
                 coords = [(rows_index[i],cols_index[i]) for i in 1:length(cols_index) if colorvec[cols_index[i]] == color_i ]
                 rows_index_c = [coord[1] for coord in coords]
-                cols_index_c = [coord[2] for coord in coords]
-                spmtx = collect(sparse(rows_index_c,cols_index_c,ones(length(rows_index_c)),size(J)...))
-                J = J + dx .* spmtx
+                len_rows = length(rows_index_c)
+                unused_rows = setdiff(1:ncols,rows_index_c)
+                perm_rows = sortperm([i<=len_rows ? rows_index_c[i] : unused_rows[i-len_rows] for i in 1:ncols])
+                cols_index_c = [i<=len_rows ? coords[i][2] : false for i in 1:ncols][perm_rows]
+                Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:ncols, j in 1:ncols]
+                J = J + Ji
                 color_i += 1
                 (color_i > maxcolor) && return J
             end

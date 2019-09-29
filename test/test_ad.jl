@@ -3,6 +3,7 @@ using ForwardDiff: Dual, jacobian
 using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices
+using StaticArrays
 
 fcalls = 0
 function f(dx,x)
@@ -58,6 +59,18 @@ fcalls = 0
 _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J)
 @test _J1 ≈ J
 @test fcalls == 1
+
+fcalls = 0
+_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
+@test _J1 ≈ J
+@test fcalls == 1
+
+_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = SMatrix{30,30}(_J))
+@test _J1 ≈ J
+_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = _J)
+@test _J1 ≈ J
+_J1 = forwarddiff_color_jacobian(oopf, x)
+@test _J1 ≈ J
 
 fcalls = 0
 _J1 = similar(_J)

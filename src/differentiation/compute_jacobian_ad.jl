@@ -79,43 +79,26 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
     maxcolor = maximum(colorvec)
 
     vecx = vec(x)
-    vect = vec(t)
-    vecfx= vec(fx)
-    vecdx= vec(dx)
     
     ncols=length(x)
     J = jac_prototype isa Nothing ? zeros(Float64,ncols,ncols) : zero(jac_prototype)
 
-    if DiffEqDiffTools._use_findstructralnz(sparsity)
+    if !(sparsity isa Nothing)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
-    else
-        rows_index = nothing
-        cols_index = nothing
     end
 
     for i in eachindex(p)
         partial_i = p[i]
-        vect .= Dual{typeof(f)}.(vecx, partial_i) #t is modified here
+        t = reshape(Dual{typeof(f)}.(vecx, partial_i),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
-                dx .= vec(partials.(fx, j))
-                if ArrayInterface.fast_scalar_indexing(dx)
-                    #dx is implicitly used in vecdx
-                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
-                else
-                    #=
-                    J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
-                    or
-                    J[rows_index, cols_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
-                    += means requires a zero'd out start
-                    =#
-                    if J isa SparseMatrixCSC
-                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
-                    else
-                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
-                    end
-                end
+                dx = vec(partials.(fx, j))
+                coords = [(rows_index[i],cols_index[i]) for i in 1:length(cols_index) if colorvec[cols_index[i]] == color_i ]
+                rows_index_c = [coord[1] for coord in coords]
+                cols_index_c = [coord[2] for coord in coords]
+                spmtx = collect(sparse(rows_index_c,cols_index_c,ones(length(rows_index_c)),size(J)...))
+                J = J + dx .* spmtx
                 color_i += 1
                 (color_i > maxcolor) && return J
             end
@@ -123,7 +106,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > maxcolor) && return J
-                J[:, col_index] .= partials.(vecfx, j)
+                J = J + partials.(vec(fx), j) .* [(i==col_index ? 1 : 0) for i in 1:ncols]'
             end
         end
     end

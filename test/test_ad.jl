@@ -27,6 +27,12 @@ function oopf(x)
     dx
 end
 
+function staticf(x,N=length(x))
+    global fcalls += 1
+    SVector{N}([i == 1 ? -2x[1]+x[2] : (i == N ? x[N-1]-2x[N] : x[i-1]-2x[i]+x[i+1]) for i in 1:N])
+end
+    
+
 function second_derivative_stencil(N)
     A = zeros(N,N)
     for i in 1:N, j in 1:N
@@ -61,11 +67,11 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = 
 @test fcalls == 1
 
 fcalls = 0
-_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
+_J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J
 @test fcalls == 1
 
-_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = SMatrix{30,30}(_J))
+_J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J
 _J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = _J)
 @test _J1 ≈ J

@@ -3,6 +3,7 @@ using ForwardDiff: Dual, jacobian
 using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices
+using StaticArrays
 
 fcalls = 0
 function f(dx,x)
@@ -14,6 +15,23 @@ function f(dx,x)
     dx[end] = x[end-1] - 2x[end]
     nothing
 end
+
+function oopf(x)
+    global fcalls += 1
+    dx = zero(x)
+    for i in 2:length(x)-1
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    dx[end] = x[end-1] - 2x[end]
+    dx
+end
+
+function staticf(x,N=length(x))
+    global fcalls += 1
+    SVector{N}([i == 1 ? -2x[1]+x[2] : (i == N ? x[N-1]-2x[N] : x[i-1]-2x[i]+x[i+1]) for i in 1:N])
+end
+    
 
 function second_derivative_stencil(N)
     A = zeros(N,N)
@@ -39,6 +57,29 @@ forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3,10))
 @test fcalls == 1
 
 fcalls = 0
+_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
+@test _J1 ≈ J
+@test fcalls == 1
+
+fcalls = 0
+_J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J)
+@test _J1 ≈ J
+@test fcalls == 1
+
+fcalls = 0
+_J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
+@test _J1 ≈ J
+@test fcalls == 1
+
+_J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), jac_prototype = SMatrix{30,30}(_J))
+@test _J1 ≈ J
+_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = _J)
+@test _J1 ≈ J
+_J1 = forwarddiff_color_jacobian(oopf, x)
+@test _J1 ≈ J
+
+fcalls = 0
+_J1 = similar(_J)
 jac_cache = ForwardColorJacCache(f,x,colorvec = repeat(1:3,10), sparsity = _J1)
 forwarddiff_color_jacobian!(_J1, f, x, jac_cache)
 @test _J1 ≈ J

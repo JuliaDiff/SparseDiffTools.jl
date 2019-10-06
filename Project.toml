@@ -30,6 +30,7 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SparsityDetection = "684fba80-ace3-11e9-3d08-3bc7ed6f96df"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [targets]
-test = ["Test", "IterativeSolvers", "Random", "SafeTestsets", "Zygote", "SparsityDetection"]
+test = ["Test", "IterativeSolvers", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]

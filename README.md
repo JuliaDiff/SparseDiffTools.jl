@@ -19,7 +19,7 @@ Suppose we had the function
 
 ```julia
 fcalls = 0
-function f(dx,x)
+function f(dx,x) # in-place
   global fcalls += 1
   for i in 2:length(x)-1
     dx[i] = x[i-1] - 2x[i] + x[i+1]
@@ -27,6 +27,17 @@ function f(dx,x)
   dx[1] = -2x[1] + x[2]
   dx[end] = x[end-1] - 2x[end]
   nothing
+end
+
+function g(x) # out-of-place
+  global fcalls += 1
+  dx = zero(x)
+  for i in 2:length(x)-1
+    dx[i] = x[i-1] - 2x[i] + x[i+1]
+  end
+  dx[1] = -2x[1] + x[2]
+  dx[end] = x[end-1] - 2x[end]
+  dx
 end
 ```
 
@@ -62,7 +73,10 @@ In addition, a faster forward-mode autodiff call can be utilized as well:
 
 ```julia
 forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)
+jacout = forwarddiff_color_jacobian(g, x, colorvec = colors, sparsity = similar(jac), jac_prototype = similar(jac))
 ```
+One can specify the type of the output jacobian by giving an additional `jac_prototype` to 
+the out-of place `forwarddiff_color_jacobian` function, otherwise it will become a dense matrix.
 
 If one only need to compute products, one can use the operators. For example,
 

@@ -66,7 +66,7 @@ end
 
 function forwarddiff_color_jacobian(f,
                 x::AbstractArray{<:Number};
-                dx = similar(x), #if fx is nothing, we will estimate fx at the cost of a function call 
+                dx = similar(x), #if dx is nothing, we will estimate dx at the cost of a function call 
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing)
@@ -88,8 +88,8 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     vecx = vec(x)
     
-    ncols=length(x)
     J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* dx .* x' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
+    nrows,ncols = size(J)
 
     if !(sparsity isa Nothing)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
@@ -101,7 +101,6 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
         partial_i = p[i]
         t = reshape(Dual{typeof(f)}.(vecx, partial_i),size(t))
         fx = f(t)
-        nrows=length(fx)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
                 dx = vec(partials.(fx, j))

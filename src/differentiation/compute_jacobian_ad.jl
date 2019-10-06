@@ -101,8 +101,8 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
                 cols_index_c = cols_index[pick_inds]
                 len_rows = length(pick_inds)
                 unused_rows = setdiff(1:ncols,rows_index_c)
-                perm_rows = sortperm([i<=len_rows ? rows_index_c[i] : unused_rows[i-len_rows] for i in 1:ncols])
-                cols_index_c = [i<=len_rows ? cols_index_c[i] : false for i in 1:ncols][perm_rows]
+                perm_rows = sortperm(vcat(rows_index_c,unused_rows))
+                cols_index_c = vcat(cols_index_c,zeros(Int,ncols-len_rows))[perm_rows]
                 Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:ncols, j in 1:ncols]
                 J = J + Ji
                 color_i += 1
@@ -112,7 +112,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > maxcolor) && return J
-                J = J + partials.(vec(fx), j) .* [(i==col_index ? 1 : 0) for i in 1:ncols]'
+                J = J + mapreduce(i -> i==col_index ? partials.(vec(fx), j) : zeros(ncols), hcat, 1:ncols)
             end
         end
     end

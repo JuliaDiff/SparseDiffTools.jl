@@ -73,10 +73,17 @@ In addition, a faster forward-mode autodiff call can be utilized as well:
 
 ```julia
 forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)
-jacout = forwarddiff_color_jacobian(g, x, colorvec = colors, sparsity = similar(jac), jac_prototype = similar(jac))
+#OR
+jacout = forwarddiff_color_jacobian(g, x, dx = similar(x),colorvec = colors, sparsity = similar(jac), jac_prototype = similar(jac))
 ```
-One can specify the type of the output jacobian by giving an additional `jac_prototype` to 
+One can specify the type and shape of the output jacobian by giving an additional `jac_prototype` to 
 the out-of place `forwarddiff_color_jacobian` function, otherwise it will become a dense matrix.
+If `jac_prototype` and `sparsity` is not specified (both default to `nothing`), the oop jacobian will 
+assume that the function has a *square* jacobian matrix. If it is not the case, please specify 
+the shape of output by giving `dx` or giving `dx = nothing` where the shape is determined 
+automatically at the cost of a function evaluation `f(x)`. 
+If not necessary (e.g `StaticArrays` involved), please turn to the inplace jacobian function
+`forwarddiff_color_jacobian!` which is faster in general cases.
 
 If one only need to compute products, one can use the operators. For example,
 

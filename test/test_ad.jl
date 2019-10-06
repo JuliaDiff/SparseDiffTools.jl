@@ -27,11 +27,53 @@ function oopf(x)
     dx
 end
 
+function nsqf(x)#length(dx)<length(x)
+    global fcalls +=1
+    dx = zero(x)[1:div(length(x),2)]
+    for i in 2:length(dx)
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    dx
+end
+
+function nsqf2(x)#length(dx)>length(x)
+    global fcalls +=1
+    dx = zeros(eltype(x),length(x)*2)
+    for i in 2:length(x)-1
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    dx
+end
+
+function nsqf!(dx,x)
+    global fcalls +=1
+    for i in 2:length(dx)
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    nothing
+end
+
+function nsqf2!(dx,x)
+    global fcalls +=1
+    for i in 2:length(x)-1
+        dx[i] = x[i-1] - 2x[i] + x[i+1]
+    end
+    dx[1] = -2x[1] + x[2]
+    nothing
+end
+
 function staticf(x,N=length(x))
     global fcalls += 1
     SVector{N}([i == 1 ? -2x[1]+x[2] : (i == N ? x[N-1]-2x[N] : x[i-1]-2x[i]+x[i+1]) for i in 1:N])
 end
-    
+
+function staticnsqf(x,N=div(length(x),2))
+    global fcalls += 1
+    SVector{N}(vcat([-2x[1]+x[2]],[x[i-1]-2x[i]+x[i+1] for i in 2:N]))
+end
 
 function second_derivative_stencil(N)
     A = zeros(N,N)
@@ -73,10 +115,55 @@ _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,
 
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J
-_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = _J)
+_J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = similar(_J))
 @test _J1 ≈ J
 _J1 = forwarddiff_color_jacobian(oopf, x)
 @test _J1 ≈ J
+
+#Non-square Jacobian
+#length(dx)<length(x)
+nsqJ = jacobian(nsqf,x)
+spnsqJ = sparse(nsqJ)
+_nsqJ = forwarddiff_color_jacobian(nsqf, x, dx = nothing)
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf, x, colorvec = repeat(1:3,10), sparsity = spnsqJ)
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf, x, jac_prototype = similar(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf, x, colorvec = repeat(1:3,10), sparsity = spnsqJ, jac_prototype = similar(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf, x, jac_prototype = SMatrix{15,30}(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x), jac_prototype = SMatrix{15,30}(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x), jac_prototype = SMatrix{15,30}(nsqJ), colorvec = repeat(1:3,10), sparsity = spnsqJ)
+@test _nsqJ ≈ nsqJ
+_nsqJ = similar(nsqJ)
+forwarddiff_color_jacobian!(_nsqJ, nsqf!, x)
+@test _nsqJ ≈ nsqJ
+_nsqJ = similar(nsqJ)
+forwarddiff_color_jacobian!(_nsqJ, nsqf!, x, colorvec = repeat(1:3,10), sparsity = spnsqJ )
+@test _nsqJ ≈ nsqJ
+
+#length(dx)>length(x)
+nsqJ = jacobian(nsqf2,x)
+spnsqJ = sparse(nsqJ)
+_nsqJ = forwarddiff_color_jacobian(nsqf2, x, dx = nothing)
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf2, x, colorvec = repeat(1:3,10), sparsity = spnsqJ)
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf2, x, jac_prototype = similar(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf2, x, colorvec = repeat(1:3,10), sparsity = spnsqJ, jac_prototype = similar(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = forwarddiff_color_jacobian(nsqf2, x, jac_prototype = SMatrix{60,30}(nsqJ))
+@test _nsqJ ≈ nsqJ
+_nsqJ = similar(nsqJ)
+forwarddiff_color_jacobian!(_nsqJ, nsqf2!, x)
+@test _nsqJ ≈ nsqJ
+_nsqJ = similar(nsqJ)
+forwarddiff_color_jacobian!(_nsqJ, nsqf2!, x, colorvec = repeat(1:3,10), sparsity = spnsqJ )
+@test _nsqJ ≈ nsqJ
 
 fcalls = 0
 _J1 = similar(_J)

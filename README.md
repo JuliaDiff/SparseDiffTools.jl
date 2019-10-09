@@ -50,7 +50,9 @@ vector of length 30 and takes in a vector of length 30, and `sparsity!` spits
 out a `Sparsity` object which we can turn into a `SparseMatrixCSC`:
 
 ```julia
-using SparsityDetection
+using SparsityDetection, SparseArrays, SparseDiffTools
+input = rand(30)
+output = similar(input)
 sparsity_pattern = sparsity!(f,output,input)
 jac = Float64.(sparse(sparsity_pattern))
 ```

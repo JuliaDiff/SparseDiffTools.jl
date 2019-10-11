@@ -50,7 +50,7 @@ vector of length 30 and takes in a vector of length 30, and `sparsity!` spits
 out a `Sparsity` object which we can turn into a `SparseMatrixCSC`:
 
 ```julia
-using SparsityDetection, SparseArrays, SparseDiffTools
+using SparsityDetection, SparseArrays
 input = rand(30)
 output = similar(input)
 sparsity_pattern = sparsity!(f,output,input)
@@ -60,34 +60,29 @@ jac = Float64.(sparse(sparsity_pattern))
 Now we call `matrix_colors` to get the colorvec vector for that matrix:
 
 ```julia
+using SparseDiffTools
 colors = matrix_colors(jac)
 ```
 
 Since `maximum(colors)` is 3, this means that finite differencing can now
-compute the Jacobian in just 4 `f`-evaluations:
+compute the Jacobian in just 4 `f`-evaluations. Generating the sparsity
+pattern used 1 (pseudo) `f`-evaluation, so the total number of times that
+`f` is called to compute the sparsity pattern plus the entire 30x30 Jacobian
+is 5 times:
 
 ```julia
+using DiffEqDiffTools
 DiffEqDiffTools.finite_difference_jacobian!(jac, f, rand(30), colorvec=colors)
-@show fcalls # 4
+@show fcalls # 5
 ```
 
 In addition, a faster forward-mode autodiff call can be utilized as well:
 
 ```julia
 forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)
-#OR
-jacout = forwarddiff_color_jacobian(g, x, dx = similar(x),colorvec = colors, sparsity = similar(jac), jac_prototype = similar(jac))
 ```
-One can specify the type and shape of the output jacobian by giving an additional `jac_prototype` to 
-the out-of place `forwarddiff_color_jacobian` function, otherwise it will become a dense matrix.
-If `jac_prototype` and `sparsity` is not specified (both default to `nothing`), the oop jacobian will 
-assume that the function has a *square* jacobian matrix. If it is not the case, please specify 
-the shape of output by giving `dx` or giving `dx = nothing` where the shape is determined 
-automatically at the cost of a function evaluation `f(x)`. 
-If not necessary (e.g `StaticArrays` involved), please turn to the inplace jacobian function
-`forwarddiff_color_jacobian!` which is faster in general cases.
 
-If one only need to compute products, one can use the operators. For example,
+If one only needs to compute products, one can use the operators. For example,
 
 ```julia
 u = rand(30)
@@ -164,7 +159,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             sparsity = nothing)
 ```
 
-This call wiil allocate the cache variables each time. To avoid allocating the
+This call will allocate the cache variables each time. To avoid allocating the
 cache, construct the cache in advance:
 
 ```julia
@@ -182,6 +177,28 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             x::AbstractArray{<:Number},
                             jac_cache::ForwardColorJacCache)
 ```
+
+`dx` is a pre-allocated output vector which is used to declare the output size,
+and thus allows for specifying a non-square Jacobian.
+
+If one is using an out-of-place function `f(x)`, then the alternative form
+ca be used:
+
+```julia
+jacout = forwarddiff_color_jacobian(g, x,
+                                    dx = similar(x),
+                                    colorvec = 1:length(x),
+                                    sparsity = nothing,
+                                    jac_prototype = nothing)
+```
+
+Note that the out-of-place form is efficient and compatible with StaticArrays.
+One can specify the type and shape of the output Jacobian by giving an
+additional `jac_prototype` to the out-of place `forwarddiff_color_jacobian`
+function, otherwise it will become a dense matrix. If `jac_prototype` and
+`sparsity` are not specified, then the oop Jacobian will assume that the
+function has a *square* Jacobian matrix. If it is not the case, please specify
+the shape of output by giving `dx`.
 
 ### Jacobian-Vector and Hessian-Vector Products
 

@@ -72,7 +72,7 @@ for i in 1:6
 
     #test condition 2
     for j = vertices(g)
-        walk = LightGraphs.saw(g, j, 4)
+        walk = LightGraphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk
@@ -92,7 +92,7 @@ for i in 1:6
 
     #test condition 2
     for j = vertices(g)
-        walk = LightGraphs.saw(g, j, 4)
+        walk = LightGraphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk

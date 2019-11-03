@@ -1,7 +1,5 @@
 module SparseDiffTools
 
-using BandedMatrices
-using BlockBandedMatrices
 using DiffEqDiffTools
 using ForwardDiff
 using LightGraphs
@@ -12,7 +10,6 @@ using Adapt
 using LinearAlgebra
 using SparseArrays, ArrayInterface
 
-using BlockBandedMatrices: blocksize, nblocks
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 using DataStructures: DisjointSets, find_root, union!
 

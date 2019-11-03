@@ -209,3 +209,13 @@ colors = matrix_colors(J)
 forwarddiff_color_jacobian!(J, f, x, colorvec=colors)
 forwarddiff_color_jacobian!(Jsparse, f, x, colorvec=colors)
 @test J ≈ Jsparse
+
+# Non vector input
+x = rand(2,2)
+oopf(x) = x
+iipf(fx,x) = (fx.=x)
+J = forwarddiff_color_jacobian(oopf,x)
+@test J ≈ Matrix(I,4,4)
+J = zero(J)
+forwarddiff_color_jacobian!(J,iipf,x,dx=similar(x))
+@test J ≈ Matrix(I,4,4)

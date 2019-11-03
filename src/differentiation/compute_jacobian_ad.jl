@@ -88,7 +88,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     vecx = vec(x)
     
-    J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* dx .* x' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
+    J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
     nrows,ncols = size(J)
 
     if !(sparsity isa Nothing)

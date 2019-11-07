@@ -1,5 +1,5 @@
 """
-    ColorContraction
+    color_graph(G::VSafeGraph,::ContractionColor)
 
 Find a coloring of the graph g such that no two vertices connected
 by an edge have the same color.
@@ -37,7 +37,6 @@ function color_graph(G::VSafeGraph,::ContractionColor)
         V = nv(G)
     end
     return colors
-
 end
 
 
@@ -47,8 +46,7 @@ end
 Find the vertex in the group nn of vertices belonging to the
 graph G which has the highest degree.
 """
-function max_degree_vertex(G::VSafeGraph,nn::Array{Int,1})
-
+function max_degree_vertex(G::VSafeGraph, nn::Vector{Int})
     max_degree = -1
     max_degree_vertex = -1
     for v in nn
@@ -59,7 +57,6 @@ function max_degree_vertex(G::VSafeGraph,nn::Array{Int,1})
         end
     end
     return max_degree_vertex
-
 end
 
 
@@ -80,17 +77,16 @@ function max_degree_vertex(G::VSafeGraph)
         end
     end
     return max_degree_vertex
-
 end
 
 
 """
-    non_neighbors(G,x)
+    non_neighbors(G, x)
 
 Find the set of vertices belonging to the graph G which do
 not share an edge with the vertex x.
 """
-function non_neighbors(G::VSafeGraph, x::Int)
+function non_neighbors(G::VSafeGraph, x::Integer)
 
     nn = zeros(Int, 0)
     for v in vertices(G)
@@ -102,20 +98,18 @@ function non_neighbors(G::VSafeGraph, x::Int)
         end
     end
     return nn
-
 end
 
 
 """
-    length_common_neighbor(G,z,x)
+    length_common_neighbor(g, z, x)
 
 Find the number of vertices that share an edge with both the
-vertices z and x belonging to the graph G.
+vertices z and x belonging to the graph g.
 """
-function length_common_neighbor(G::VSafeGraph,z::Int, x::Int)
-
-    z_neighbors = inneighbors(G,z)
-    x_neighbors = inneighbors(G,x)
+function length_common_neighbor(g::VSafeGraph, z::Int, x::Int)
+    z_neighbors = inneighbors(g, z)
+    x_neighbors = inneighbors(g, x)
     common_vertices = indexin(z_neighbors, x_neighbors)
     num_common_vertices = 0
     for i in common_vertices
@@ -124,36 +118,28 @@ function length_common_neighbor(G::VSafeGraph,z::Int, x::Int)
         end
     end
     return num_common_vertices
-
 end
 
 
 """
-    vertex_degree(G,z)
+    vertex_degree(g, z)
 
-Find the degree of the vertex z which belongs to the graph G.
+Find the degree of the vertex z which belongs to the graph g.
 """
-function vertex_degree(G::VSafeGraph,z::Int)
-
-    return length(inneighbors(G,z))
-
-end
-
+vertex_degree(G::VSafeGraph,z::Int) = length(inneighbors(G,z))
 
 """
-    contract!(G,y,x)
+    contract!(g, y, x)
 
 Contract the vertex y to x, both of which belong to graph G, that is
 delete vertex y and join x with the neighbors of y if they are not
 already connected with an edge.
 """
-function contract!(G::VSafeGraph,y::Int, x::Int)
-
-    for v in inneighbors(G,y)
-        if has_edge(G,v,x) == false
-            add_edge!(G,v,x)
+function contract!(g::VSafeGraph, y::Int, x::Int)
+    for v in inneighbors(g, y)
+        if !has_edge(g, v, x)
+            add_edge!(g, v, x)
         end
     end
-    rem_vertex!(G,y)
-
+    rem_vertex!(g, y)
 end

@@ -41,14 +41,14 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
 
         color[v] = min_index(forbidden_colors, v)
 
-        #grow star for every edge connecting colored vertices v and w
+        # grow star for every edge connecting colored vertices v and w
         for w in outneighbors(g, v)
             if color[w] != 0
                 grow_star!(set, v, w, g, first_neighbor, color)
             end
         end
 
-        #merge the newly formed stars into existing trees if possible
+        # merge the newly formed stars into existing trees if possible
         for w in outneighbors(g, v)
             if color[w] != 0
                 for x in outneighbors(g, w)
@@ -66,14 +66,14 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
 end
 
 """
-        prevent_cycle(v::Integer,
-                    w::Integer,
-                    x::Integer,
-                    g::LightGraphs.AbstractGraph,
-                    color::AbstractVector{<:Integer},
-                    forbidden_colors::AbstractVector{<:Integer},
-                    first_visit_to_tree::Array{Tuple{Integer, Integer}, 1},
-                    set::DisjointSets{LightGraphs.Edge})
+    prevent_cycle(v::Integer,
+                w::Integer,
+                x::Integer,
+                g::LightGraphs.AbstractGraph,
+                color::AbstractVector{<:Integer},
+                forbidden_colors::AbstractVector{<:Integer},
+                first_visit_to_tree::Array{Tuple{Integer, Integer}, 1},
+                set::DisjointSets{LightGraphs.Edge})
 
 Subroutine to avoid generation of 2-colored cycle due to coloring of vertex v,
 which is adjacent to vertices w and x in graph g. Disjoint set is used to store
@@ -85,7 +85,7 @@ function prevent_cycle(v::Integer,
                         g::LightGraphs.AbstractGraph,
                         color::AbstractVector{<:Integer},
                         forbidden_colors::AbstractVector{<:Integer},
-                        first_visit_to_tree::AbstractVector{<: Tuple{Integer, Integer}},
+                        first_visit_to_tree::AbstractVector{<:Tuple{Integer, Integer}},
                         set::DisjointSets{LightGraphs.Edge})
 
     edge = find_edge(g, w, x)
@@ -108,13 +108,14 @@ function min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
 end
 
 """
-        grow_star!(set::DisjointSets{LightGraphs.Edge},
+    grow_star!(set::DisjointSets{LightGraphs.Edge},
                 v::Integer,
                 w::Integer,
-                g::LightGraphs.AbstractGraph
-                first_neighbor::Array{Tuple{Integer, Integer}, 1})
+                g::LightGraphs.AbstractGraph,
+                first_neighbor::AbstractVector{<:Tuple{Integer, Integer}},
+                color::AbstractVector{<: Integer})
 
-Subroutine to grow a 2-colored star after assigning a new color to the
+Grow a 2-colored star after assigning a new color to the
 previously uncolored vertex v, by comparing it with the adjacent vertex w.
 Disjoint set is used to store stars in sets, which are identified through key
 edges present in g.
@@ -123,7 +124,7 @@ function grow_star!(set::DisjointSets{LightGraphs.Edge},
                    v::Integer,
                    w::Integer,
                    g::LightGraphs.AbstractGraph,
-                   first_neighbor::AbstractArray{<: Tuple{Integer, Integer}, 1},
+                   first_neighbor::AbstractVector{<:Tuple{Integer, Integer}},
                    color::AbstractVector{<: Integer})
     edge = find_edge(g, v, w)
     push!(set, edge)

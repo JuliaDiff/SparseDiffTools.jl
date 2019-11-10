@@ -219,3 +219,9 @@ J = forwarddiff_color_jacobian(oopf,x)
 J = zero(J)
 forwarddiff_color_jacobian!(J,iipf,x,dx=similar(x))
 @test J ≈ Matrix(I,4,4)
+
+#1x1 SVector test
+x = SVector{1}([1.])
+f(x) = x
+J = forwarddiff_color_jacobian(f,x)
+@test J ≈ SMatrix{1,1}([1.])

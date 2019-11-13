@@ -66,7 +66,7 @@ end
 
 function forwarddiff_color_jacobian(f,
                 x::AbstractArray{<:Number};
-                dx = similar(x), #if dx is nothing, we will estimate dx at the cost of a function call 
+                dx = copy(x), #if dx is nothing, we will estimate dx at the cost of a function call
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing)
@@ -87,7 +87,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
     maxcolor = maximum(colorvec)
 
     vecx = vec(x)
-    
+
     J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
     nrows,ncols = size(J)
 

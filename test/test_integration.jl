@@ -5,6 +5,18 @@ using SparsityDetection
 using LinearAlgebra, SparseArrays, Test
 
 fcalls = 0
+
+function f(x)
+  global fcalls += 1
+  dx = similar(x)
+  for i in 2:length(x)-1
+    dx[i] = x[i-1] - 2x[i] + x[i+1]
+  end
+  dx[1] = -2x[1] + x[2]
+  dx[end] = x[end-1] - 2x[end]
+  dx
+end
+
 function f(dx,x)
   global fcalls += 1
   for i in 2:length(x)-1

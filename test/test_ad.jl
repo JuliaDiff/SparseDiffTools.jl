@@ -224,4 +224,5 @@ forwarddiff_color_jacobian!(J,iipf,x,dx=similar(x))
 x = SVector{1}([1.])
 f(x) = x
 J = forwarddiff_color_jacobian(f,x)
+@test J isa SArray
 @test J ≈ SMatrix{1,1}([1.])

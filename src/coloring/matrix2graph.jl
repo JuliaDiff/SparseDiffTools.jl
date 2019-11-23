@@ -6,7 +6,7 @@ sparse matrix, columns are represented with vertices
 and 2 vertices are connected with an edge only if
 the two columns are mutually orthogonal.
 """
-function matrix2graph(sparse_matrix::SparseMatrixCSC{<:Number,<:Integer}, partition_by_rows::Bool)
+function matrix2graph(sparse_matrix::SparseMatrixCSC{<:Number, Int}, partition_by_rows::Bool)
     dropzeros(sparse_matrix)
     (rows_index, cols_index, val) = findnz(sparse_matrix)
 

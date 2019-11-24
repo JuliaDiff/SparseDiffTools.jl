@@ -145,7 +145,9 @@ DiffEqDiffTools.jl and for automatic differentiation is provided by
 ForwardDiff.jl.
 
 For DiffEqDiffTools.jl, one simply has to use the provided `colorvec` keyword
-argument. See [the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiffEq/DiffEqDiffTools.jl#jacobians) for more details.
+argument. See 
+[the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiffEq/DiffEqDiffTools.jl#jacobians) 
+for more details.
 
 For forward-mode automatic differentiation, use of a colorvec vector is provided
 by the following function:
@@ -160,8 +162,9 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 ```
 
 Notice that if a sparsity pattern is not supplied then the built Jacobian will
-be the compressed Jacobian: `sparsity` must be a sparse matrix with the appropriate
-sparsity pattern to allow for decompression.
+be the compressed Jacobian: `sparsity` must be a sparse matrix or a structured matrix
+(`Tridiagonal`, `Banded`, etc. conforming to the ArrayInterface.jl specs) with the 
+appropriate sparsity pattern to allow for decompression.
 
 This call will allocate the cache variables each time. To avoid allocating the
 cache, construct the cache in advance:

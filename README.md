@@ -159,6 +159,10 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             sparsity = nothing)
 ```
 
+Notice that if a sparsity pattern is not supplied then the built Jacobian will
+be the compressed Jacobian: `sparsity` must be a sparse matrix with the appropriate
+sparsity pattern to allow for decompression.
+
 This call will allocate the cache variables each time. To avoid allocating the
 cache, construct the cache in advance:
 

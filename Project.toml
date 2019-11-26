@@ -6,6 +6,7 @@ version = "0.10.3"
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DiffEqDiffTools = "01453d9d-ee7c-5054-8395-0335cb756afa"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -18,6 +19,7 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 [compat]
 Adapt = "1"
 ArrayInterface = "1.1"
+Compat = "2.2, 3"
 DataStructures = "0.17"
 DiffEqDiffTools = "1.3"
 ForwardDiff = "0.10"
@@ -33,9 +35,9 @@ IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SparsityDetection = "684fba80-ace3-11e9-3d08-3bc7ed6f96df"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [targets]
 test = ["Test", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]

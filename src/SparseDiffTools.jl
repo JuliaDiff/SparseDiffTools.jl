@@ -1,5 +1,6 @@
 module SparseDiffTools
 
+using Compat
 using DiffEqDiffTools
 using ForwardDiff
 using LightGraphs

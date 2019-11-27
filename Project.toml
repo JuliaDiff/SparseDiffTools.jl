@@ -18,7 +18,7 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
 Adapt = "1"
-ArrayInterface = "1.1"
+ArrayInterface = "1.1, 2.0"
 Compat = "2.2, 3"
 DataStructures = "0.17"
 DiffEqDiffTools = "1.3"

@@ -86,7 +86,7 @@ end
 Find the set of vertices belonging to the graph G which do
 not share an edge with the vertex x.
 """
-function non_neighbors(G::VSafeGraph, x::Integer)
+function non_neighbors(G::VSafeGraph, x::Int)
 
     nn = zeros(Int, 0)
     for v in vertices(G)

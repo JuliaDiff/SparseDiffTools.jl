@@ -1,9 +1,9 @@
 """
-    color_graph(g::LightGraphs, ::BacktrackingColor)
+    color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 
-Returns a tight, distance-1 coloring of graph g
+Return a tight, distance-1 coloring of graph g
 using the minimum number of colors possible (i.e.
-the chromatic number of graph, χ(g))
+the chromatic number of graph, `χ(g)`)
 """
 function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
     v = nv(g)
@@ -181,9 +181,7 @@ function free_colors(x::Integer,
             push!(freecolors, c)
         end
     end
-
     return freecolors
-
 end
 
 """

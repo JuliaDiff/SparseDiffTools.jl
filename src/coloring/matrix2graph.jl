@@ -1,21 +1,21 @@
 """
-        matrix2graph(SparseMatrix)
+        matrix2graph(sparse_matrix)
 
 A utility function to generate a graph from input
 sparse matrix, columns are represented with vertices
 and 2 vertices are connected with an edge only if
 the two columns are mutually orthogonal.
 """
-function matrix2graph(SparseMatrix::SparseMatrixCSC{T,Int}, partition_by_rows::Bool) where T<:Number
-    dropzeros(SparseMatrix)
-    (rows_index, cols_index, val) = findnz(SparseMatrix)
+function matrix2graph(sparse_matrix::SparseMatrixCSC{<:Number, Int}, partition_by_rows::Bool)
+    dropzeros(sparse_matrix)
+    (rows_index, cols_index, val) = findnz(sparse_matrix)
 
-    cols = size(SparseMatrix, 2)
-    rows = size(SparseMatrix, 1)
+    ncols = size(sparse_matrix, 2)
+    nrows = size(sparse_matrix, 1)
 
-    partition_by_rows ? V = rows : V = cols
+    num_vtx = partition_by_rows ? nrows : ncols
 
-    inner = SimpleGraph(V)
+    inner = SimpleGraph(num_vtx)
     graph = VSafeGraph(inner)
 
     if partition_by_rows

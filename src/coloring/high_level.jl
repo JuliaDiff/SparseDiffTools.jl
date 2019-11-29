@@ -7,12 +7,11 @@ struct GreedyStar2Color <: SparseDiffToolsColoringAlgorithm end
 struct AcyclicColoring <: SparseDiffToolsColoringAlgorithm end
 
 """
-    matrix_colors(A,alg::ColoringAlgorithm = GreedyD1Color())
+    matrix_colors(A, alg::ColoringAlgorithm = GreedyD1Color())
 
-    Returns the colorvec vector for the matrix A using the chosen coloring
-    algorithm. If a known analytical solution exists, that is used instead.
-    The coloring defaults to a greedy distance-1 coloring.
-
+Return the colorvec vector for the matrix A using the chosen coloring
+algorithm. If a known analytical solution exists, that is used instead.
+The coloring defaults to a greedy distance-1 coloring.
 """
 function ArrayInterface.matrix_colors(A::AbstractMatrix, alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy

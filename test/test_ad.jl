@@ -4,6 +4,7 @@ using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices
 using StaticArrays
+using InteractiveUtils: @which
 
 fcalls = 0
 function f(dx,x)
@@ -84,6 +85,8 @@ function second_derivative_stencil(N)
     A
 end
 
+@info "ended definitions"
+
 x = rand(30)
 dx = rand(30)
 
@@ -98,20 +101,29 @@ forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3,10))
 @test _J1 ≈ J
 @test fcalls == 1
 
+@info "second passed"
+
 fcalls = 0
 _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
 @test _J1 ≈ J
 @test fcalls == 1
+
+@info "third passed"
 
 fcalls = 0
 _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J)
 @test _J1 ≈ J
 @test fcalls == 1
 
+@info "4th passed"
+
 fcalls = 0
+@info "which $(@which forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J)))"
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J
 @test fcalls == 1
+
+@info "5"
 
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J

@@ -31,7 +31,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
-    t = reshape(Dual{typeof(f)}.(vec(x),first(p)),size(x)...)
+    t = reshape(Dual{ForwardDiff.Tag(typeof(f),typeof(vec(x)))}.(vec(x),first(p)),size(x)...)
 
     if dx isa Nothing
         fx = similar(t)

@@ -31,7 +31,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
-    t = reshape(Dual{ForwardDiff.Tag(f,vec(x)}.(vec(x),first(p)),size(x)...)
+    t = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(x),first(p)),size(x)...)
 
     if dx isa Nothing
         fx = similar(t)
@@ -43,7 +43,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         else
             pi = pi[1:length(dx)]
         end
-        fx = reshape(Dual{typeof(f)}.(vec(dx),pi),size(dx)...)
+        fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
         _dx = dx
     end
 
@@ -99,7 +99,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{typeof(f)}.(vecx, partial_i),size(t))
+        t = reshape(Dual{ForwardDiff.Tag(f,eltype(vecx))}.(vecx, partial_i),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -169,7 +169,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
     for i in eachindex(p)
         partial_i = p[i]
-        vect .= Dual{typeof(f)}.(vecx, partial_i)
+        vect .= Dual{ForwardDiff.Tag(f,eltype(vecx))}.(vecx, partial_i)
         f(fx,t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize

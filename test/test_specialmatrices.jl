@@ -15,11 +15,11 @@ tridiagonal=Tridiagonal(dense)
 symtridiagonal=SymTridiagonal(dense)
 
 banded=BandedMatrix(dense,(1,2))
-blockbanded1=BlockBandedMatrix(dense,([1,2,3,4],[4,3,2,1]),(1,0))
-blockbanded2=BlockBandedMatrix(dense,([4,3,2,1],[1,2,3,4]),(1,1))
-bandedblockbanded1=BandedBlockBandedMatrix(dense,([1,2,3,4],[4,3,2,1]),(1,0),(1,1))
-bandedblockbanded2=BandedBlockBandedMatrix(dense,([4,3,2,1],[1,2,3,4]),(1,1),(1,0))
-bandedblockbanded3 = BandedBlockBandedMatrix(Zeros(2 * 4 , 2 * 4), ([4, 4] ,[4, 4]), (1, 1), (1, 1))
+blockbanded1=BlockBandedMatrix(dense,[1,2,3,4],[4,3,2,1],(1,0))
+blockbanded2=BlockBandedMatrix(dense,[4,3,2,1],[1,2,3,4],(1,1))
+bandedblockbanded1=BandedBlockBandedMatrix(dense,[1,2,3,4],[4,3,2,1],(1,0),(1,1))
+bandedblockbanded2=BandedBlockBandedMatrix(dense,[4,3,2,1],[1,2,3,4],(1,1),(1,0))
+bandedblockbanded3 = BandedBlockBandedMatrix(Zeros(2 * 4 , 2 * 4), [4, 4] ,[4, 4], (1, 1), (1, 1))
 
 @test matrix_colors(dense)==1:n
 @test matrix_colors(uptri)==1:n

@@ -9,7 +9,7 @@ is a collection of trees—and hence is acyclic.
 
 Reference: Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 """
-function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
+function color_graph(g::LightGraphs.AbstractGraph)
 
     color = zeros(Int, nv(g))
     forbidden_colors = zeros(Int, nv(g))

@@ -3,7 +3,7 @@ using LightGraphs
 using Test
 
 using Random
-Random.seed!(45)
+Random.seed!(123)
 
 # println("Starting acyclic coloring test...")
 #= Test data =#

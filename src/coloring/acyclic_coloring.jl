@@ -83,8 +83,8 @@ function prevent_cycle!(v::Integer,
                         x::Integer,
                         g::LightGraphs.AbstractGraph,
                         set::DisjointSets{<:Integer},
-                        first_visit_to_tree::AbstractVector{<:Tuple{Integer,Integer}},
-                        forbidden_colors::AbstractVector{<:Tuple{Integer, Integer}},
+                        first_visit_to_tree::Array{<:Tuple{Integer,Integer},1},
+                        forbidden_colors::AbstractVector{<:Integer},
                         color::AbstractVector{<:Integer})
     e = find(w, x, g, set)
     p, q = first_visit_to_tree[e]
@@ -113,8 +113,8 @@ edges present in g.
 function grow_star!(v::Integer,
                     w::Integer,
                     g::LightGraphs.AbstractGraph,
-                    set::DisjointSets{Integer},
-                    first_neighbor::AbstractVector{<:Tuple{Integer,Integer}},
+                    set::DisjointSets{<:Integer},
+                    first_neighbor::Array{<: Tuple{Integer,Integer},1},
                     color::AbstractVector{<:Integer})
     make_set!(v,w,g,set)
     p, q = first_neighbor[color[w]]
@@ -223,7 +223,7 @@ end
 
 Helper function to initialize the data structures with tuple (0,0)
 """
-function init_array!(array::AbstractVector{<:Tuple{Integer, Integer}},
+function init_array!(array::Array{<: Tuple{Integer,Integer},1},
                     n::Integer)
     for i in 1:n
         push!(array,(0,0))

@@ -2,42 +2,47 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
     color = zeros(Int, nv(g))
     set = DisjointSets{Int}([])
 
-    first_visit_to_tree = Array{Tuple{Int, Int}, 1}(undef, ne(g))
-    first_neighbor = Array{Tuple{Int, Int}, 1}(undef, ne(g))
+    first_visit_to_tree = Array{Tuple{Int, Int}, 1}()
+    first_neighbor = Array{Tuple{Int, Int}, 1}()
+
+    init_array!(first_visit_to_tree, ne(g))
+    init_array!(first_neighbor, ne(g))
+
+
 
     forbidden_colors = zeros(Int, nv(g))
 
     for v in vertices(g)
-        println(">>>\nOUTER LOOP")
-        println(">>> v = $v")
-        println(">>> first block")
+        # println(">>>\nOUTER LOOP")
+        # println(">>> v = $v")
+        # println(">>> first block")
         for w in outneighbors(g, v)
-            println(">>>     w = $w")
+            # println(">>>     w = $w")
             if color[w]!=0
-                wc = color[w]
-                println(">>>     $w has nonzero color = $wc")
-                println(">>>     setting forbidden color[$wc] = $v")
+                # wc = color[w]
+                # println(">>>     $w has nonzero color = $wc")
+                # println(">>>     setting forbidden color[$wc] = $v")
                 forbidden_colors[color[w]] = v
             end
         end
 
-        println(">>> second block")
+        # println(">>> second block")
         for w in outneighbors(g, v)
-            println(">>>     w = $w")
+            # println(">>>     w = $w")
             if color[w]!=0
-                wc = color[w]
-                println(">>>     $w has nonzero color = $wc")
+                # wc = color[w]
+                # println(">>>     $w has nonzero color = $wc")
                 for x in outneighbors(g, w)
-                    println(">>>          x = $x")
-                    wx = color[x]
-                    println(">>>          $x has color = $wx")
+                    # println(">>>          x = $x")
+                    # wx = color[x]
+                    # println(">>>          $x has color = $wx")
                     if color[x]!=0
-                        println(">>>          $wx != 0")
-                        fbc = forbidden_color[color[x]]
-                        println(">>>          forbidden color[$wx] = $fbc")
+                        # println(">>>          $wx != 0")
+                        # fbc = forbidden_colors[color[x]]
+                        # println(">>>          forbidden color[$wx] = $fbc")
                         if forbidden_colors[color[x]] != v
-                            println(">>>          $fbc != $v")
-                            println(">>>          calling prevent cycle with $v, $w, $x")
+                            # println(">>>          $fbc != $v")
+                            # println(">>>          calling prevent cycle with $v, $w, $x")
                             prevent_cycle!(v, w, x, g, set, first_visit_to_tree, forbidden_colors,color)
                         end
                     end
@@ -45,29 +50,29 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
             end
         end
 
-        println(">>> third block")
+        # println(">>> third block")
         color[v] = min_index(forbidden_colors, v)
-        vc = color[v]
-        println(">>> color of v = $vc")
+        # vc = color[v]
+        # println(">>> color of v = $vc")
         for w in outneighbors(g, v)
-            println(">>>     w = $w")
+            # println(">>>     w = $w")
             if color[w]!=0
-                println(">>>     calling grow star for v = $v, w = $w")
+                # println(">>>     calling grow star for v = $v, w = $w")
                 grow_star!(v, w, g, set,first_neighbor,color)
             end
         end
 
-        println(">>> fourth block")
+        # println(">>> fourth block")
         for w in outneighbors(g, v)
-            println(">>>     w = $w"
+            # println(">>>     w = $w")
             if color[w]!=0
-                wc = color[w]
-                println(">>>     $w has non zero color = $wc")
+                # wc = color[w]
+                # println(">>>     $w has non zero color = $wc")
                 for x in outneighbors(g, w)
-                    wx = color[x]
-                    println(">>>          x = $x")
+                    # wx = color[x]
+                    # println(">>>          x = $x")
                     if color[x]!=0 && x!=v
-                        println(">>>          $x has nonzero color = $wx")
+                        # println(">>>          $x has nonzero color = $wx")
                         if color[x]==color[v]
                             merge_trees!(v,w,x,g,set)
                         end
@@ -79,10 +84,16 @@ function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
     return color
 end
 
+function init_array!(array, n)
+    for i in 1:n
+        push!(array,(0,0))
+    end
+end
+
 function prevent_cycle!(v:: Int, w:: Int, x::Int, g, set, first_visit_to_tree, forbidden_colors,color)
     e = find(w, x, g, set)
     p, q = first_visit_to_tree[e]
-    println(">>> first visit to tree : p = $p, q = $q")
+    # println(">>> first visit to tree : p = $p, q = $q")
     if p != v
         first_visit_to_tree[e] = (v,w)
     elseif q != w
@@ -93,9 +104,9 @@ end
 function grow_star!(v, w,g,set,first_neighbor,color)
     make_set!(v,w,g,set)
     p, q = first_neighbor[color[w]]
-    wc = color[w]
-    println(">>> color of w = $wc")
-    println(">>> first neighbor : p = $p, q = $q")
+    # wc = color[w]
+    # println(">>>     color of w = $wc")
+    # println(">>>     first neighbor : p = $p, q = $q")
     if p != v
         first_neighbor[color[w]] = (v,w)
     else

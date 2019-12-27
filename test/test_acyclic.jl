@@ -3,13 +3,14 @@ using LightGraphs
 using Test
 
 using Random
-Random.seed!(555)
+Random.seed!(45)
 
+# println("Starting acyclic coloring test...")
 #= Test data =#
 test_graphs = Vector{SimpleGraph}(undef, 0)
 test_graphs_dir = Vector{SimpleDiGraph}(undef, 0)
 
-for _ in 1:5
+for _ in 1:6
     nv = rand(5:20)
     ne = rand(1:100)
     graph = SimpleGraph(nv)
@@ -94,7 +95,7 @@ for g in test_graphs
 end
 
 
-for i in 1:4
+for i in 1:5
     g = test_graphs[i]
     dg = test_graphs_dir[i]
     println("Testing graph $i")
@@ -107,7 +108,7 @@ for i in 1:4
     end
     println()
     out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.AcyclicColoring())
-
+    # println(out_colors)
     #test condition 1
     for v in vertices(g)
         color = out_colors[v]
@@ -116,22 +117,25 @@ for i in 1:4
         end
     end
 end
-#
-# for i in 3:6
-#     g = test_graphs[i]
-#     dg = test_graphs_dir[i]
-#     out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.AcyclicColoring())
-#
-#     #test condition 2
-#     cycles = simplecycles(dg)
-#     for c in cycles
-#         colors = zeros(Int, 0)
-#         if length(c) > 2
-#             for v in c
-#                 push!(colors, out_colors[v])
-#             end
-#             @test length(unique(colors)) >= 3
-#         end
-#     end
-#
-# end
+
+for i in 3:4
+    g = test_graphs[i]
+    dg = test_graphs_dir[i]
+    # println("testing graph $i")
+    out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.AcyclicColoring())
+    # println(out_colors)
+    #test condition 2
+    cycles = simplecycles(dg)
+    for c in cycles
+        colors = zeros(Int, 0)
+        if length(c) > 2
+            for v in c
+                push!(colors, out_colors[v])
+            end
+            @test length(unique(colors)) >= 3
+        end
+    end
+    # println("finished testing graph $i")
+end
+
+# println("finished testing...")

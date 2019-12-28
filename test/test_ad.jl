@@ -215,7 +215,7 @@ function f(out, x)
 	return vec(out)
 end
 x = rand(10000)
-J = BandedBlockBandedMatrix(Ones(10000, 10000), (fill(100, 100), fill(100, 100)), (1, 1), (1, 1))
+J = BandedBlockBandedMatrix(Ones(10000, 10000), fill(100, 100), fill(100, 100), (1, 1), (1, 1))
 Jsparse = sparse(J)
 colors = matrix_colors(J)
 forwarddiff_color_jacobian!(J, f, x, colorvec=colors)

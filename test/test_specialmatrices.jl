@@ -42,7 +42,7 @@ function _testvalidity(A)
     colorvec=matrix_colors(A)
     ncolor=maximum(colorvec)
     for colorvec in 1:ncolor
-        subA=A[:,findall(x->x==colorvec,colorvec)]
+        subA=Array(A)[:,findall(x->x==colorvec,colorvec)]
         @test maximum(sum(subA,dims=2))<=1.0
     end
 end
@@ -56,7 +56,7 @@ _testvalidity(bidiagonalL)
 _testvalidity(tridiagonal)
 _testvalidity(symtridiagonal)
 _testvalidity(banded)
-#_testvalidity(blockbanded1)
+_testvalidity(blockbanded1)
 _testvalidity(blockbanded2)
 _testvalidity(bandedblockbanded1)
 _testvalidity(bandedblockbanded2)

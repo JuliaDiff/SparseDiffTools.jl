@@ -1,8 +1,8 @@
 # SparseDiffTools.jl
 
-[![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/JuliaDiffEq/SparseDiffTools.jl.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/SparseDiffTools.jl)
-[![GitlabCI](https://gitlab.com/juliadiffeq/SparseDiffTools-jl/badges/master/pipeline.svg)](https://gitlab.com/juliadiffeq/SparseDiffTools-jl/pipelines)
+[![Join the chat at https://gitter.im/JuliaDiff/Lobby](https://badges.gitter.im/JuliaDiff/Lobby.svg)](https://gitter.im/JuliaDiff/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/JuliaDiff/SparseDiffTools.jl.svg?branch=master)](https://travis-ci.org/JuliaDiff/SparseDiffTools.jl)
+[![GitlabCI](https://gitlab.com/JuliaDiff/SparseDiffTools-jl/badges/master/pipeline.svg)](https://gitlab.com/JuliaDiff/SparseDiffTools-jl/pipelines)
 
 This package is for exploiting sparsity in Jacobians and Hessians to accelerate
 computations. Matrix-free Jacobian-vector product and Hessian-vector product
@@ -145,8 +145,8 @@ DiffEqDiffTools.jl and for automatic differentiation is provided by
 ForwardDiff.jl.
 
 For DiffEqDiffTools.jl, one simply has to use the provided `colorvec` keyword
-argument. See 
-[the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiffEq/DiffEqDiffTools.jl#jacobians) 
+argument. See
+[the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiff/DiffEqDiffTools.jl#jacobians)
 for more details.
 
 For forward-mode automatic differentiation, use of a colorvec vector is provided
@@ -163,7 +163,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
 Notice that if a sparsity pattern is not supplied then the built Jacobian will
 be the compressed Jacobian: `sparsity` must be a sparse matrix or a structured matrix
-(`Tridiagonal`, `Banded`, etc. conforming to the ArrayInterface.jl specs) with the 
+(`Tridiagonal`, `Banded`, etc. conforming to the ArrayInterface.jl specs) with the
 appropriate sparsity pattern to allow for decompression.
 
 This call will allocate the cache variables each time. To avoid allocating the

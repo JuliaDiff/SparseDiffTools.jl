@@ -203,7 +203,7 @@ _Jt = similar(Tridiagonal(J))
 forwarddiff_color_jacobian!(_Jt, f, x, colorvec = repeat(1:3,10), sparsity = _Jt)
 @test _Jt ≈ J
 
-#https://github.com/JuliaDiffEq/DiffEqDiffTools.jl/issues/67#issuecomment-516871956
+#https://github.com/JuliaDiff/DiffEqDiffTools.jl/issues/67#issuecomment-516871956
 function f(out, x)
 	x = reshape(x, 100, 100)
 	out = reshape(out, 100, 100)

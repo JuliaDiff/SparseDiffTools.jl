@@ -108,12 +108,12 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
                 pick_inds = [i for i in 1:length(rows_index) if colorvec[cols_index[i]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
-                len_rows = length(pick_inds)
-                unused_rows = setdiff(1:nrows,rows_index_c)
-                perm_rows = sortperm(vcat(rows_index_c,unused_rows))
                 if J isa SparseMatrixCSC
                     Ji = sparse(rows_index_c, cols_index_c, dx[rows_index_c],nrows,ncols)
                 else
+                    len_rows = length(pick_inds)
+                    unused_rows = setdiff(1:nrows,rows_index_c)
+                    perm_rows = sortperm(vcat(rows_index_c,unused_rows))
                     cols_index_c = vcat(cols_index_c,zeros(Int,nrows-len_rows))[perm_rows]
                     Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:nrows, j in 1:ncols]
                 end

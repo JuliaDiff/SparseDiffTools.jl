@@ -106,6 +106,7 @@ forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3,10))
 fcalls = 0
 _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
 @test _J1 ≈ J
+@test typeof(_J1) == typeof(_J)
 @test fcalls == 1
 
 @info "third passed"
@@ -146,6 +147,7 @@ _nsqJ = forwarddiff_color_jacobian(nsqf, x, colorvec = repeat(1:3,10), sparsity 
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(nsqf, x, jac_prototype = SMatrix{15,30}(nsqJ))
 @test _nsqJ ≈ nsqJ
+@test typeof(_nsqJ) == typeof(SMatrix{15,30}(nsqJ))
 _nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x), jac_prototype = SMatrix{15,30}(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x), jac_prototype = SMatrix{15,30}(nsqJ), colorvec = repeat(1:3,10), sparsity = spnsqJ)

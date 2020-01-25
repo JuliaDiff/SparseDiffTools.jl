@@ -12,7 +12,7 @@ _denseJ1 = cu(collect(_J1))
 x = cu(rand(30))
 CuArrays.allowscalar(false)
 forwarddiff_color_jacobian!(_denseJ1, f, x)
-forwarddiff_color_jacobian!(_denseJ1, f, x, sparsity = _J1)
-forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _J1)
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, sparsity = _J1) isa Nothing
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _J1) isa Nothing
 _Jt = similar(Tridiagonal(_J1))
-@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _Jt)
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _Jt) isa Nothing

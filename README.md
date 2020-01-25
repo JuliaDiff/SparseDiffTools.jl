@@ -71,8 +71,8 @@ pattern used 1 (pseudo) `f`-evaluation, so the total number of times that
 is 5 times:
 
 ```julia
-using DiffEqDiffTools
-DiffEqDiffTools.finite_difference_jacobian!(jac, f, rand(30), colorvec=colors)
+using FiniteDiff
+FiniteDiff.finite_difference_jacobian!(jac, f, rand(30), colorvec=colors)
 @show fcalls # 5
 ```
 
@@ -141,12 +141,12 @@ The result is a vector which assigns a colorvec to each column (or row) of the m
 ### Colorvec-Assisted Differentiation
 
 Colorvec-assisted differentiation for numerical differentiation is provided by
-DiffEqDiffTools.jl and for automatic differentiation is provided by
+FiniteDiff.jl and for automatic differentiation is provided by
 ForwardDiff.jl.
 
-For DiffEqDiffTools.jl, one simply has to use the provided `colorvec` keyword
+For FiniteDiff.jl, one simply has to use the provided `colorvec` keyword
 argument. See
-[the DiffEqDiffTools Jacobian documentation](https://github.com/JuliaDiff/DiffEqDiffTools.jl#jacobians)
+[the FiniteDiff Jacobian documentation](https://github.com/JuliaDiff/FiniteDiff.jl#jacobians)
 for more details.
 
 For forward-mode automatic differentiation, use of a colorvec vector is provided

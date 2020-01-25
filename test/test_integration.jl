@@ -1,5 +1,5 @@
 using SparseDiffTools
-using DiffEqDiffTools: finite_difference_jacobian, finite_difference_jacobian!
+using FiniteDiff: finite_difference_jacobian, finite_difference_jacobian!
 using SparsityDetection
 
 using LinearAlgebra, SparseArrays, Test

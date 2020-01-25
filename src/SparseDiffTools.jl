@@ -1,7 +1,7 @@
 module SparseDiffTools
 
 using Compat
-using DiffEqDiffTools
+using FiniteDiff
 using ForwardDiff
 using LightGraphs
 using Requires

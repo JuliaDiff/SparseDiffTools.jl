@@ -153,7 +153,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     maxcolor = maximum(colorvec)
     fill!(J, zero(eltype(J)))
 
-    if DiffEqDiffTools._use_findstructralnz(sparsity)
+    if FiniteDiff._use_findstructralnz(sparsity)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
     else
         rows_index = nothing
@@ -176,7 +176,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 dx .= partials.(fx, j)
                 if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
-                    DiffEqDiffTools._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
+                    FiniteDiff._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
                 else
                     #=
                     J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]

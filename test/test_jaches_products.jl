@@ -1,4 +1,4 @@
-using SparseDiffTools, ForwardDiff, DiffEqDiffTools, Zygote, IterativeSolvers
+using SparseDiffTools, ForwardDiff, FiniteDiff, Zygote, IterativeSolvers
 using LinearAlgebra, Test
 
 using Random
@@ -12,10 +12,10 @@ v = rand(300)
 du = similar(x)
 g(u) = sum(abs2,u)
 function h(x)
-      DiffEqDiffTools.finite_difference_gradient(g,x)
+      FiniteDiff.finite_difference_gradient(g,x)
 end
 function h(dx,x)
-      DiffEqDiffTools.finite_difference_gradient!(dx,g,x)
+      FiniteDiff.finite_difference_gradient!(dx,g,x)
 end
 
 cache1 = ForwardDiff.Dual{SparseDiffTools.DeivVecTag}.(x, v)

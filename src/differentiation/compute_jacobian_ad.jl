@@ -43,6 +43,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         else
             pi = pi[1:length(dx)]
         end
+        @show typeof(dx),typeof(pi)
         fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
         _dx = dx
     end
@@ -131,7 +132,7 @@ end
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 f,
                 x::AbstractArray{<:Number};
-                dx = Array{eltype(x)}(undef,size(J,1)),
+                dx = similar(x,size(J,1)),
                 colorvec = 1:length(x),
                 sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity))
@@ -156,8 +157,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     if FiniteDiff._use_findstructralnz(sparsity)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
     else
-        rows_index = nothing
-        cols_index = nothing
+        rows_index = 1:size(J,1)
+        cols_index = 1:size(J,2)
     end
 
     vecx = vec(x)

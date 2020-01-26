@@ -43,7 +43,6 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         else
             pi = pi[1:length(dx)]
         end
-        @show typeof(dx),typeof(pi)
         fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
         _dx = dx
     end

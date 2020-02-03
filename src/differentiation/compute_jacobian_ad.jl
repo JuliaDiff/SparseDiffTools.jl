@@ -76,6 +76,8 @@ function forwarddiff_color_jacobian(f,
     forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
+void(f) = (args...)->(f(args...); return)
+
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
     t = jac_cache.t
     dx = jac_cache.dx
@@ -189,9 +191,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     += means requires a zero'd out start
                     =#
                     if J isa SparseMatrixCSC
-                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
+                        @. void(setindex!)((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
                     else
-                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
+                        @. void(setindex!)((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1

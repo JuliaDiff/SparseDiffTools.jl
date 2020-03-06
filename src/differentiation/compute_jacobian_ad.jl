@@ -69,11 +69,12 @@ function forwarddiff_color_jacobian(f,
                 dx = copy(x), #if dx is nothing, we will estimate dx at the cost of a function call
                 colorvec = 1:length(x),
                 sparsity = nothing,
-                jac_prototype = nothing)
+                jac_prototype = nothing,
+                chunksize = nothing)
     if dx isa Nothing
         dx = f(x)
     end
-    forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+    forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)

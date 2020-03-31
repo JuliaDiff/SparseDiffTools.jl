@@ -4,7 +4,6 @@ using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices
 using StaticArrays
-using InteractiveUtils: @which
 
 fcalls = 0
 function f(dx,x)
@@ -119,7 +118,6 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = 
 @info "4th passed"
 
 fcalls = 0
-@info "which $(@which forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J)))"
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = SMatrix{30,30}(_J))
 @test _J1 ≈ J
 @test fcalls == 1

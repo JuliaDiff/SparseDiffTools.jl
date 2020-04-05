@@ -37,12 +37,8 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         fx = similar(t)
         _dx = similar(x)
     else
-        pi = first(p) #perform trim (length(dx)<length(x)) or padding (length(dx)>length(x)) to first(p)
-        if length(dx)>length(x)
-            pi = vcat(pi,reshape(mapslices(Tuple,zeros(Bool,length(first(pi)),length(dx)-length(x)),dims=1),:))
-        else
-            pi = pi[1:length(dx)]
-        end
+        tup = first(first(p)) .* false
+        pi = adapt.(typeof(dx),[tup for i in 1:length(dx)])
         fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
         _dx = dx
     end

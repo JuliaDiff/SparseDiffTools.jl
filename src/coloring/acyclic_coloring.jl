@@ -192,11 +192,12 @@ function find(w::Integer,
               g::LightGraphs.AbstractGraph,
               two_colored_forest::DisjointSets{<:Integer})
     edge_index = find_edge_index(w, x, g)
-    return find_root(two_colored_forest, edge_index)
+    return find_root!(two_colored_forest, edge_index)
 end
 
 
 """
+
         find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
 
 Returns an integer equivalent to the index of the edge connecting the vertices

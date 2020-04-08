@@ -197,7 +197,6 @@ end
 
 
 """
-
         find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
 
 Returns an integer equivalent to the index of the edge connecting the vertices

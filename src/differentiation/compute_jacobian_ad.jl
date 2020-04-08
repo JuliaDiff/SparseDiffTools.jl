@@ -39,7 +39,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     else
         tup = first(first(p)) .* false
         _pi = adapt.(typeof(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
+        fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),_pi),size(dx)...)
         _dx = dx
     end
 

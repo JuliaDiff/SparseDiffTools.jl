@@ -31,14 +31,14 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
-    t = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(x),first(p)),size(x)...)
-
+    _t = Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(x),first(p))
+    t = ArrayInterface.restructure(x,_t)
     if dx isa Nothing
         fx = similar(t)
         _dx = similar(x)
     else
         tup = first(first(p)) .* false
-        pi = adapt.(typeof(dx),[tup for i in 1:length(dx)])
+        _pi = adapt.(typeof(dx),[tup for i in 1:length(dx)])
         fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),pi),size(dx)...)
         _dx = dx
     end

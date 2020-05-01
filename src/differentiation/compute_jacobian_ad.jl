@@ -18,6 +18,7 @@ end
 
 getsize(::Val{N}) where N = N
 getsize(N::Integer) = N
+void_setindex!(args...) = (setindex!(args...); return)
 
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
@@ -30,15 +31,15 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    p = adapt.(typeof(x),generate_chunked_partials(x,colorvec,chunksize))
+    p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
     _t = Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(x),first(p))
     t = ArrayInterface.restructure(x,_t)
     if dx isa Nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        tup = first(first(p)) .* false
-        _pi = adapt.(typeof(dx),[tup for i in 1:length(dx)])
+        tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
+        _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
         fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),_pi),size(dx)...)
         _dx = dx
     end
@@ -121,7 +122,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > ncols) && return J
-                Ji = mapreduce(i -> i==col_index ? partials.(vec(fx), j) : zeros(nrows), hcat, 1:ncols)
+                Ji = mapreduce(i -> i==col_index ? partials.(vec(fx), j) : adapt(parameterless_type(J),zeros(eltype(J),nrows)), hcat, 1:ncols)
                 J = J + (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
             end
         end

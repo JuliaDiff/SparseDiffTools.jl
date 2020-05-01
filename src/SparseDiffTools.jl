@@ -46,6 +46,10 @@ include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
 
+Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
+parameterless_type(x) = parameterless_type(typeof(x))
+parameterless_type(x::Type) = __parameterless_type(x)
+
 function __init__()
     @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
         export numback_hesvec, numback_hesvec!, autoback_hesvec, autoback_hesvec!

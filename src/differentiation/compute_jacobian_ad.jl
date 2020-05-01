@@ -32,7 +32,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     end
 
     p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-    _t = Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(x),first(p))
+    _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
     t = ArrayInterface.restructure(x,_t)
     if dx isa Nothing
         fx = similar(t)
@@ -40,7 +40,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     else
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
         _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),_pi),size(dx)...)
+        fx = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(dx),_pi),size(dx)...)
         _dx = dx
     end
 
@@ -97,7 +97,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{ForwardDiff.Tag(f,eltype(vecx))}.(vecx, partial_i),size(t))
+        t = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -171,7 +171,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
     for i in eachindex(p)
         partial_i = p[i]
-        vect .= Dual{ForwardDiff.Tag(f,eltype(vecx))}.(vecx, partial_i)
+        vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
         f(fx,t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize

@@ -40,7 +40,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
     else
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
         _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{ForwardDiff.Tag(f,eltype(vec(x)))}.(vec(dx),_pi),size(dx)...)
+        fx = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(dx),_pi),size(dx)...)
         _dx = dx
     end
 

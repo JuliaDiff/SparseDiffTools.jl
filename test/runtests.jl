@@ -1,8 +1,15 @@
+using Pkg
 using SafeTestsets
 
 const GROUP = get(ENV, "GROUP", "All")
 const is_APPVEYOR = ( Sys.iswindows() && haskey(ENV,"APPVEYOR") )
 const is_TRAVIS = haskey(ENV,"TRAVIS")
+
+function activate_gpu_env()
+    Pkg.activate("gpu")
+    Pkg.develop(PackageSpec(path=dirname(@__DIR__)))
+    Pkg.instantiate()
+end
 
 if GROUP == "All"
     @time @safetestset "Exact coloring via contraction" begin include("test_contraction.jl") end
@@ -17,5 +24,6 @@ if GROUP == "All"
 end
 
 if GROUP == "GPU"
+    activate_gpu_env()
     @time @safetestset "GPU AD" begin include("test_gpu_ad.jl") end
 end

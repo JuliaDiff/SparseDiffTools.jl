@@ -61,13 +61,17 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
 
 end
 
-function forwarddiff_color_jacobian(f,
+@inline function forwarddiff_color_jacobian(f,
                 x::AbstractArray{<:Number};
-                dx = copy(x), #if dx is nothing, we will estimate dx at the cost of a function call
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
-                chunksize = nothing)
+                chunksize = nothing,
+                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
+    if sparsity === nothing && jac_prototype === nothing
+        cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+        return ForwardDiff.jacobian(f, x, cfg)
+    end
     if dx isa Nothing
         dx = f(x)
     end

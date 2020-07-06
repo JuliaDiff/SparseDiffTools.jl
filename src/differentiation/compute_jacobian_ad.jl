@@ -61,13 +61,17 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
 
 end
 
-function forwarddiff_color_jacobian(f,
+@inline function forwarddiff_color_jacobian(f,
                 x::AbstractArray{<:Number};
-                dx = copy(x), #if dx is nothing, we will estimate dx at the cost of a function call
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
-                chunksize = nothing)
+                chunksize = nothing,
+                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
+    if sparsity === nothing && jac_prototype === nothing || !ArrayInterface.ismutable(x)
+        cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+        return ForwardDiff.jacobian(f, x, cfg)
+    end
     if dx isa Nothing
         dx = f(x)
     end
@@ -193,15 +197,15 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     end
                 end
                 color_i += 1
-                (color_i > maxcolor) && return
+                (color_i > maxcolor) && return J
             end
         else
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
-                (col_index > ncols) && return
+                (col_index > ncols) && return J
                 J[:, col_index] .= partials.(vecfx, j)
             end
         end
     end
-    nothing
+    return J
 end

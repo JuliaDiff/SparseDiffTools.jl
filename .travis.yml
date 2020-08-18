@@ -6,9 +6,8 @@ branches:
     - master
 os:
   - linux
-  - osx
+# - osx
 julia:
-  - 1.2
   - 1
   - nightly
 matrix:

@@ -37,7 +37,7 @@ cache2 = ForwardDiff.Dual{SparseDiffTools.DeivVecTag}.(x, v)
 @test numauto_hesvec(g, x, v) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-8
 
 @test autonum_hesvec!(du, g, x, v) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-2
-@test autonum_hesvec!(du, g, x, v, similar(v), cache1, cache2) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-2
+@test autonum_hesvec!(du, g, x, v, cache1, cache2) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-2
 @test autonum_hesvec(g, x, v) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-8
 
 @test numback_hesvec!(du, g, x, v) ≈ ForwardDiff.hessian(g,x)*v rtol=1e-8

@@ -93,14 +93,13 @@ function numauto_hesvec(f,x,v)
 end
 
 function autonum_hesvec!(du,f,x,v,
-                     cache1 = similar(v),
-                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+                     cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v))
     cache = FiniteDiff.GradientCache(v[1],cache1,Val{:central})
     g = (dx,x) -> FiniteDiff.finite_difference_gradient!(dx,f,x,cache)
-    cache2 .= Dual{DeivVecTag}.(x, v)
-    g(cache3,cache2)
-    du .= partials.(cache3, 1)
+    cache1 .= Dual{DeivVecTag}.(x, v)
+    g(cache2,cache1)
+    du .= partials.(cache2, 1)
 end
 
 function autonum_hesvec(f,x,v)

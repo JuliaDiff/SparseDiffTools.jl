@@ -1,5 +1,6 @@
 using SparseDiffTools
 using LightGraphs
+using LightGraphs: SimpleGraph
 using Random
 #=
             Graph g0

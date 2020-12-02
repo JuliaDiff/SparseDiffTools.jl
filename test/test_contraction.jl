@@ -1,6 +1,7 @@
 using SparseDiffTools
 using VertexSafeGraphs
 using LightGraphs
+using LightGraphs: SimpleGraph
 
 using Random
 Random.seed!(123)

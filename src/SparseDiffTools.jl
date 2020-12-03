@@ -4,6 +4,7 @@ using Compat
 using FiniteDiff
 using ForwardDiff
 using LightGraphs
+using LightGraphs: SimpleGraph
 using Requires
 using VertexSafeGraphs
 using Adapt

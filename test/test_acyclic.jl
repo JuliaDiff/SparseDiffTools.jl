@@ -1,5 +1,6 @@
 using SparseDiffTools
 using LightGraphs
+using LightGraphs: SimpleGraph
 using Test
 
 using Random

@@ -17,7 +17,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
-Adapt = "1, 2.0"
+Adapt = "1, 2.0, 3.0"
 ArrayInterface = "2.8"
 Compat = "2.2, 3"
 DataStructures = "0.17, 0.18"

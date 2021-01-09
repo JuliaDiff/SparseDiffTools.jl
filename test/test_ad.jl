@@ -117,7 +117,6 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = 
 
 
 #oop with in-place Jacobian
-x = rand(30)
 fcalls = 0
 _oop_jacout = spzeros(size(J)...)
 forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)

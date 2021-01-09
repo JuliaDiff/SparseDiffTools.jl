@@ -94,16 +94,18 @@ end
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
-    dx = jac_cache.dx
-    vecx = vec(x)
-    sparsity = jac_cache.sparsity
 
-    J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
+    if jac_prototype isa Nothing ? ArrayInterface.ismutable(x) : ArrayInterface.ismutable(jac_prototype)
+        # Whenever J is mutable, we mutate it to avoid allocations
+        dx = jac_cache.dx
+        vecx = vec(x)
+        sparsity = jac_cache.sparsity
 
-    if ArrayInterface.ismutable(J) # Whenever J is mutable, we mutate it to avoid allocations
+        J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' :
+                                         zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
         forwarddiff_color_jacobian(J, f, x, jac_cache)
     else
-        forwarddiff_color_jacobian_immutable(J, f, x, jac_cache)
+        return forwarddiff_color_jacobian_immutable(f, x, jac_cache, jac_prototype)
     end
 end
 
@@ -138,9 +140,12 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArr
                 pick_inds = [i for i in 1:length(rows_index) if colorvec[cols_index[i]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
-                if J isa SparseMatrixCSC
+                if J isa SparseMatrixCSC || j > 1
+                    # Use sparse matrix to add to J column by column except . . .
                     Ji = sparse(rows_index_c, cols_index_c, dx[rows_index_c],nrows,ncols)
                 else
+                    # To overwrite pre-allocated matrix J, using sparse will cause an error
+                    # so we use this step to overwrite J
                     len_rows = length(pick_inds)
                     unused_rows = setdiff(1:nrows,rows_index_c)
                     perm_rows = sortperm(vcat(rows_index_c,unused_rows))
@@ -148,7 +153,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArr
                     Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:nrows, j in 1:ncols]
                 end
                 if j == 1 && i == 1
-                    J .= Ji # overwrite pre-allocated matrix
+                    J .= Ji # overwrite pre-allocated matrix J
                 else
                     J .+= Ji
                 end
@@ -172,7 +177,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArr
 end
 
 # When J is immutable, this version of forwarddiff_color_jacobian will avoid mutating J
-function forwarddiff_color_jacobian_immutable(J::AbstractArray{<:Number},f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache)
+function forwarddiff_color_jacobian_immutable(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
     t = jac_cache.t
     dx = jac_cache.dx
     p = jac_cache.p
@@ -184,6 +189,7 @@ function forwarddiff_color_jacobian_immutable(J::AbstractArray{<:Number},f,x::Ab
 
     vecx = vec(x)
 
+    J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
     nrows,ncols = size(J)
 
     if !(sparsity isa Nothing)

@@ -115,10 +115,9 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = 
 @test _J1 ≈ J
 @test fcalls == 1
 
-
 #oop with in-place Jacobian
 fcalls = 0
-_oop_jacout = spzeros(size(J)...)
+_oop_jacout = sparse(1.01 .* J) # want to be nonzero to check that the pre-allocated matrix is overwritten properly
 forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
 @test _oop_jacout ≈ J
 @test typeof(_oop_jacout) == typeof(_J)

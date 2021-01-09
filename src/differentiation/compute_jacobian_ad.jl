@@ -189,7 +189,11 @@ function forwarddiff_color_jacobian(J::SparseMatrixCSC{<:Number},f,x::AbstractAr
                 cols_index_c = cols_index[pick_inds]
                 Ji = sparse(rows_index_c, cols_index_c, dx[rows_index_c],nrows,ncols)
                 # J = J + Ji
-                J .+= Ji
+                if j == 1 && i == 1
+                    J .= Ji # overwrite pre-allocated matrix
+                else
+                    J .+= Ji
+                end
                 color_i += 1
                 (color_i > maxcolor) && return J
             end
@@ -199,7 +203,11 @@ function forwarddiff_color_jacobian(J::SparseMatrixCSC{<:Number},f,x::AbstractAr
                 (col_index > ncols) && return J
                 Ji = mapreduce(i -> i==col_index ? partials.(vec(fx), j) : adapt(parameterless_type(J),zeros(eltype(J),nrows)), hcat, 1:ncols)
                 # J = J + (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
-                J .+= (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
+                if j == 1 && i == 1
+                    J .= (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) # overwrite pre-allocated matrix
+                else
+                    J .+= (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
+                end
             end
         end
     end

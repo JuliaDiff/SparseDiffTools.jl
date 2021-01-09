@@ -83,12 +83,13 @@ end
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
-                chunksize = nothing) # Note no dx keyword b/c can infer Jacobian's size via J
+                chunksize = nothing,
+                dx = similar(x, size(J, 1))) #if dx is nothing, we will estimate dx at the cost of a function call
     if sparsity === nothing && jac_prototype === nothing || !ArrayInterface.ismutable(x)
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
-    forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=similar(x,size(J, 1)),colorvec=colorvec,sparsity=sparsity),jac_prototype)
+    forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)

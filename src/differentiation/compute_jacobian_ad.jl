@@ -68,16 +68,14 @@ end
                 jac_prototype = nothing,
                 chunksize = nothing,
                 dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
-    @show typeof(x)
 
-    if sparsity === nothing && jac_prototype === nothing || !ArrayInterface.ismutable(x)
+    if sparsity === nothing && jac_prototype === nothing
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
     if dx isa Nothing
         dx = f(x)
     end
-    @show "Line 80"
     forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
@@ -88,12 +86,11 @@ end
                 jac_prototype = nothing,
                 chunksize = nothing,
                 dx = similar(x, size(J, 1))) #dx kwarg can be used to avoid re-allocating dx every time
-    if sparsity === nothing && jac_prototype === nothing || !ArrayInterface.ismutable(x)
+    if sparsity === nothing && jac_prototype === nothing
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
-    @show "Line 95"
-    forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+    forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
@@ -103,13 +100,10 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
     J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' : zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
 
-    @show typeof(J)
     if ArrayInterface.ismutable(J) # Whenever J is mutable, we mutate it to avoid allocations
-        @show "Line 108"
-        forwarddiff_color_jacobian(J, f, x, jac_cache, jac_prototype)
+        forwarddiff_color_jacobian(J, f, x, jac_cache)
     else
-        @show "Line 111"
-        forwarddiff_color_jacobian_immutable(J, f, x, jac_cache, jac_prototype)
+        forwarddiff_color_jacobian_immutable(J, f, x, jac_cache)
     end
 end
 

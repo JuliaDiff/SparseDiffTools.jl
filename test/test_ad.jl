@@ -3,6 +3,7 @@ using ForwardDiff: Dual, jacobian
 using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices
+using BandedMatrices
 using StaticArrays
 
 fcalls = 0
@@ -121,6 +122,13 @@ _oop_jacout = sparse(1.01 .* J) # want to be nonzero to check that the pre-alloc
 forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
 @test _oop_jacout ≈ J
 @test typeof(_oop_jacout) == typeof(_J)
+@test fcalls == 1
+
+_oop_jacout = BandedMatrix(1.01 .* _oop_jacout) # check w/BandedMatrix instead of sparse
+fcalls = 0
+forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
+@test _oop_jacout ≈ J
+@test isa(_oop_jacout, BandedMatrix)
 @test fcalls == 1
 
 @info "4th passed"

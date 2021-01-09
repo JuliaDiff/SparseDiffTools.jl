@@ -140,6 +140,53 @@ function forwarddiff_color_jacobian(J::AbstractArray{<:Number},f,x::AbstractArra
                     cols_index_c = vcat(cols_index_c,zeros(Int,nrows-len_rows))[perm_rows]
                     Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:nrows, j in 1:ncols]
                 end
+                J = J + Ji
+                color_i += 1
+                (color_i > maxcolor) && return J
+            end
+        else
+            for j in 1:chunksize
+                col_index = (i-1)*chunksize + j
+                (col_index > ncols) && return J
+                Ji = mapreduce(i -> i==col_index ? partials.(vec(fx), j) : adapt(parameterless_type(J),zeros(eltype(J),nrows)), hcat, 1:ncols)
+                J = J + (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
+            end
+        end
+    end
+    J
+end
+
+function forwarddiff_color_jacobian(J::SparseMatrixCSC{<:Number},f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
+    t = jac_cache.t
+    dx = jac_cache.dx
+    p = jac_cache.p
+    colorvec = jac_cache.colorvec
+    sparsity = jac_cache.sparsity
+    chunksize = jac_cache.chunksize
+    color_i = 1
+    maxcolor = maximum(colorvec)
+
+    vecx = vec(x)
+
+    nrows,ncols = size(J)
+
+    if !(sparsity isa Nothing)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index = [rows_index[i] for i in 1:length(rows_index)]
+        cols_index = [cols_index[i] for i in 1:length(cols_index)]
+    end
+
+    for i in eachindex(p)
+        partial_i = p[i]
+        t = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i),size(t))
+        fx = f(t)
+        if !(sparsity isa Nothing)
+            for j in 1:chunksize
+                dx = vec(partials.(fx, j))
+                pick_inds = [i for i in 1:length(rows_index) if colorvec[cols_index[i]] == color_i]
+                rows_index_c = rows_index[pick_inds]
+                cols_index_c = cols_index[pick_inds]
+                Ji = sparse(rows_index_c, cols_index_c, dx[rows_index_c],nrows,ncols)
                 # J = J + Ji
                 J .+= Ji
                 color_i += 1

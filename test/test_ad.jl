@@ -115,6 +115,16 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3,10), sparsity = 
 @test _J1 ≈ J
 @test fcalls == 1
 
+
+#oop with in-place Jacobian
+x = rand(30)
+fcalls = 0
+_oop_jacout = spzeros(size(J)...)
+forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
+@test _oop_jacout ≈ J
+@test typeof(_oop_jacout) == typeof(_J)
+@test fcalls == 1
+
 @info "4th passed"
 
 fcalls = 0
@@ -238,12 +248,3 @@ f(x) = x
 J = forwarddiff_color_jacobian(f,x)
 @test J isa SArray
 @test J ≈ SMatrix{1,1}([1.])
-
-@info "6"
-#oop with in-place Jacobian
-fcalls = 0
-_oop_jacout = spzeros(size(J)...)
-forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3,10), sparsity = _J, jac_prototype = _J)
-@test _oop_jacout ≈ J
-@test typeof(_oop_jacout) == typeof(_J)
-@test fcalls == 1

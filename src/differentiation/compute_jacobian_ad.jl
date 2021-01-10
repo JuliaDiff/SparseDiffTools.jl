@@ -76,7 +76,7 @@ end
     if dx isa Nothing
         dx = f(x)
     end
-    forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+    return forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
 @inline function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f,
@@ -90,7 +90,7 @@ end
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
-    forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
+    return forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
@@ -103,7 +103,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 
         J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' :
                                          zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
-        forwarddiff_color_jacobian(J, f, x, jac_cache)
+        return forwarddiff_color_jacobian(J, f, x, jac_cache)
     else
         return forwarddiff_color_jacobian_immutable(f, x, jac_cache, jac_prototype)
     end
@@ -173,7 +173,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArr
             end
         end
     end
-    J
+    return J
 end
 
 # When J is immutable, this version of forwarddiff_color_jacobian will avoid mutating J
@@ -230,7 +230,7 @@ function forwarddiff_color_jacobian_immutable(f,x::AbstractArray{<:Number},jac_c
             end
         end
     end
-    J
+    return J
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},

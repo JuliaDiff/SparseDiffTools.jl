@@ -68,17 +68,116 @@ end
                 jac_prototype = nothing,
                 chunksize = nothing,
                 dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
-    if sparsity === nothing && jac_prototype === nothing || !ArrayInterface.ismutable(x)
+
+    if sparsity === nothing && jac_prototype === nothing
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
     if dx isa Nothing
         dx = f(x)
     end
-    forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+    return forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
+end
+
+@inline function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f,
+                x::AbstractArray{<:Number};
+                colorvec = 1:length(x),
+                sparsity = nothing,
+                jac_prototype = nothing,
+                chunksize = nothing,
+                dx = similar(x, size(J, 1))) #dx kwarg can be used to avoid re-allocating dx every time
+    if sparsity === nothing && jac_prototype === nothing
+        cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+        return ForwardDiff.jacobian(f, x, cfg)
+    end
+    return forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
 function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
+
+    if jac_prototype isa Nothing ? ArrayInterface.ismutable(x) : ArrayInterface.ismutable(jac_prototype)
+        # Whenever J is mutable, we mutate it to avoid allocations
+        dx = jac_cache.dx
+        vecx = vec(x)
+        sparsity = jac_cache.sparsity
+
+        J = jac_prototype isa Nothing ? (sparsity isa Nothing ? false .* vec(dx) .* vecx' :
+                                         zeros(eltype(x),size(sparsity))) : zero(jac_prototype)
+        return forwarddiff_color_jacobian(J, f, x, jac_cache)
+    else
+        return forwarddiff_color_jacobian_immutable(f, x, jac_cache, jac_prototype)
+    end
+end
+
+# When J is mutable, this version of forwarddiff_color_jacobian will mutate J to avoid allocations
+function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache)
+    t = jac_cache.t
+    dx = jac_cache.dx
+    p = jac_cache.p
+    colorvec = jac_cache.colorvec
+    sparsity = jac_cache.sparsity
+    chunksize = jac_cache.chunksize
+    color_i = 1
+    maxcolor = maximum(colorvec)
+
+    vecx = vec(x)
+
+    nrows,ncols = size(J)
+
+    if !(sparsity isa Nothing)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index = [rows_index[i] for i in 1:length(rows_index)]
+        cols_index = [cols_index[i] for i in 1:length(cols_index)]
+    end
+
+    for i in eachindex(p)
+        partial_i = p[i]
+        t = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i),size(t))
+        fx = f(t)
+        if !(sparsity isa Nothing)
+            for j in 1:chunksize
+                dx = vec(partials.(fx, j))
+                pick_inds = [i for i in 1:length(rows_index) if colorvec[cols_index[i]] == color_i]
+                rows_index_c = rows_index[pick_inds]
+                cols_index_c = cols_index[pick_inds]
+                if J isa SparseMatrixCSC || j > 1
+                    # Use sparse matrix to add to J column by column except . . .
+                    Ji = sparse(rows_index_c, cols_index_c, dx[rows_index_c],nrows,ncols)
+                else
+                    # To overwrite pre-allocated matrix J, using sparse will cause an error
+                    # so we use this step to overwrite J
+                    len_rows = length(pick_inds)
+                    unused_rows = setdiff(1:nrows,rows_index_c)
+                    perm_rows = sortperm(vcat(rows_index_c,unused_rows))
+                    cols_index_c = vcat(cols_index_c,zeros(Int,nrows-len_rows))[perm_rows]
+                    Ji = [j==cols_index_c[i] ? dx[i] : false for i in 1:nrows, j in 1:ncols]
+                end
+                if j == 1 && i == 1
+                    J .= Ji # overwrite pre-allocated matrix J
+                else
+                    J .+= Ji
+                end
+                color_i += 1
+                (color_i > maxcolor) && return J
+            end
+        else
+            for j in 1:chunksize
+                col_index = (i-1)*chunksize + j
+                (col_index > ncols) && return J
+                Ji = mapreduce(i -> i==col_index ? partials.(vec(fx), j) : adapt(parameterless_type(J),zeros(eltype(J),nrows)), hcat, 1:ncols)
+                if j == 1 && i == 1
+                    J .= (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) # overwrite pre-allocated matrix
+                else
+                    J .+= (size(Ji)!=size(J) ? reshape(Ji,size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
+                end
+            end
+        end
+    end
+    return J
+end
+
+# When J is immutable, this version of forwarddiff_color_jacobian will avoid mutating J
+function forwarddiff_color_jacobian_immutable(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
     t = jac_cache.t
     dx = jac_cache.dx
     p = jac_cache.p
@@ -131,7 +230,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
             end
         end
     end
-    J
+    return J
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},

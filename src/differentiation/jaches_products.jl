@@ -30,7 +30,7 @@ function num_jacvec(f,x,v,f0=nothing)
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(minimum(x)))
-    (f(x.+ϵ.*v) .- f(x))./ϵ
+    (f(x.+ϵ.*v) .- _f0)./ϵ
 end
 
 function num_hesvec!(du,f,x,v,

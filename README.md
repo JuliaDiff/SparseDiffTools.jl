@@ -2,6 +2,7 @@
 
 [![Join the chat at https://gitter.im/JuliaDiff/Lobby](https://badges.gitter.im/JuliaDiff/Lobby.svg)](https://gitter.im/JuliaDiff/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build status](https://badge.buildkite.com/ea7df061e20328f60d3e0816d97d2d856166f2ea7030748cef.svg?branch=master)](https://buildkite.com/julialang/sparsedifftools-dot-jl)
+[![Build status](https://badge.buildkite.com/ea7df061e20328f60d3e0816d97d2d856166f2ea7030748cef.svg)](https://buildkite.com/julialang/sparsedifftools-dot-jl)
 
 This package is for exploiting sparsity in Jacobians and Hessians to accelerate
 computations. Matrix-free Jacobian-vector product and Hessian-vector product

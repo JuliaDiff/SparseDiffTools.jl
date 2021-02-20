@@ -19,25 +19,25 @@ Suppose we had the function
 
 ```julia
 fcalls = 0
-function f(dx,x) # in-place
+function f(y,x) # in-place
   global fcalls += 1
   for i in 2:length(x)-1
-    dx[i] = x[i-1] - 2x[i] + x[i+1]
+    y[i] = x[i-1] - 2x[i] + x[i+1]
   end
-  dx[1] = -2x[1] + x[2]
-  dx[end] = x[end-1] - 2x[end]
+  y[1] = -2x[1] + x[2]
+  y[end] = x[end-1] - 2x[end]
   nothing
 end
 
 function g(x) # out-of-place
   global fcalls += 1
-  dx = zero(x)
+  y = zero(x)
   for i in 2:length(x)-1
-    dx[i] = x[i-1] - 2x[i] + x[i+1]
+    y[i] = x[i-1] - 2x[i] + x[i+1]
   end
-  dx[1] = -2x[1] + x[2]
-  dx[end] = x[end-1] - 2x[end]
-  dx
+  y[1] = -2x[1] + x[2]
+  y[end] = x[end-1] - 2x[end]
+  y
 end
 ```
 
@@ -85,8 +85,8 @@ forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)
 If one only needs to compute products, one can use the operators. For example,
 
 ```julia
-u = rand(30)
-J = JacVec(f,u)
+x = rand(30)
+J = JacVec(f,x)
 ```
 
 makes `J` into a matrix-free operator which calculates `J*v` products. For
@@ -219,14 +219,14 @@ the function signature for Jacobians is `f!(du,u)`, while out-of-place has
 The functions for Jacobians are:
 
 ```julia
-auto_jacvec!(du, f, x, v,
+auto_jacvec!(dy, f, x, v,
                       cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                       cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v))
 
 auto_jacvec(f, x, v)
 
 # If compute_f0 is false, then `f(cache1,x)` will be computed
-num_jacvec!(du,f,x,v,cache1 = similar(v),
+num_jacvec!(dy,f,x,v,cache1 = similar(v),
                      cache2 = similar(v);
                      compute_f0 = true)
 num_jacvec(f,x,v,f0=nothing)
@@ -235,21 +235,21 @@ num_jacvec(f,x,v,f0=nothing)
 For Hessians, the following are provided:
 
 ```julia
-num_hesvec!(du,f,x,v,
+num_hesvec!(dy,f,x,v,
              cache1 = similar(v),
              cache2 = similar(v),
              cache3 = similar(v))
 
 num_hesvec(f,x,v)
 
-numauto_hesvec!(du,f,x,v,
+numauto_hesvec!(dy,f,x,v,
                  cache = ForwardDiff.GradientConfig(f,v),
                  cache1 = similar(v),
                  cache2 = similar(v))
 
 numauto_hesvec(f,x,v)
 
-autonum_hesvec!(du,f,x,v,
+autonum_hesvec!(dy,f,x,v,
                  cache1 = similar(v),
                  cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                  cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
@@ -258,17 +258,17 @@ autonum_hesvec(f,x,v)
 ```
 
 In addition,
-the following forms allow you to provide a gradient function `g(dx,x)` or `dx=g(x)`
+the following forms allow you to provide a gradient function `g(dy,x)` or `dy=g(x)`
 respectively:
 
 ```julia
-num_hesvecgrad!(du,g,x,v,
+num_hesvecgrad!(dy,g,x,v,
                      cache2 = similar(v),
                      cache3 = similar(v))
 
 num_hesvecgrad(g,x,v)
 
-auto_hesvecgrad!(du,g,x,v,
+auto_hesvecgrad!(dy,g,x,v,
                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                      cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
 
@@ -287,14 +287,14 @@ optimized these will likely be the fastest.
 ```julia
 using Zygote # Required
 
-numback_hesvec!(du,f,x,v,
+numback_hesvec!(dy,f,x,v,
                      cache1 = similar(v),
                      cache2 = similar(v))
 
 numback_hesvec(f,x,v)
 
 # Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
-autoback_hesvec!(du,f,x,v,
+autoback_hesvec!(dy,f,x,v,
                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
                      cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
 
@@ -308,9 +308,9 @@ Jacobian-vector and Hessian-vector products where the differentiation takes
 place at the vector `u`:
 
 ```julia
-JacVec(f,u::AbstractArray;autodiff=true)
-HesVec(f,u::AbstractArray;autodiff=true)
-HesVecGrad(g,u::AbstractArray;autodiff=false)
+JacVec(f,x::AbstractArray;autodiff=true)
+HesVec(f,x::AbstractArray;autodiff=true)
+HesVecGrad(g,x::AbstractArray;autodiff=false)
 ```
 
 These all have the same interface, where `J*v` utilizes the out-of-place

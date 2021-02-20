@@ -1,4 +1,4 @@
-function numback_hesvec!(du, f, x, v, cache1 = similar(v), cache2 = similar(v))
+function numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))
     g = let f=f
         (dx, x) -> dx .= first(Zygote.gradient(f,x))
     end
@@ -9,7 +9,7 @@ function numback_hesvec!(du, f, x, v, cache1 = similar(v), cache2 = similar(v))
     g(cache1,x)
     @. x -= 2ϵ*v
     g(cache2,x)
-    @. du = (cache1 - cache2)/(2ϵ)
+    @. dy = (cache1 - cache2)/(2ϵ)
 end
 
 function numback_hesvec(f, x, v)
@@ -24,14 +24,14 @@ function numback_hesvec(f, x, v)
     (gxp - gxm)/(2ϵ)
 end
 
-function autoback_hesvec!(du, f, x, v, cache2 = ForwardDiff.Dual{Nothing}.(x, v),
+function autoback_hesvec!(dy, f, x, v, cache2 = ForwardDiff.Dual{Nothing}.(x, v),
                           cache3 = ForwardDiff.Dual{Nothing}.(x, v))
     g = let f=f
         (dx, x) -> dx .= first(Zygote.gradient(f,x))
     end
     cache2 .= Dual{Nothing}.(x, v)
     g(cache3,cache2)
-    du .= partials.(cache3, 1)
+    dy .= partials.(cache3, 1)
 end
 
 function autoback_hesvec(f, x, v)

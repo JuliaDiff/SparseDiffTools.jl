@@ -1,4 +1,4 @@
-using SparseDiffTools, CuArrays, Test, LinearAlgebra
+using SparseDiffTools, CUDA, Test, LinearAlgebra
 using ArrayInterface: allowed_getindex, allowed_setindex!
 function f(dx,x)
     dx[2:end-1] = x[1:end-2] - 2x[2:end-1] + x[3:end]
@@ -10,7 +10,7 @@ end
 _J1 = similar(rand(30,30))
 _denseJ1 = cu(collect(_J1))
 x = cu(rand(30))
-CuArrays.allowscalar(false)
+CUDA.allowscalar(false)
 forwarddiff_color_jacobian!(_denseJ1, f, x)
 @test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, sparsity = _J1) isa Nothing
 @test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3,10), sparsity = _J1) isa Nothing

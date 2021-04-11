@@ -1,4 +1,4 @@
-using SparseDiffTools, CuArrays, Test, LinearAlgebra
+using SparseDiffTools, CUDA, Test, LinearAlgebra
 using ArrayInterface: allowed_getindex, allowed_setindex!
 function f(dx,x)
     dx[2:end-1] = x[1:end-2] - 2x[2:end-1] + x[3:end]

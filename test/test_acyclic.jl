@@ -4,7 +4,7 @@ using LightGraphs: SimpleGraph
 using Test
 
 using Random
-Random.seed!(123)
+Random.seed!(100)
 
 # println("Starting acyclic coloring test...")
 #= Test data =#

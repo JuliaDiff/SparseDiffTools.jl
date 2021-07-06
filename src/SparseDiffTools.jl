@@ -12,6 +12,8 @@ using Adapt
 using LinearAlgebra
 using SparseArrays, ArrayInterface
 
+import StaticArrays
+
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 using DataStructures: DisjointSets, find_root!, union!
 

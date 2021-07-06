@@ -70,7 +70,15 @@ end
                 dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
 
     if sparsity === nothing && jac_prototype === nothing
-        cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+        cfg = if chunksize === nothing
+            if typeof(x) <: StaticArrays.StaticArray
+                ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk{StaticArrays.Size(vec(x))[1]}())
+            else
+                ForwardDiff.JacobianConfig(f, x)
+            end
+        else
+            ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+        end
         return ForwardDiff.jacobian(f, x, cfg)
     end
     if dx isa Nothing

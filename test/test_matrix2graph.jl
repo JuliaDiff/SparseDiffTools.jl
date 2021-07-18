@@ -40,3 +40,22 @@ for i in 1:20
         @test pr != 0
     end
 end
+
+@info "stored zeros"
+for i in 1:20  
+    matrix = matrices[i]
+    g = matrix2graph(matrix)
+    # recalculate graph with stored zeros
+    matrix_sz = copy(matrix)
+    fill!(matrix_sz, 0.0)
+    g_sz = matrix2graph(matrix_sz)
+    # check that graphs are the same 
+    @test nv(g) == nv(g_sz)
+    @test ne(g) == ne(g_sz)
+    for e in edges(g)
+        @test has_edge(g_sz, e)
+    end
+    for e in edges(g_sz)
+        @test has_edge(g, e)
+    end    
+end

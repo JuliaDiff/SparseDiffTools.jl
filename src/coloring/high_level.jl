@@ -12,6 +12,9 @@ struct AcyclicColoring <: SparseDiffToolsColoringAlgorithm end
 Return the colorvec vector for the matrix A using the chosen coloring
 algorithm. If a known analytical solution exists, that is used instead.
 The coloring defaults to a greedy distance-1 coloring.
+
+Note that if A isa SparseMatrixCSC, the sparsity pattern is defined by structural nonzeroes,
+ie includes explicitly stored zeros.
 """
 function ArrayInterface.matrix_colors(A::AbstractMatrix, alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy

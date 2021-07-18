@@ -267,23 +267,15 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     
     fill!(J, zero(eltype(J)))
 
-    # fast path if J and sparsity are both SparseMatrixCSC and have the same number of columns and stored values
-    sparseCSC_common = (J isa SparseMatrixCSC && 
-                        sparsity isa SparseMatrixCSC && 
-                        length(J.colptr) == length(sparsity.colptr) &&
-                        length(J.nzval) == length(sparsity.nzval))
-
-    if sparseCSC_common
-        J.colptr .= sparsity.colptr
-        J.rowval .= sparsity.rowval
-    end
-
     if FiniteDiff._use_findstructralnz(sparsity)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
     else
         rows_index = 1:size(J,1)
         cols_index = 1:size(J,2)
     end
+
+    # fast path if J and sparsity are both SparseMatrixCSC and have the same number of columns and stored values
+    sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity!(J, sparsity)
 
     vecx = vec(x)
     vect = vec(t)
@@ -302,8 +294,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
                 if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
-                    if sparseCSC_common
-                        _colorediteration!(J,vecdx,colorvec,color_i,ncols)
+                    if sparseCSC_common_sparsity
+                        FiniteDiff._colorediteration!(J,vecdx,colorvec,color_i,ncols)
                     else
                         FiniteDiff._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
                     end
@@ -334,16 +326,5 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     return J
 end
 
-# fast version of FiniteDiff._colorediteration! for the case where J and sparsity have the same sparsity pattern
-@inline function _colorediteration!(Jsparsity::SparseMatrixCSC,vfx,colorvec,color_i,ncols)
-    @inbounds for col_index in 1:ncols
-        if colorvec[col_index] == color_i
-            @inbounds for spidx in nzrange(Jsparsity, col_index)
-                row_index = Jsparsity.rowval[spidx]
-                Jsparsity.nzval[spidx]=vfx[row_index]
-            end
-        end
-    end
-end
 
 

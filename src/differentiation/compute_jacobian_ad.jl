@@ -274,8 +274,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         cols_index = 1:size(J,2)
     end
 
-    # fast path if J and sparsity are both SparseMatrixCSC and have the same number of columns and stored values
-    sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity!(J, sparsity)
+    # fast path if J and sparsity are both SparseMatrixCSC and have the same sparsity pattern
+    sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity(J, sparsity)
 
     vecx = vec(x)
     vect = vec(t)

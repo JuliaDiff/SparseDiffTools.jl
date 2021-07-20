@@ -264,6 +264,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     chunksize = jac_cache.chunksize
     color_i = 1
     maxcolor = maximum(colorvec)
+    
     fill!(J, zero(eltype(J)))
 
     if FiniteDiff._use_findstructralnz(sparsity)
@@ -272,6 +273,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         rows_index = 1:size(J,1)
         cols_index = 1:size(J,2)
     end
+
+    # fast path if J and sparsity are both SparseMatrixCSC and have the same sparsity pattern
+    sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity(J, sparsity)
 
     vecx = vec(x)
     vect = vec(t)
@@ -287,9 +291,14 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         if !(sparsity isa Nothing)
             for j in 1:chunksize
                 dx .= partials.(fx, j)
+
                 if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
-                    FiniteDiff._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
+                    if sparseCSC_common_sparsity
+                        FiniteDiff._colorediteration!(J,vecdx,colorvec,color_i,ncols)
+                    else
+                        FiniteDiff._colorediteration!(J,sparsity,rows_index,cols_index,vecdx,colorvec,color_i,ncols)
+                    end
                 else
                     #=
                     J.nzval[rows_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
@@ -316,3 +325,6 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     end
     return J
 end
+
+
+

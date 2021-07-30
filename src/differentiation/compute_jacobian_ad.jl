@@ -8,14 +8,6 @@ struct ForwardColorJacCache{T,T2,T3,T4,T5,T6}
     chunksize::Int
 end
 
-function default_chunk_size(maxcolor)
-    if maxcolor < DEFAULT_CHUNK_THRESHOLD
-        Val(maxcolor)
-    else
-        Val(DEFAULT_CHUNK_THRESHOLD)
-    end
-end
-
 getsize(::Val{N}) where N = N
 getsize(N::Integer) = N
 void_setindex!(args...) = (setindex!(args...); return)
@@ -26,7 +18,7 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
                               sparsity::Union{AbstractArray,Nothing}=nothing)
 
     if _chunksize isa Nothing
-        chunksize = default_chunk_size(maximum(colorvec))
+        chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
     else
         chunksize = _chunksize
     end
@@ -264,7 +256,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     chunksize = jac_cache.chunksize
     color_i = 1
     maxcolor = maximum(colorvec)
-    
+
     fill!(J, zero(eltype(J)))
 
     if FiniteDiff._use_findstructralnz(sparsity)
@@ -325,6 +317,3 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     end
     return J
 end
-
-
-

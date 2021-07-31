@@ -12,6 +12,8 @@ getsize(::Val{N}) where N = N
 getsize(N::Integer) = N
 void_setindex!(args...) = (setindex!(args...); return)
 
+const default_chunk_size = ForwardDiff.pickchunksize
+
 function ForwardColorJacCache(f,x,_chunksize = nothing;
                               dx = nothing,
                               colorvec=1:length(x),

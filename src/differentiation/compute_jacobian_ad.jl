@@ -66,9 +66,11 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     padding_matrix = BitMatrix(undef, length(x), padding_size)
     partials = hcat(partials, padding_matrix)
 
+
+    #chunked_partials = map(i -> Tuple.(eachrow(partials[:,(i-1)*chunksize+1:i*chunksize])),1:num_of_chunks)
     chunked_partials = Vector{Vector{NTuple{chunksize,eltype(x)}}}(undef, num_of_chunks)
     for i in 1:num_of_chunks
-        tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, chunksize)
+        tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, size(partials,1))
         for j in 1:size(partials,1)
             tmp[j] = Tuple(@view partials[j,(i-1)*chunksize+1:i*chunksize])
         end

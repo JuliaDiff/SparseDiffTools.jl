@@ -14,10 +14,10 @@ void_setindex!(args...) = (setindex!(args...); return)
 
 const default_chunk_size = ForwardDiff.pickchunksize
 
-function ForwardColorJacCache(f,x,_chunksize = nothing;
+function ForwardColorJacCache(f::F,x,_chunksize = nothing;
                               dx = nothing,
                               colorvec=1:length(x),
-                              sparsity::Union{AbstractArray,Nothing}=nothing)
+                              sparsity::Union{AbstractArray,Nothing}=nothing) where {F}
 
     if _chunksize isa Nothing
         chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
@@ -25,9 +25,19 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-    _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
-    t = ArrayInterface.restructure(x,_t)
+    if x isa Array
+        p = generate_chunked_partials(x,colorvec,chunksize)
+        t = similar(x,Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))})
+        for i in eachindex(t)
+            t[i] = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}(x[i],first(p)[1])
+        end
+    else
+        p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
+        _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
+        t = ArrayInterface.restructure(x,_t)
+    end
+
+
     if dx isa Nothing
         fx = similar(t)
         _dx = similar(x)
@@ -46,13 +56,27 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     maxcolor = maximum(colorvec)
     num_of_chunks = Int(ceil(maxcolor / chunksize))
     padding_size = (chunksize - (maxcolor % chunksize)) % chunksize
-    partials = colorvec .== (1:maxcolor)'
+
+    # partials = colorvec .== (1:maxcolor)'
+    partials = BitMatrix(undef, length(colorvec), maxcolor)
+    for i in 1:maxcolor, j in 1:length(colorvec)
+        partials[j,i] = colorvec[j] == i
+    end
+
     padding_matrix = BitMatrix(undef, length(x), padding_size)
     partials = hcat(partials, padding_matrix)
 
-    chunked_partials = map(i -> Tuple.(eachrow(partials[:,(i-1)*chunksize+1:i*chunksize])),1:num_of_chunks)
-    chunked_partials
 
+    #chunked_partials = map(i -> Tuple.(eachrow(partials[:,(i-1)*chunksize+1:i*chunksize])),1:num_of_chunks)
+    chunked_partials = Vector{Vector{NTuple{chunksize,eltype(x)}}}(undef, num_of_chunks)
+    for i in 1:num_of_chunks
+        tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, size(partials,1))
+        for j in 1:size(partials,1)
+            tmp[j] = Tuple(@view partials[j,(i-1)*chunksize+1:i*chunksize])
+        end
+        chunked_partials[i] = tmp
+    end
+    chunked_partials
 end
 
 @inline function forwarddiff_color_jacobian(f,
@@ -280,11 +304,26 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
     for i in eachindex(p)
         partial_i = p[i]
-        vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
+
+        if vect isa Array
+            @inbounds @simd ivdep for j in eachindex(vect)
+                vect[j] = Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}(vecx[j], partial_i[j])
+            end
+        else
+            vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
+        end
+
         f(fx,t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
-                dx .= partials.(fx, j)
+
+                if dx isa Array
+                    @inbounds @simd ivdep for k in eachindex(dx)
+                        dx[k] = partials(fx[k], j)
+                    end
+                else
+                    dx .= partials.(fx, j)
+                end
 
                 if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
@@ -313,7 +352,13 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > ncols) && return J
-                J[:, col_index] .= partials.(vecfx, j)
+                if J isa Array
+                    @inbounds @simd for k in 1:size(J,1)
+                        J[k, col_index] = partials(vecfx[k], j)
+                    end
+                else
+                    J[:, col_index] .= partials.(vecfx, j)
+                end
             end
         end
     end

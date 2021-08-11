@@ -27,9 +27,9 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
 
     if x isa Array
         p = generate_chunked_partials(x,colorvec,chunksize)
-        t = similar(x,Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))})
+        t = similar(x,Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x)))),eltype(x),length(first(first(p)))})
         for i in eachindex(t)
-            t[i] = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}(x[i],first(p)[1])
+            t[i] = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x)))),eltype(x),length(first(first(p)))}(x[i],ForwardDiff.Partials(first(p)[i]))
         end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))

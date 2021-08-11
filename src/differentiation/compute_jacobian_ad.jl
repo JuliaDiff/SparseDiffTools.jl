@@ -59,8 +59,8 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
 
     # partials = colorvec .== (1:maxcolor)'
     partials = BitMatrix(undef, length(colorvec), maxcolor)
-    for j in 1:length(colorvec), i in 1:maxcolor
-        partials[i,j] = colorvec[j] == i
+    for i in 1:maxcolor, j in 1:length(colorvec)
+        partials[j,i] = colorvec[j] == i
     end
 
     padding_matrix = BitMatrix(undef, length(x), padding_size)

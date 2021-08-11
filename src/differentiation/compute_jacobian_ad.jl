@@ -27,11 +27,17 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
 
     if x isa Array
         p = generate_chunked_partials(x,colorvec,chunksize)
+        t = similar(x,Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))})
+        for i in eachindex(t)
+            t[i] = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}(x[i],first(p)[1])
+        end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
+        _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
+        t = ArrayInterface.restructure(x,_t)
     end
-    _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
-    t = ArrayInterface.restructure(x,_t)
+
+
     if dx isa Nothing
         fx = similar(t)
         _dx = similar(x)
@@ -50,16 +56,25 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     maxcolor = maximum(colorvec)
     num_of_chunks = Int(ceil(maxcolor / chunksize))
     padding_size = (chunksize - (maxcolor % chunksize)) % chunksize
-    partials = colorvec .== (1:maxcolor)'
+
+    # partials = colorvec .== (1:maxcolor)'
+    partials = BitMatrix(undef, length(colorvec), maxcolor)
+    for j in 1:length(colorvec), i in 1:maxcolor
+        partials[i,j] = colorvec[j] == i
+    end
+
     padding_matrix = BitMatrix(undef, length(x), padding_size)
     partials = hcat(partials, padding_matrix)
 
     chunked_partials = Vector{Vector{NTuple{chunksize,eltype(x)}}}(undef, num_of_chunks)
     for i in 1:num_of_chunks
-        chunked_partials[i] = Tuple.(eachrow(@view(partials[:,(i-1)*chunksize+1:i*chunksize])))
+        tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, chunksize)
+        for j in 1:size(partials,1)
+            tmp[j] = Tuple(@view partials[j,(i-1)*chunksize+1:i*chunksize])
+        end
+        chunked_partials[i] = tmp
     end
     chunked_partials
-
 end
 
 @inline function forwarddiff_color_jacobian(f,
@@ -287,11 +302,26 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
     for i in eachindex(p)
         partial_i = p[i]
-        vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
+
+        if vect isa Array
+            @inbounds @simd ivdep for j in eachindex(vect)
+                vect = Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}(vecx[j], partial_i[j])
+            end
+        else
+            vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
+        end
+
         f(fx,t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
-                dx .= partials.(fx, j)
+
+                if dx isa Array
+                    @inbounds @simd ivdep for k in eachindex(dx)
+                        dx[k] = partials(fx[k], j)
+                    end
+                else
+                    dx .= partials.(fx, j)
+                end
 
                 if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
@@ -320,7 +350,13 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
                 col_index = (i-1)*chunksize + j
                 (col_index > ncols) && return J
-                J[:, col_index] .= partials.(vecfx, j)
+                if J isa Array
+                    @inbounds @simd for k in 1:size(J,1)
+                        J[k, col_index] = partials(vecfx[k], j)
+                    end
+                else
+                    J[:, col_index] .= partials.(vecfx, j)
+                end
             end
         end
     end

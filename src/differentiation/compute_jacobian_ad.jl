@@ -14,10 +14,10 @@ void_setindex!(args...) = (setindex!(args...); return)
 
 const default_chunk_size = ForwardDiff.pickchunksize
 
-function ForwardColorJacCache(f,x,_chunksize = nothing;
+function ForwardColorJacCache(f::F,x,_chunksize = nothing;
                               dx = nothing,
                               colorvec=1:length(x),
-                              sparsity::Union{AbstractArray,Nothing}=nothing)
+                              sparsity::Union{AbstractArray,Nothing}=nothing) where {F}
 
     if _chunksize isa Nothing
         chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
@@ -25,7 +25,11 @@ function ForwardColorJacCache(f,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
-    p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
+    if x isa Array
+        p = generate_chunked_partials(x,colorvec,chunksize)
+    else
+        p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
+    end
     _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
     t = ArrayInterface.restructure(x,_t)
     if dx isa Nothing
@@ -50,7 +54,10 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     padding_matrix = BitMatrix(undef, length(x), padding_size)
     partials = hcat(partials, padding_matrix)
 
-    chunked_partials = map(i -> Tuple.(eachrow(partials[:,(i-1)*chunksize+1:i*chunksize])),1:num_of_chunks)
+    chunked_partials = Vector{Vector{NTuple{chunksize,eltype(x)}}}(undef, num_of_chunks)
+    for i in 1:num_of_chunks
+        chunked_partials[i] = Tuple.(eachrow(@view(partials[:,(i-1)*chunksize+1:i*chunksize])))
+    end
     chunked_partials
 
 end

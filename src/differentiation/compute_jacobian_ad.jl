@@ -307,7 +307,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
         if vect isa Array
             @inbounds @simd ivdep for j in eachindex(vect)
-                vect = Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}(vecx[j], partial_i[j])
+                vect[j] = Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}(vecx[j], partial_i[j])
             end
         else
             vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)

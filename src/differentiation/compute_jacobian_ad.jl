@@ -318,7 +318,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
             for j in 1:chunksize
 
                 if dx isa Array
-                    @inbounds @simd ivdep for k in eachindex(dx)
+                    @inbounds @simd for k in eachindex(dx)
                         dx[k] = partials(fx[k], j)
                     end
                 else

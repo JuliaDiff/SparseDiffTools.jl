@@ -9,7 +9,8 @@ function auto_jacvec!(dy, f, x, v,
     dy .= partials.(cache2, 1)
 end
 function auto_jacvec(f, x, v)
-    partials.(f(Dual{DeivVecTag}.(x, v)), 1)
+    fval = f(map((xi, vi) -> Dual{typeof(ForwardDiff.Tag(f,eltype(x)))}(xi, vi), x, v))
+    map(u -> partials(u)[1], fval)
 end
 
 function num_jacvec!(dy,f,x,v,cache1 = similar(v),

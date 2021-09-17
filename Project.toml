@@ -1,7 +1,7 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "1.16.4"
+version = "1.16.5"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"

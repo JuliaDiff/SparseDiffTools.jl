@@ -1,146 +1,178 @@
 struct DeivVecTag end
 
 # J(f(x))*v
-function auto_jacvec!(dy, f, x, v,
-                      cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v))
-    cache1 .= Dual{DeivVecTag}.(x, v)
-    f(cache2,cache1)
+function auto_jacvec!(
+    dy,
+    f,
+    x,
+    v,
+    cache1 = Dual{DeivVecTag}.(x, reshape(v, size(x))),
+    cache2 = similar(cache1),
+)
+    cache1 .= Dual{DeivVecTag}.(x, reshape(v, size(x)))
+    f(cache2, cache1)
     dy .= partials.(cache2, 1)
 end
+
 function auto_jacvec(f, x, v)
-    fval = f(map((xi, vi) -> Dual{typeof(ForwardDiff.Tag(f,eltype(x)))}(xi, vi), x, v))
-    map(u -> partials(u)[1], fval)
+    vv = reshape(v, axes(x))
+    vec(partials.(vec(f(ForwardDiff.Dual{DeivVecTag}.(x, vv))), 1))
 end
 
-function num_jacvec!(dy,f,x,v,cache1 = similar(v),
-                     cache2 = similar(v);
-                     compute_f0 = true)
-    compute_f0 && (f(cache1,x))
+function num_jacvec!(
+    dy,
+    f,
+    x,
+    v,
+    cache1 = similar(v),
+    cache2 = similar(v);
+    compute_f0 = true,
+)
+    vv = reshape(v, axes(x))
+    compute_f0 && (f(cache1, x))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ*v
-    f(cache2,x)
-    @. x -= ϵ*v
-    @. dy = (cache2 - cache1)/ϵ
+    @. x += ϵ * vv
+    f(cache2, x)
+    @. x -= ϵ * vv
+    @. dy = (cache2 - cache1) / ϵ
 end
 
-function num_jacvec(f,x,v,f0=nothing)
+function num_jacvec(f, x, v, f0 = nothing)
+    vv = reshape(v, axes(x))
     f0 === nothing ? _f0 = f(x) : _f0 = f0
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(minimum(x)))
-    (f(x.+ϵ.*v) .- _f0)./ϵ
+    vec((f(x .+ ϵ .* vv) .- _f0) ./ ϵ)
 end
 
-function num_hesvec!(dy,f,x,v,
-                     cache1 = similar(v),
-                     cache2 = similar(v),
-                     cache3 = similar(v))
-    cache = FiniteDiff.GradientCache(v[1],cache1,Val{:central})
-    g = let f=f,cache=cache
-        (dx,x) -> FiniteDiff.finite_difference_gradient!(dx,f,x,cache)
+function num_hesvec!(
+    dy,
+    f,
+    x,
+    v,
+    cache1 = similar(v),
+    cache2 = similar(v),
+    cache3 = similar(v),
+)
+    cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
+    g = let f = f, cache = cache
+        (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
     end
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ*v
-    g(cache2,x)
-    @. x -= 2ϵ*v
-    g(cache3,x)
-    @. dy = (cache2 - cache3)/(2ϵ)
+    @. x += ϵ * v
+    g(cache2, x)
+    @. x -= 2ϵ * v
+    g(cache3, x)
+    @. dy = (cache2 - cache3) / (2ϵ)
 end
 
-function num_hesvec(f,x,v)
-    g = (x) -> FiniteDiff.finite_difference_gradient(f,x)
+function num_hesvec(f, x, v)
+    g = (x) -> FiniteDiff.finite_difference_gradient(f, x)
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    x += ϵ*v
+    x += ϵ * v
     gxp = g(x)
-    x -= 2ϵ*v
+    x -= 2ϵ * v
     gxm = g(x)
-    (gxp - gxm)/(2ϵ)
+    (gxp - gxm) / (2ϵ)
 end
 
-function numauto_hesvec!(dy,f,x,v,
-                     cache = ForwardDiff.GradientConfig(f,v),
-                     cache1 = similar(v),
-                     cache2 = similar(v))
-    g = let f=f,x=x,cache=cache
-        g = (dx,x) -> ForwardDiff.gradient!(dx,f,x,cache)
+function numauto_hesvec!(
+    dy,
+    f,
+    x,
+    v,
+    cache = ForwardDiff.GradientConfig(f, v),
+    cache1 = similar(v),
+    cache2 = similar(v),
+)
+    g = let f = f, x = x, cache = cache
+        g = (dx, x) -> ForwardDiff.gradient!(dx, f, x, cache)
     end
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ*v
-    g(cache1,x)
-    @. x -= 2ϵ*v
-    g(cache2,x)
-    @. dy = (cache1 - cache2)/(2ϵ)
+    @. x += ϵ * v
+    g(cache1, x)
+    @. x -= 2ϵ * v
+    g(cache2, x)
+    @. dy = (cache1 - cache2) / (2ϵ)
 end
 
-function numauto_hesvec(f,x,v)
-    g = (x) -> ForwardDiff.gradient(f,x)
+function numauto_hesvec(f, x, v)
+    g = (x) -> ForwardDiff.gradient(f, x)
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    x += ϵ*v
+    x += ϵ * v
     gxp = g(x)
-    x -= 2ϵ*v
+    x -= 2ϵ * v
     gxm = g(x)
-    (gxp - gxm)/(2ϵ)
+    (gxp - gxm) / (2ϵ)
 end
 
-function autonum_hesvec!(dy,f,x,v,
-                     cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v))
-    cache = FiniteDiff.GradientCache(v[1],cache1,Val{:central})
-    g = (dx,x) -> FiniteDiff.finite_difference_gradient!(dx,f,x,cache)
+function autonum_hesvec!(
+    dy,
+    f,
+    x,
+    v,
+    cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+    cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+)
+    cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
+    g = (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
     cache1 .= Dual{DeivVecTag}.(x, v)
-    g(cache2,cache1)
+    g(cache2, cache1)
     dy .= partials.(cache2, 1)
 end
 
-function autonum_hesvec(f,x,v)
-    g = (x) -> FiniteDiff.finite_difference_gradient(f,x)
+function autonum_hesvec(f, x, v)
+    g = (x) -> FiniteDiff.finite_difference_gradient(f, x)
     partials.(g(Dual{DeivVecTag}.(x, v)), 1)
 end
 
-function num_hesvecgrad!(dy,g,x,v,
-                     cache2 = similar(v),
-                     cache3 = similar(v))
+function num_hesvecgrad!(dy, g, x, v, cache2 = similar(v), cache3 = similar(v))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ*v
-    g(cache2,x)
-    @. x -= 2ϵ*v
-    g(cache3,x)
-    @. dy = (cache2 - cache3)/(2ϵ)
+    @. x += ϵ * v
+    g(cache2, x)
+    @. x -= 2ϵ * v
+    g(cache3, x)
+    @. dy = (cache2 - cache3) / (2ϵ)
 end
 
-function num_hesvecgrad(g,x,v)
+function num_hesvecgrad(g, x, v)
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    x += ϵ*v
+    x += ϵ * v
     gxp = g(x)
-    x -= 2ϵ*v
+    x -= 2ϵ * v
     gxm = g(x)
-    (gxp - gxm)/(2ϵ)
+    (gxp - gxm) / (2ϵ)
 end
 
-function auto_hesvecgrad!(dy,g,x,v,
-                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
-                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+function auto_hesvecgrad!(
+    dy,
+    g,
+    x,
+    v,
+    cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+    cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+)
     cache2 .= Dual{DeivVecTag}.(x, v)
-    g(cache3,cache2)
+    g(cache3, cache2)
     dy .= partials.(cache3, 1)
 end
 
-function auto_hesvecgrad(g,x,v)
+function auto_hesvecgrad(g, x, v)
     partials.(g(Dual{DeivVecTag}.(x, v)), 1)
 end
 
@@ -154,7 +186,7 @@ struct JacVec{F,T1,T2,xType}
     autodiff::Bool
 end
 
-function JacVec(f,x::AbstractArray;autodiff=true)
+function JacVec(f, x::AbstractArray; autodiff = true)
     if autodiff
         cache1 = ForwardDiff.Dual{DeivVecTag}.(x, x)
         cache2 = ForwardDiff.Dual{DeivVecTag}.(x, x)
@@ -162,18 +194,20 @@ function JacVec(f,x::AbstractArray;autodiff=true)
         cache1 = similar(x)
         cache2 = similar(x)
     end
-    JacVec(f,cache1,cache2,x,autodiff)
+    JacVec(f, cache1, cache2, x, autodiff)
 end
 
-Base.size(L::JacVec) = (length(L.cache1),length(L.cache1))
-Base.size(L::JacVec,i::Int) = length(L.cache1)
-Base.:*(L::JacVec,v::AbstractVector) = L.autodiff ? auto_jacvec(_x->L.f(_x),L.x,v) : num_jacvec(_x->L.f(_x),L.x,v)
+Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
+Base.size(L::JacVec, i::Int) = length(L.cache1)
+Base.:*(L::JacVec, v::AbstractVector) =
+    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) :
+    num_jacvec(_x -> L.f(_x), L.x, v)
 
-function LinearAlgebra.mul!(dy::AbstractVector,L::JacVec,v::AbstractVector)
+function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
     if L.autodiff
-        auto_jacvec!(dy,(_y,_x)->L.f(_y,_x),L.x,v,L.cache1,L.cache2)
+        auto_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
     else
-        num_jacvec!(dy,(_y,_x)->L.f(_y,_x),L.x,v,L.cache1,L.cache2)
+        num_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
     end
 end
 
@@ -186,9 +220,9 @@ struct HesVec{F,T1,T2,xType}
     autodiff::Bool
 end
 
-function HesVec(f,x::AbstractArray;autodiff=true)
+function HesVec(f, x::AbstractArray; autodiff = true)
     if autodiff
-        cache1 = ForwardDiff.GradientConfig(f,x)
+        cache1 = ForwardDiff.GradientConfig(f, x)
         cache2 = similar(x)
         cache3 = similar(x)
     else
@@ -196,18 +230,19 @@ function HesVec(f,x::AbstractArray;autodiff=true)
         cache2 = similar(x)
         cache3 = similar(x)
     end
-    HesVec(f,cache1,cache2,cache3,x,autodiff)
+    HesVec(f, cache1, cache2, cache3, x, autodiff)
 end
 
-Base.size(L::HesVec) = (length(L.cache2),length(L.cache2))
-Base.size(L::HesVec,i::Int) = length(L.cache2)
-Base.:*(L::HesVec,v::AbstractVector) = L.autodiff ? numauto_hesvec(L.f,L.x,v) : num_hesvec(L.f,L.x,v)
+Base.size(L::HesVec) = (length(L.cache2), length(L.cache2))
+Base.size(L::HesVec, i::Int) = length(L.cache2)
+Base.:*(L::HesVec, v::AbstractVector) =
+    L.autodiff ? numauto_hesvec(L.f, L.x, v) : num_hesvec(L.f, L.x, v)
 
-function LinearAlgebra.mul!(dy::AbstractVector,L::HesVec,v::AbstractVector)
+function LinearAlgebra.mul!(dy::AbstractVector, L::HesVec, v::AbstractVector)
     if L.autodiff
-        numauto_hesvec!(dy,L.f,L.x,v,L.cache1,L.cache2,L.cache3)
+        numauto_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
     else
-        num_hesvec!(dy,L.f,L.x,v,L.cache1,L.cache2,L.cache3)
+        num_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
     end
 end
 
@@ -219,7 +254,7 @@ struct HesVecGrad{G,T1,T2,uType}
     autodiff::Bool
 end
 
-function HesVecGrad(g,x::AbstractArray;autodiff=false)
+function HesVecGrad(g, x::AbstractArray; autodiff = false)
     if autodiff
         cache1 = ForwardDiff.Dual{DeivVecTag}.(x, x)
         cache2 = ForwardDiff.Dual{DeivVecTag}.(x, x)
@@ -227,17 +262,22 @@ function HesVecGrad(g,x::AbstractArray;autodiff=false)
         cache1 = similar(x)
         cache2 = similar(x)
     end
-    HesVecGrad(g,cache1,cache2,x,autodiff)
+    HesVecGrad(g, cache1, cache2, x, autodiff)
 end
 
-Base.size(L::HesVecGrad) = (length(L.cache2),length(L.cache2))
-Base.size(L::HesVecGrad,i::Int) = length(L.cache2)
-Base.:*(L::HesVecGrad,v::AbstractVector) = L.autodiff ? auto_hesvecgrad(L.g,L.x,v) : num_hesvecgrad(L.g,L.x,v)
+Base.size(L::HesVecGrad) = (length(L.cache2), length(L.cache2))
+Base.size(L::HesVecGrad, i::Int) = length(L.cache2)
+Base.:*(L::HesVecGrad, v::AbstractVector) =
+    L.autodiff ? auto_hesvecgrad(L.g, L.x, v) : num_hesvecgrad(L.g, L.x, v)
 
-function LinearAlgebra.mul!(dy::AbstractVector,L::HesVecGrad,v::AbstractVector)
+function LinearAlgebra.mul!(
+    dy::AbstractVector,
+    L::HesVecGrad,
+    v::AbstractVector,
+)
     if L.autodiff
-        auto_hesvecgrad!(dy,L.g,L.x,v,L.cache1,L.cache2)
+        auto_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
     else
-        num_hesvecgrad!(dy,L.g,L.x,v,L.cache1,L.cache2)
+        num_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
     end
 end

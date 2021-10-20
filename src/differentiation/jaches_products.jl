@@ -2,8 +2,8 @@ struct DeivVecTag end
 
 # J(f(x))*v
 function auto_jacvec!(dy, f, x, v,
-                      cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,x))}.(x, v),
-                      cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,x))}.(x, v))
+                      cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x)))}.(x, v),
+                      cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x)))}.(x, v))
     cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x)))}.(x, v)
     f(cache2,cache1)
     dy .= partials.(cache2, 1)

@@ -8,7 +8,6 @@ using LightGraphs: SimpleGraph
 using Requires
 using VertexSafeGraphs
 using Adapt
-using Zygote
 
 using LinearAlgebra
 using SparseArrays, ArrayInterface
@@ -50,6 +49,7 @@ include("coloring/greedy_star2_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/jaches_products.jl")
+include("differentiation/vecjac_products.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))

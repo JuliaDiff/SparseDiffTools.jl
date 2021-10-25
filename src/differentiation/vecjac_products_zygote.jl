@@ -1,7 +1,7 @@
 function auto_vecjac!(du, f, x, v, cache1 = nothing, cache2 = nothing)
     !hasmethod(f, (typeof(x),)) &&
         error("For inplace function use autodiff = false")
-    du .= auto_vecjac(f, x, v)
+    du .= reshape(auto_vecjac(f, x, v), size(du))
 end
 
 function auto_vecjac(f, x, v)

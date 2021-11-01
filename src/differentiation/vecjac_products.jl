@@ -8,7 +8,7 @@ function num_vecjac!(
     cache2 = similar(v);
     compute_f0 = true,
 )
-    if DiffEqBase.numargs(f) != 2
+    if SciMLBase.numargs(f) != 2
         du .= num_jacvec(f, x, v)
         return du
     end

@@ -9,6 +9,17 @@ function _numargs(f)
     return (numparam-1) #-1 in v0.5 since it adds f as the first parameter
 end
 
+
+#Get the number of parameters of a Tuple type, i.e. the number of fields.
+
+function num_types_in_tuple(sig)
+  length(sig.parameters)
+end
+
+function num_types_in_tuple(sig::UnionAll)
+  length(Base.unwrap_unionall(sig).parameters)
+end
+    
 function num_vecjac!(
     du,
     f,

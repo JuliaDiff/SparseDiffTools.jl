@@ -48,6 +48,7 @@ function num_vecjac!(
 end
 
 function num_vecjac(f, x, v, f0 = nothing)
+    println(typeof(v))
     vv = reshape(v, axes(x))
     f0 === nothing ? _f0 = f(x) : _f0 = f0
     T = eltype(x)

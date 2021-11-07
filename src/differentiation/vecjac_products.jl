@@ -55,6 +55,7 @@ function num_vecjac(f, x, v, f0 = nothing)
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
     du = similar(x)
     for i = 1:length(x)
+        println(typeof(x))
         x[i] += ϵ
         f0 = f(x)
         x[i] -= ϵ

@@ -1,6 +1,6 @@
 using SparseDiffTools
-using LightGraphs
-using LightGraphs: SimpleGraph
+using Graphs
+using Graphs: SimpleGraph
 using Test
 
 using Random
@@ -73,7 +73,7 @@ for i in 1:6
 
     #test condition 2
     for j = vertices(g)
-        walk = LightGraphs.self_avoiding_walk(g, j, 4)
+        walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk
@@ -93,7 +93,7 @@ for i in 1:6
 
     #test condition 2
     for j = vertices(g)
-        walk = LightGraphs.self_avoiding_walk(g, j, 4)
+        walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
             for t in walk

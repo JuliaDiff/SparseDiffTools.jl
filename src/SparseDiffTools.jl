@@ -3,8 +3,8 @@ module SparseDiffTools
 using Compat
 using FiniteDiff
 using ForwardDiff
-using LightGraphs
-using LightGraphs: SimpleGraph
+using Graphs
+using Graphs: SimpleGraph
 using Requires
 using VertexSafeGraphs
 using Adapt

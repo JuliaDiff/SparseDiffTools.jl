@@ -23,7 +23,7 @@ Reference: Gebremedhin AH, Manne F, Pothen A. **What color is your Jacobian? Gra
 
 TODO: add text explaining the difference between star1 and star2
 """
-function color_graph(g::LightGraphs.AbstractGraph, ::GreedyStar2Color)
+function color_graph(g::Graphs.AbstractGraph, ::GreedyStar2Color)
     v = nv(g)
     colorvec = zeros(Int, v)
 

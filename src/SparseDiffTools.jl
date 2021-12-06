@@ -8,6 +8,7 @@ using Graphs: SimpleGraph
 using Requires
 using VertexSafeGraphs
 using Adapt
+import ChainRulesCore
 
 using LinearAlgebra
 using SparseArrays, ArrayInterface

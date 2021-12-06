@@ -1,4 +1,4 @@
-function _numargs(f)
+ChainRulesCore.@non_differentiable function _numargs(f)
     typ = Tuple{Any, Val{:analytic}, Vararg}
     typ2 = Tuple{Any, Type{Val{:analytic}}, Vararg} # This one is required for overloaded types
     typ3 = Tuple{Any, Val{:jac}, Vararg}
@@ -19,7 +19,7 @@ end
 function num_types_in_tuple(sig::UnionAll)
   length(Base.unwrap_unionall(sig).parameters)
 end
-    
+
 function num_vecjac!(
     du,
     f,

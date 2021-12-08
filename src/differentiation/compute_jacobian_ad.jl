@@ -52,9 +52,9 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
 end
 
 generate_chunked_partials(x,colorvec,N::Integer) = generate_chunked_partials(x,colorvec,Val(N))
-function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
+function generate_chunked_partials(x,colorvec,cs::Val{chunksize}) where chunksize
     maxcolor = maximum(colorvec)
-    num_of_chunks = Int(ceil(maxcolor / chunksize))
+    num_of_chunks = cld(maxcolor, chunksize)
     padding_size = (chunksize - (maxcolor % chunksize)) % chunksize
 
     # partials = colorvec .== (1:maxcolor)'
@@ -72,11 +72,15 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     for i in 1:num_of_chunks
         tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, size(partials,1))
         for j in 1:size(partials,1)
-            tmp[j] = Tuple(@view partials[j,(i-1)*chunksize+1:i*chunksize])
+            tmp[j] = partials_view_tup(partials, j, i, cs)
         end
         chunked_partials[i] = tmp
     end
     chunked_partials
+end
+
+@generated function partials_view_tup(partials, j, i, ::Val{chunksize}) where chunksize
+    :(Base.@ntuple $chunksize k->partials[j,(i-1)*$chunksize+k])
 end
 
 function forwarddiff_color_jacobian(f::F,

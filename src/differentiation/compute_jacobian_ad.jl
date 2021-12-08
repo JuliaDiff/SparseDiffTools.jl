@@ -79,13 +79,13 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     chunked_partials
 end
 
-@inline function forwarddiff_color_jacobian(f,
+function forwarddiff_color_jacobian(f::F,
                 x::AbstractArray{<:Number};
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
                 chunksize = nothing,
-                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
+                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) where {F} #if dx is nothing, we will estimate dx at the cost of a function call
 
     if sparsity === nothing && jac_prototype === nothing
         cfg = if chunksize === nothing
@@ -95,7 +95,7 @@ end
                 ForwardDiff.JacobianConfig(f, x)
             end
         else
-            ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+            ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk{getsize(chunksize)}())
         end
         return ForwardDiff.jacobian(f, x, cfg)
     end
@@ -105,13 +105,13 @@ end
     return forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
-@inline function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f,
+function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f::F,
                 x::AbstractArray{<:Number};
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
                 chunksize = nothing,
-                dx = similar(x, size(J, 1))) #dx kwarg can be used to avoid re-allocating dx every time
+                dx = similar(x, size(J, 1))) where {F} #dx kwarg can be used to avoid re-allocating dx every time
     if sparsity === nothing && jac_prototype === nothing
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
@@ -119,7 +119,7 @@ end
     return forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
-function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
+function forwarddiff_color_jacobian(f::F,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing) where F
 
     if jac_prototype isa Nothing ? ArrayInterface.ismutable(x) : ArrayInterface.ismutable(jac_prototype)
         # Whenever J is mutable, we mutate it to avoid allocations
@@ -136,7 +136,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 end
 
 # When J is mutable, this version of forwarddiff_color_jacobian will mutate J to avoid allocations
-function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache)
+function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f::F,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache) where F
     t = jac_cache.t
     dx = jac_cache.dx
     p = jac_cache.p

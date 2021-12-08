@@ -72,7 +72,9 @@ function generate_chunked_partials(x,colorvec,cs::Val{chunksize}) where chunksiz
     for i in 1:num_of_chunks
         tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, size(partials,1))
         for j in 1:size(partials,1)
-            tmp[j] = ntuple(k->partials[j,(i-1)*chunksize+k],cs)
+            tmp[j] = ntuple(let partials=partials, i=i, j=j, chunksize=chunksize
+                k->partials[j,(i-1)*chunksize+k]
+            end, cs)
         end
         chunked_partials[i] = tmp
     end

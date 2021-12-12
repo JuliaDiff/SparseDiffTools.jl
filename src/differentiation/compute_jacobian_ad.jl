@@ -41,7 +41,7 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
         end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-        _t = Dual{T}.(vec(x),first(p))
+        _t = Dual{T,eltype(x),length(first(first(p)))}.(vec(x),first(p))
         t = ArrayInterface.restructure(x,_t)
     end
 
@@ -52,7 +52,7 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
     else
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
         _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{T}.(vec(dx),_pi),size(dx)...)
+        fx = reshape(Dual{T,eltype(dx),length(tup)}.(vec(dx),_pi),size(dx)...)
         _dx = dx
     end
 

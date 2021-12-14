@@ -42,7 +42,7 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
         end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-        _t = Dual{T,eltype(x),length(first(first(p)))}.(vec(x),ForwardDiff.Partials.(first(p)))
+        _t = Dual{T,eltype(x),getsize(chunksize)}.(vec(x),ForwardDiff.Partials.(first(p)))
         t = ArrayInterface.restructure(x,_t)
     end
 

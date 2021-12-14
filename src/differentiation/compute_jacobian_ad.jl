@@ -14,7 +14,7 @@ void_setindex!(args...) = (setindex!(args...); return)
 gettag(::Type{ForwardDiff.Dual{T}}) where {T} = T
 
 const default_chunk_size = ForwardDiff.pickchunksize
-const SMALLTAG = ForwardDiff.Tag(missing,Float64)
+const SMALLTAG = typeof(ForwardDiff.Tag(missing,Float64))
 
 function ForwardColorJacCache(f::F,x,_chunksize = nothing;
                               dx = nothing,

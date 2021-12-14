@@ -14,6 +14,7 @@ void_setindex!(args...) = (setindex!(args...); return)
 gettag(::Type{ForwardDiff.Dual{T}}) where {T} = T
 
 const default_chunk_size = ForwardDiff.pickchunksize
+const SMALLTAG = ForwardDiff.Tag(missing,Float64)
 
 function ForwardColorJacCache(f::F,x,_chunksize = nothing;
                               dx = nothing,
@@ -41,7 +42,7 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
         end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-        _t = Dual{T,eltype(x),length(first(first(p)))}.(vec(x),first(p))
+        _t = Dual{T,eltype(x),length(first(first(p)))}.(vec(x),ForwardDiff.Partials.(first(p)))
         t = ArrayInterface.restructure(x,_t)
     end
 
@@ -52,7 +53,7 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
     else
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
         _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{T,eltype(dx),length(tup)}.(vec(dx),_pi),size(dx)...)
+        fx = reshape(Dual{T,eltype(dx),length(tup)}.(vec(dx),ForwardDiff.Partials.(_pi)),size(dx)...)
         _dx = dx
     end
 
@@ -170,7 +171,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f::F,x::Abstract
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{gettag(eltype(t))}.(vecx, partial_i),size(t))
+        t = reshape(eltype(t).(vecx, ForwardDiff.Partials.(partial_i)),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -238,7 +239,7 @@ function forwarddiff_color_jacobian_immutable(f,x::AbstractArray{<:Number},jac_c
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{gettag(eltype(t))}.(vecx, partial_i),size(t))
+        t = reshape(eltype(t).(vecx, ForwardDiff.Partials.(partial_i)),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -319,10 +320,10 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
         if vect isa Array
             @inbounds @simd ivdep for j in eachindex(vect)
-                vect[j] = Dual{gettag(eltype(t))}(vecx[j], partial_i[j])
+                vect[j] = eltype(t)(vecx[j], ForwardDiff.Partials(partial_i[j]))
             end
         else
-            vect .= Dual{gettag(eltype(t))}.(vecx, partial_i)
+            vect .= eltype(t).(vecx, ForwardDiff.Partials.(partial_i))
         end
 
         f(fx,t)

@@ -6,10 +6,10 @@ function auto_jacvec!(
     f,
     x,
     v,
-    cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(reshape(v, size(x)))),
+    cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(reshape(v, size(x)))),
     cache2 = similar(cache1),
 )
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(reshape(v, size(x))))
+    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(reshape(v, size(x))))
     f(cache2, cache1)
     vecdy = _vec(dy)
     vecdy .= partials.(vec(cache2), 1)
@@ -20,7 +20,7 @@ _vec(v::AbstractVector) = v
 
 function auto_jacvec(f, x, v)
     vv = reshape(v, axes(x))
-    vec(partials.(vec(f(ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(vv)))), 1))
+    vec(partials.(vec(f(ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(vv)))), 1))
 end
 
 function num_jacvec!(

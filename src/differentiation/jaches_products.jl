@@ -6,17 +6,21 @@ function auto_jacvec!(
     f,
     x,
     v,
-    cache1 = Dual{DeivVecTag}.(x, reshape(v, size(x))),
+    cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(reshape(v, size(x)))),
     cache2 = similar(cache1),
 )
-    cache1 .= Dual{DeivVecTag}.(x, reshape(v, size(x)))
+    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(reshape(v, size(x))))
     f(cache2, cache1)
-    dy .= partials.(cache2, 1)
+    vecdy = _vec(dy)
+    vecdy .= partials.(vec(cache2), 1)
 end
+
+_vec(v) = vec(v)
+_vec(v::AbstractVector) = v
 
 function auto_jacvec(f, x, v)
     vv = reshape(v, axes(x))
-    vec(partials.(vec(f(ForwardDiff.Dual{DeivVecTag}.(x, vv))), 1))
+    vec(partials.(vec(f(ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, vv))), 1))
 end
 
 function num_jacvec!(
@@ -197,6 +201,7 @@ function JacVec(f, x::AbstractArray; autodiff = true)
     JacVec(f, cache1, cache2, x, autodiff)
 end
 
+Base.eltype(L::JacVec) = eltype(L.x)
 Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
 Base.size(L::JacVec, i::Int) = length(L.cache1)
 Base.:*(L::JacVec, v::AbstractVector) =

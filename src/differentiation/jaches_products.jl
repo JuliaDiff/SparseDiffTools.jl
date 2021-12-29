@@ -20,7 +20,7 @@ _vec(v::AbstractVector) = v
 
 function auto_jacvec(f, x, v)
     vv = reshape(v, axes(x))
-    vec(partials.(vec(f(ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, vv))), 1))
+    vec(partials.(vec(f(ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials(vv)))), 1))
 end
 
 function num_jacvec!(

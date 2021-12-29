@@ -18,8 +18,8 @@ function h(dy,x)
       FiniteDiff.finite_difference_gradient!(dy,g,x)
 end
 
-cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(v)))
-cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(v)))
+cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(v)))
+cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(v)))
 @test num_jacvec!(dy, f, x, v) ≈ ForwardDiff.jacobian(f,similar(x),x)*v rtol=1e-6
 @test num_jacvec!(dy, f, x, v, similar(v), similar(v)) ≈ ForwardDiff.jacobian(f,similar(x),x)*v rtol=1e-6
 @test num_jacvec(f, x, v) ≈ ForwardDiff.jacobian(f,similar(x),x)*v rtol=1e-6

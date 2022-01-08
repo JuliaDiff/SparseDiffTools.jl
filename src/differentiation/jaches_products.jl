@@ -41,7 +41,10 @@ function num_jacvec!(
     @. x += ϵ * vv
     f(cache2, x)
     @. x -= ϵ * vv
-    @. dy = (cache2 - cache1) / ϵ
+    vecdy = _vec(dy)
+    veccache1 = _vec(cache1)
+    veccache2 = _vec(cache2)
+    @. vecdy = (veccache2 - veccache1) / ϵ
 end
 
 function num_jacvec(f, x, v, f0 = nothing)

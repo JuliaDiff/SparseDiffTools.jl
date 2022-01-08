@@ -9,7 +9,7 @@ function auto_jacvec!(
     cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))),
     cache2 = similar(cache1),
 )
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
+    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     f(cache2, cache1)
     vecdy = _vec(dy)
     vecdy .= partials.(_vec(cache2), 1)

@@ -296,7 +296,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     color_i = 1
     maxcolor = maximum(colorvec)
 
-    if J isa SparseMatrixCSC
+    if J isa AbstractSparseMatrix
         fill!(nonzeros(J), zero(eltype(J)))
     else
         fill!(J, zero(eltype(J)))
@@ -309,7 +309,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         cols_index = 1:size(J,2)
     end
 
-    # fast path if J and sparsity are both SparseMatrixCSC and have the same sparsity pattern
+    # fast path if J and sparsity are both AbstractSparseMatrix and have the same sparsity pattern
     sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity(J, sparsity)
 
     vecx = vec(x)
@@ -356,7 +356,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     J[rows_index, cols_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
                     += means requires a zero'd out start
                     =#
-                    if J isa SparseMatrixCSC
+                    if J isa AbstractSparseMatrix
                         @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
                     else
                         @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)

@@ -296,7 +296,11 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     color_i = 1
     maxcolor = maximum(colorvec)
 
-    fill!(J, zero(eltype(J)))
+    if J isa SparseMatrixCSC
+        fill!(nonzeros(J), zero(eltype(J)))
+    else
+        fill!(J, zero(eltype(J)))
+    end
 
     if FiniteDiff._use_findstructralnz(sparsity)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)

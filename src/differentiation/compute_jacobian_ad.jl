@@ -294,6 +294,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     chunksize = jac_cache.chunksize
     color_i = 1
+    adaptedcolorvec = adapt(__parameterless_type(typeof(dx)),colorvec)
+
     maxcolor = maximum(colorvec)
 
     if J isa AbstractSparseMatrix
@@ -357,9 +359,17 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     += means requires a zero'd out start
                     =#
                     if J isa AbstractSparseMatrix
-                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
+                        if J isa SparseMatrixCSC
+                            @. void_setindex!(Ref(nonzeros(J)),getindex(Ref(nonzeros(J)),rows_index) + (getindex(Ref(adaptedcolorvec),cols_index) == color_i) * getindex(Ref(vecdx),rows_index),rows_index)
+                        else
+                            nzval = @view nonzeros(J)[rows_index]
+                            cv = @view adaptedcolorvec[cols_index]
+                            vdx = @view dx[rows_index]
+                            tmp = cv .== color_i
+                            nzval .+= tmp .* vdx
+                        end
                     else
-                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
+                        @. void_setindex!(Ref(J),getindex(Ref(J),rows_index, cols_index) + (getindex(Ref(colorvec),cols_index) == color_i) * getindex(Ref(vecdx),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1

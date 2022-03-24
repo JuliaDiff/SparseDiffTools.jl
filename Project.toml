@@ -19,7 +19,7 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
 Adapt = "1, 2.0, 3.0"
-ArrayInterface = "2.8, 3.0, 4"
+ArrayInterface = "2.8, 3.0, 4, 5"
 Compat = "2.2, 3"
 DataStructures = "0.17, 0.18"
 FiniteDiff = "2.8.1"

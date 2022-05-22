@@ -1,11 +1,11 @@
 """
-    color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
+    color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
 
 Return a tight, distance-1 coloring of graph g
 using the minimum number of colors possible (i.e.
 the chromatic number of graph, `χ(g)`)
 """
-function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
+function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
     v = nv(g)
 
     #A is list of vertices in non-increasing order of degree
@@ -96,14 +96,14 @@ function color_graph(g::LightGraphs.AbstractGraph, ::BacktrackingColor)
 end
 
 """
-    sort_by_degree(g::LightGraphs.AbstractGraph)
+    sort_by_degree(g::Graphs.AbstractGraph)
 
 Returns a list of the vertices of graph g sorted
 in non-increasing order of their degrees
 """
-function sort_by_degree(g::LightGraphs.AbstractGraph)
+function sort_by_degree(g::Graphs.AbstractGraph)
     vs = vertices(g)
-    degrees = (LightGraphs.degree(g, v) for v in vs)
+    degrees = (Graphs.degree(g, v) for v in vs)
     vertex_pairs = collect(zip(vs, degrees))
     sort!(vertex_pairs, by = p -> p[2], rev = true)
     return [v[1] for v in vertex_pairs]
@@ -129,7 +129,7 @@ end
                 A::AbstractVector{<:Integer},
                 colors::AbstractVector{<:Integer},
                 F::Array{Integer,1},
-                g::LightGraphs.AbstractGraph,
+                g::Graphs.AbstractGraph,
                 opt::Integer)
 
 Returns set of free colors of x which are less
@@ -149,7 +149,7 @@ function free_colors(x::Integer,
                     A::AbstractVector{<:Integer},
                     colors::AbstractVector{<:Integer},
                     F::Array{Integer,1},
-                    g::LightGraphs.AbstractGraph,
+                    g::Graphs.AbstractGraph,
                     opt::Integer)
     index = -1
 

@@ -1,10 +1,10 @@
 using SparseDiffTools
-using LightGraphs
-using LightGraphs: SimpleGraph
+using Graphs
+using Graphs: SimpleGraph
 using Test
 
 using Random
-Random.seed!(100)
+Random.seed!(90)
 
 # println("Starting acyclic coloring test...")
 #= Test data =#

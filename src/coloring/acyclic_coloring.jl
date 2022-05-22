@@ -1,5 +1,5 @@
 """
-        color_graph(g::LightGraphs.AbstractGraphs, ::AcyclicColoring)
+        color_graph(g::Graphs.AbstractGraphs, ::AcyclicColoring)
 
 Returns a coloring vector following the acyclic coloring rules (1) the coloring
 corresponds to a distance-1 coloring, and (2) vertices in every cycle of the
@@ -9,7 +9,7 @@ is a collection of trees—and hence is acyclic.
 
 Reference: Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 """
-function color_graph(g::LightGraphs.AbstractGraph, ::AcyclicColoring)
+function color_graph(g::Graphs.AbstractGraph, ::AcyclicColoring)
     color = zeros(Int, nv(g))
     two_colored_forest = DisjointSets{Int}(())
 
@@ -67,7 +67,7 @@ end
                         v::Integer,
                         w::Integer,
                         x::Integer,
-                        g::LightGraphs.AbstractGraph,
+                        g::Graphs.AbstractGraph,
                         two_colored_forest::DisjointSets{<:Integer},
                         color::AbstractVector{<:Integer})
 
@@ -81,7 +81,7 @@ function prevent_cycle!(first_visit_to_tree::AbstractVector{<:Tuple{Integer,Inte
                         v::Integer,
                         w::Integer,
                         x::Integer,
-                        g::LightGraphs.AbstractGraph,
+                        g::Graphs.AbstractGraph,
                         two_colored_forest::DisjointSets{<:Integer},
                         color::AbstractVector{<:Integer})
     e = find(w, x, g, two_colored_forest)
@@ -100,7 +100,7 @@ end
                     first_neighbor::AbstractVector{<: Tuple{Integer,Integer}},
                     v::Integer,
                     w::Integer,
-                    g::LightGraphs.AbstractGraph,
+                    g::Graphs.AbstractGraph,
                     color::AbstractVector{<:Integer})
 
 Grow a 2-colored star after assigning a new color to the
@@ -112,7 +112,7 @@ function grow_star!(two_colored_forest::DisjointSets{<:Integer},
                     first_neighbor::AbstractVector{<: Tuple{Integer,Integer}},
                     v::Integer,
                     w::Integer,
-                    g::LightGraphs.AbstractGraph,
+                    g::Graphs.AbstractGraph,
                     color::AbstractVector{<:Integer})
     insert_new_tree!(two_colored_forest,v,w,g)
     p, q = first_neighbor[color[w]]
@@ -132,7 +132,7 @@ end
                       v::Integer,
                       w::Integer,
                       x::Integer,
-                      g::LightGraphs.AbstractGraph)
+                      g::Graphs.AbstractGraph)
 
 Subroutine to merge trees present in the disjoint set which have a
 common edge.
@@ -141,7 +141,7 @@ function merge_trees!(two_colored_forest::DisjointSets{<:Integer},
                       v::Integer,
                       w::Integer,
                       x::Integer,
-                      g::LightGraphs.AbstractGraph)
+                      g::Graphs.AbstractGraph)
     e1 = find(v,w,g,two_colored_forest)
     e2 = find(w,x,g,two_colored_forest)
     if e1 != e2
@@ -154,7 +154,7 @@ end
         insert_new_tree!(two_colored_forest::DisjointSets{<:Integer},
                           v::Integer,
                           w::Integer,
-                          g::LightGraphs.AbstractGraph)
+                          g::Graphs.AbstractGraph)
 
 creates a new singleton set in the disjoint set 'two_colored_forest' consisting
 of the edge connecting v and w in the graph g
@@ -162,7 +162,7 @@ of the edge connecting v and w in the graph g
 function insert_new_tree!(two_colored_forest::DisjointSets{<:Integer},
                           v::Integer,
                           w::Integer,
-                          g::LightGraphs.AbstractGraph)
+                          g::Graphs.AbstractGraph)
     edge_index = find_edge_index(v,w,g)
     push!(two_colored_forest,edge_index)
 end
@@ -181,7 +181,7 @@ end
 """
         find(w::Integer,
              x::Integer,
-             g::LightGraphs.AbstractGraph,
+             g::Graphs.AbstractGraph,
              two_colored_forest::DisjointSets{<:Integer})
 
 Returns the root of the disjoint set to which the edge connecting vertices w and x
@@ -189,7 +189,7 @@ in the graph g belongs to
 """
 function find(w::Integer,
               x::Integer,
-              g::LightGraphs.AbstractGraph,
+              g::Graphs.AbstractGraph,
               two_colored_forest::DisjointSets{<:Integer})
     edge_index = find_edge_index(w, x, g)
     return find_root!(two_colored_forest, edge_index)
@@ -197,12 +197,12 @@ end
 
 
 """
-        find_edge(g::LightGraphs.AbstractGraph, v::Integer, w::Integer)
+        find_edge(g::Graphs.AbstractGraph, v::Integer, w::Integer)
 
 Returns an integer equivalent to the index of the edge connecting the vertices
 v and w in the graph g
 """
-function find_edge_index(v::Integer, w::Integer, g::LightGraphs.AbstractGraph)
+function find_edge_index(v::Integer, w::Integer, g::Graphs.AbstractGraph)
     pos = 1
     for i in edges(g)
 

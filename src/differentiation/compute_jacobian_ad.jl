@@ -11,11 +11,14 @@ end
 getsize(::Val{N}) where N = N
 getsize(N::Integer) = N
 void_setindex!(args...) = (setindex!(args...); return)
+gettag(::Type{ForwardDiff.Dual{T}}) where {T} = T
 
 const default_chunk_size = ForwardDiff.pickchunksize
+const SMALLTAG = typeof(ForwardDiff.Tag(missing,Float64))
 
 function ForwardColorJacCache(f::F,x,_chunksize = nothing;
                               dx = nothing,
+                              tag = nothing,
                               colorvec=1:length(x),
                               sparsity::Union{AbstractArray,Nothing}=nothing) where {F}
 
@@ -25,16 +28,22 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
         chunksize = _chunksize
     end
 
+    if tag === nothing
+        T = typeof(ForwardDiff.Tag(f,eltype(vec(x))))
+    else
+        T = tag
+    end
+
     if x isa Array
         p = generate_chunked_partials(x,colorvec,chunksize)
-        t = similar(x,Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x)))),eltype(x),length(first(first(p)))})
+        t = Array{Dual{T,eltype(x),length(first(first(p)))}}(undef,size(x))
         for i in eachindex(t)
-            t[i] = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x)))),eltype(x),length(first(first(p)))}(x[i],ForwardDiff.Partials(first(p)[i]))
+            t[i] = Dual{T,eltype(x),length(first(first(p)))}(x[i],ForwardDiff.Partials(first(p)[i]))
         end
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
-        _t = Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(x),first(p))
-        t = ArrayInterface.restructure(x,_t)
+        _t = Dual{T,eltype(x),getsize(chunksize)}.(vec(x),ForwardDiff.Partials.(first(p)))
+        t = ArrayInterfaceCore.restructure(x,_t)
     end
 
 
@@ -42,9 +51,9 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
         fx = similar(t)
         _dx = similar(x)
     else
-        tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p,1),1) .* false
+        tup = ArrayInterfaceCore.allowed_getindex(ArrayInterfaceCore.allowed_getindex(p,1),1) .* false
         _pi = adapt(parameterless_type(dx),[tup for i in 1:length(dx)])
-        fx = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vec(x))))}.(vec(dx),_pi),size(dx)...)
+        fx = reshape(Dual{T,eltype(dx),length(tup)}.(vec(dx),ForwardDiff.Partials.(_pi)),size(dx)...)
         _dx = dx
     end
 
@@ -52,9 +61,9 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
 end
 
 generate_chunked_partials(x,colorvec,N::Integer) = generate_chunked_partials(x,colorvec,Val(N))
-function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
+function generate_chunked_partials(x,colorvec,cs::Val{chunksize}) where chunksize
     maxcolor = maximum(colorvec)
-    num_of_chunks = Int(ceil(maxcolor / chunksize))
+    num_of_chunks = cld(maxcolor, chunksize)
     padding_size = (chunksize - (maxcolor % chunksize)) % chunksize
 
     # partials = colorvec .== (1:maxcolor)'
@@ -72,20 +81,24 @@ function generate_chunked_partials(x,colorvec,::Val{chunksize}) where chunksize
     for i in 1:num_of_chunks
         tmp = Vector{NTuple{chunksize,eltype(x)}}(undef, size(partials,1))
         for j in 1:size(partials,1)
-            tmp[j] = Tuple(@view partials[j,(i-1)*chunksize+1:i*chunksize])
+            tmp[j] = partials_view_tup(partials, j, i, cs)
         end
         chunked_partials[i] = tmp
     end
     chunked_partials
 end
 
-@inline function forwarddiff_color_jacobian(f,
+@generated function partials_view_tup(partials, j, i, ::Val{chunksize}) where chunksize
+    :(Base.@ntuple $chunksize k->partials[j,(i-1)*$chunksize+k])
+end
+
+function forwarddiff_color_jacobian(f::F,
                 x::AbstractArray{<:Number};
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
                 chunksize = nothing,
-                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) #if dx is nothing, we will estimate dx at the cost of a function call
+                dx = sparsity === nothing && jac_prototype === nothing ? nothing : copy(x)) where {F} #if dx is nothing, we will estimate dx at the cost of a function call
 
     if sparsity === nothing && jac_prototype === nothing
         cfg = if chunksize === nothing
@@ -95,7 +108,7 @@ end
                 ForwardDiff.JacobianConfig(f, x)
             end
         else
-            ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
+            ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk{getsize(chunksize)}())
         end
         return ForwardDiff.jacobian(f, x, cfg)
     end
@@ -105,13 +118,13 @@ end
     return forwarddiff_color_jacobian(f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity),jac_prototype)
 end
 
-@inline function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f,
+function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f::F,
                 x::AbstractArray{<:Number};
                 colorvec = 1:length(x),
                 sparsity = nothing,
                 jac_prototype = nothing,
                 chunksize = nothing,
-                dx = similar(x, size(J, 1))) #dx kwarg can be used to avoid re-allocating dx every time
+                dx = similar(x, size(J, 1))) where {F} #dx kwarg can be used to avoid re-allocating dx every time
     if sparsity === nothing && jac_prototype === nothing
         cfg = chunksize === nothing ? ForwardDiff.JacobianConfig(f, x) : ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
@@ -119,9 +132,9 @@ end
     return forwarddiff_color_jacobian(J,f,x,ForwardColorJacCache(f,x,chunksize,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
-function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing)
+function forwarddiff_color_jacobian(f::F,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache,jac_prototype=nothing) where F
 
-    if jac_prototype isa Nothing ? ArrayInterface.ismutable(x) : ArrayInterface.ismutable(jac_prototype)
+    if jac_prototype isa Nothing ? ArrayInterfaceCore.ismutable(x) : ArrayInterfaceCore.ismutable(jac_prototype)
         # Whenever J is mutable, we mutate it to avoid allocations
         dx = jac_cache.dx
         vecx = vec(x)
@@ -136,7 +149,7 @@ function forwarddiff_color_jacobian(f,x::AbstractArray{<:Number},jac_cache::Forw
 end
 
 # When J is mutable, this version of forwarddiff_color_jacobian will mutate J to avoid allocations
-function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache)
+function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f::F,x::AbstractArray{<:Number},jac_cache::ForwardColorJacCache) where F
     t = jac_cache.t
     dx = jac_cache.dx
     p = jac_cache.p
@@ -151,14 +164,14 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},f,x::AbstractArr
     nrows,ncols = size(J)
 
     if !(sparsity isa Nothing)
-        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
         rows_index = [rows_index[i] for i in 1:length(rows_index)]
         cols_index = [cols_index[i] for i in 1:length(cols_index)]
     end
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i),size(t))
+        t = reshape(eltype(t).(vecx, ForwardDiff.Partials.(partial_i)),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -219,14 +232,14 @@ function forwarddiff_color_jacobian_immutable(f,x::AbstractArray{<:Number},jac_c
     nrows,ncols = size(J)
 
     if !(sparsity isa Nothing)
-        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
         rows_index = [rows_index[i] for i in 1:length(rows_index)]
         cols_index = [cols_index[i] for i in 1:length(cols_index)]
     end
 
     for i in eachindex(p)
         partial_i = p[i]
-        t = reshape(Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i),size(t))
+        t = reshape(eltype(t).(vecx, ForwardDiff.Partials.(partial_i)),size(t))
         fx = f(t)
         if !(sparsity isa Nothing)
             for j in 1:chunksize
@@ -264,7 +277,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 x::AbstractArray{<:Number};
                 dx = similar(x,size(J,1)),
                 colorvec = 1:length(x),
-                sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
+                sparsity = ArrayInterfaceCore.has_sparsestruct(J) ? J : nothing)
     forwarddiff_color_jacobian!(J,f,x,ForwardColorJacCache(f,x,dx=dx,colorvec=colorvec,sparsity=sparsity))
 end
 
@@ -281,18 +294,24 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     sparsity = jac_cache.sparsity
     chunksize = jac_cache.chunksize
     color_i = 1
+    adaptedcolorvec = adapt(__parameterless_type(typeof(dx)),colorvec)
+
     maxcolor = maximum(colorvec)
 
-    fill!(J, zero(eltype(J)))
+    if J isa AbstractSparseMatrix
+        fill!(nonzeros(J), zero(eltype(J)))
+    else
+        fill!(J, zero(eltype(J)))
+    end
 
     if FiniteDiff._use_findstructralnz(sparsity)
-        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
     else
         rows_index = 1:size(J,1)
         cols_index = 1:size(J,2)
     end
 
-    # fast path if J and sparsity are both SparseMatrixCSC and have the same sparsity pattern
+    # fast path if J and sparsity are both AbstractSparseMatrix and have the same sparsity pattern
     sparseCSC_common_sparsity = FiniteDiff._use_sparseCSC_common_sparsity(J, sparsity)
 
     vecx = vec(x)
@@ -307,10 +326,10 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
         if vect isa Array
             @inbounds @simd ivdep for j in eachindex(vect)
-                vect[j] = Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}(vecx[j], partial_i[j])
+                vect[j] = eltype(t)(vecx[j], ForwardDiff.Partials(partial_i[j]))
             end
         else
-            vect .= Dual{typeof(ForwardDiff.Tag(f,eltype(vecx)))}.(vecx, partial_i)
+            vect .= eltype(t).(vecx, ForwardDiff.Partials.(partial_i))
         end
 
         f(fx,t)
@@ -325,7 +344,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     dx .= partials.(fx, j)
                 end
 
-                if ArrayInterface.fast_scalar_indexing(dx)
+                if ArrayInterfaceCore.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
                     if sparseCSC_common_sparsity
                         FiniteDiff._colorediteration!(J,vecdx,colorvec,color_i,ncols)
@@ -339,10 +358,18 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     J[rows_index, cols_index] .+= (colorvec[cols_index] .== color_i) .* dx[rows_index]
                     += means requires a zero'd out start
                     =#
-                    if J isa SparseMatrixCSC
-                        @. setindex!((J.nzval,),getindex((J.nzval,),rows_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index)
+                    if J isa AbstractSparseMatrix
+                        if J isa SparseMatrixCSC
+                            @. void_setindex!(Ref(nonzeros(J)),getindex(Ref(nonzeros(J)),rows_index) + (getindex(Ref(adaptedcolorvec),cols_index) == color_i) * getindex(Ref(vecdx),rows_index),rows_index)
+                        else
+                            nzval = @view nonzeros(J)[rows_index]
+                            cv = @view adaptedcolorvec[cols_index]
+                            vdx = @view dx[rows_index]
+                            tmp = cv .== color_i
+                            nzval .+= tmp .* vdx
+                        end
                     else
-                        @. setindex!((J,),getindex((J,),rows_index, cols_index) + (getindex((colorvec,),cols_index) == color_i) * getindex((vecdx,),rows_index),rows_index, cols_index)
+                        @. void_setindex!(Ref(J),getindex(Ref(J),rows_index, cols_index) + (getindex(Ref(colorvec),cols_index) == color_i) * getindex(Ref(vecdx),rows_index),rows_index, cols_index)
                     end
                 end
                 color_i += 1

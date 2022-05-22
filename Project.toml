@@ -5,7 +5,7 @@ version = "1.21.0"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
@@ -19,7 +19,7 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
 Adapt = "1, 2.0, 3.0"
-ArrayInterface = "2.8, 3.0, 4, 5"
+ArrayInterfaceCore = "0.1.1"
 Compat = "2.2, 3"
 DataStructures = "0.17, 0.18"
 FiniteDiff = "2.8.1"

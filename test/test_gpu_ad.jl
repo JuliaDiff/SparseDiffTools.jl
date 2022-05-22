@@ -1,5 +1,5 @@
 using SparseDiffTools, CUDA, Test, LinearAlgebra
-using ArrayInterface: allowed_getindex, allowed_setindex!
+using ArrayInterfaceCore: allowed_getindex, allowed_setindex!
 using SparseArrays
 
 function f(dx,x)

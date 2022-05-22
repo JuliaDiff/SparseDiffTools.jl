@@ -318,7 +318,7 @@ Jacobian-vector or Hessian-vector function, whereas `mul!(res,J,v)` utilizes
 the appropriate in-place versions. To update the location of differentiation
 in the operator, simply mutate the vector `u`: `J.u .= ...`.
 
-# Note about sparse differentiation of BandedMatrices and BlockBandedMatrices
+# Note about sparse differentiation of GPUArrays, BandedMatrices, and BlockBandedMatrices
 
 These two matrix types need the dependencies ArrayInterfaceBandedMatrices.jl and
 ArrayInterfaceBlockBandedMatrices.jl to basically work with any functionality
@@ -326,3 +326,5 @@ ArrayInterfaceBlockBandedMatrices.jl to basically work with any functionality
 `import` on them if you are using BandedMatrices.jl or BlockBandedMatrices.jl
 for sparsity patterns. In the future, those two packages should just depend on
 ArrayInterface.jl and remove this issue entirely from the user space.
+
+Additionally, GPUs need ArrayInterfaceGPUArrays for proper determination of the indexing.

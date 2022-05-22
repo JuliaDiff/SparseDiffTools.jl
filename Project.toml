@@ -32,6 +32,7 @@ julia = "1.6"
 
 [extras]
 ArrayInterfaceBlockBandedMatrices = "5331f1e9-51c7-46b0-a9b0-df4434785e0a"
+ArrayInterfaceStaticArrays = "b0d46f97-bff5-4637-a19a-dd75974142cd"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
@@ -44,4 +45,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "ArrayInterfaceBlockBandedMatrices", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]
+test = ["Test", "ArrayInterfaceBlockBandedMatrices", "ArrayInterfaceStaticArrays", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]

@@ -5,6 +5,7 @@ using LinearAlgebra
 using BlockBandedMatrices
 using BandedMatrices
 using StaticArrays
+using ArrayInterfaceStaticArrays
 
 fcalls = 0
 function f(dx,x)

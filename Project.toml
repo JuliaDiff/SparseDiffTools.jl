@@ -1,7 +1,7 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "1.21.0"
+version = "1.22.0"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -19,7 +19,7 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
 Adapt = "1, 2.0, 3.0"
-ArrayInterface = "2.8, 3.0, 4, 5"
+ArrayInterface = "6"
 Compat = "2.2, 3"
 DataStructures = "0.17, 0.18"
 FiniteDiff = "2.8.1"

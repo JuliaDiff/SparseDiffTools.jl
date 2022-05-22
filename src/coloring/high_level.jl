@@ -1,4 +1,4 @@
-abstract type SparseDiffToolsColoringAlgorithm <: ArrayInterface.ColoringAlgorithm end
+abstract type SparseDiffToolsColoringAlgorithm <: ArrayInterfaceCore.ColoringAlgorithm end
 struct GreedyD1Color <: SparseDiffToolsColoringAlgorithm end
 struct BacktrackingColor <: SparseDiffToolsColoringAlgorithm end
 struct ContractionColor <: SparseDiffToolsColoringAlgorithm end
@@ -16,7 +16,7 @@ The coloring defaults to a greedy distance-1 coloring.
 Note that if A isa SparseMatrixCSC, the sparsity pattern is defined by structural nonzeroes,
 ie includes explicitly stored zeros.
 """
-function ArrayInterface.matrix_colors(A::AbstractMatrix, alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
+function ArrayInterfaceCore.matrix_colors(A::AbstractMatrix, alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color(); partition_by_rows::Bool = false)
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
     A_graph = matrix2graph(_A, partition_by_rows)
     return color_graph(A_graph, alg)

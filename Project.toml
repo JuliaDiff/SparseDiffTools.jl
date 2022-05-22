@@ -5,7 +5,8 @@ version = "1.21.0"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
+ArrayInterfaceStaticArrays = "b0d46f97-bff5-4637-a19a-dd75974142cd"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
@@ -19,7 +20,8 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
 Adapt = "1, 2.0, 3.0"
-ArrayInterface = "2.8, 3.0, 4, 5"
+ArrayInterfaceCore = "0.1.1"
+ArrayInterfaceStaticArrays = "0.1"
 Compat = "2.2, 3"
 DataStructures = "0.17, 0.18"
 FiniteDiff = "2.8.1"
@@ -31,6 +33,8 @@ VertexSafeGraphs = "0.2"
 julia = "1.6"
 
 [extras]
+ArrayInterfaceBlockBandedMatrices = "5331f1e9-51c7-46b0-a9b0-df4434785e0a"
+ArrayInterfaceBandedMatrices = "2e50d22c-5be1-4042-81b1-c572ed69783d"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
@@ -43,4 +47,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]
+test = ["Test", "ArrayInterfaceBandedMatrices", "ArrayInterfaceBlockBandedMatrices", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Zygote", "SparsityDetection", "StaticArrays"]

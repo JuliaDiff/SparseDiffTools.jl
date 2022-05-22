@@ -1,6 +1,7 @@
 using SparseDiffTools, CUDA, Test, LinearAlgebra
-using ArrayInterface: allowed_getindex, allowed_setindex!
+using ArrayInterfaceCore: allowed_getindex, allowed_setindex!
 using SparseArrays
+using ArrayInterfaceGPUArrays
 
 function f(dx,x)
     dx[2:end-1] = x[1:end-2] - 2x[2:end-1] + x[3:end]

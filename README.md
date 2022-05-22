@@ -112,7 +112,7 @@ gmres!(res,J,v)
 
 ### Matrix Coloring
 
-This library extends the common `ArrayInterface.matrix_colors` function to allow
+This library extends the common `ArrayInterfaceCore.matrix_colors` function to allow
 for coloring sparse matrices using graphical techniques.
 
 Matrix coloring allows you to reduce the number of times finite differencing
@@ -163,7 +163,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 
 Notice that if a sparsity pattern is not supplied then the built Jacobian will
 be the compressed Jacobian: `sparsity` must be a sparse matrix or a structured matrix
-(`Tridiagonal`, `Banded`, etc. conforming to the ArrayInterface.jl specs) with the
+(`Tridiagonal`, `Banded`, etc. conforming to the ArrayInterfaceCore.jl specs) with the
 appropriate sparsity pattern to allow for decompression.
 
 This call will allocate the cache variables each time. To avoid allocating the
@@ -317,3 +317,14 @@ These all have the same interface, where `J*v` utilizes the out-of-place
 Jacobian-vector or Hessian-vector function, whereas `mul!(res,J,v)` utilizes
 the appropriate in-place versions. To update the location of differentiation
 in the operator, simply mutate the vector `u`: `J.u .= ...`.
+
+# Note about sparse differentiation of GPUArrays, BandedMatrices, and BlockBandedMatrices
+
+These two matrix types need the dependencies ArrayInterfaceBandedMatrices.jl and
+ArrayInterfaceBlockBandedMatrices.jl to basically work with any functionality
+(anywhere). For now, the right thing to do is to add these libraries and do
+`import` on them if you are using BandedMatrices.jl or BlockBandedMatrices.jl
+for sparsity patterns. In the future, those two packages should just depend on
+ArrayInterface.jl and remove this issue entirely from the user space.
+
+Additionally, GPUs need ArrayInterfaceGPUArrays for proper determination of the indexing.

@@ -51,6 +51,7 @@ include("coloring/greedy_star1_coloring.jl")
 include("coloring/greedy_star2_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
+include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
 

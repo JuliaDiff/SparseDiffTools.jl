@@ -187,7 +187,13 @@ end
 
 ### Operator Forms
 
-struct JacVec{F,T1,T2,xType}
+abstract type AutomaticDerivativeOperator <: SciMLOperators.AbstractSciMLOperator end
+
+SciMLOperators.update_coefficients(A::AutomaticDerivativeOperator,u,p,t) = typeof(A)(A.f,A.cache1,A.cache2,u,A.autodiff)
+SciMLOperators.update_coefficients!(A::JacAutomaticDerivativeOperatorVec,u,p,t) = (A.x .= u; A)
+SciMLOperators.isconstant(A) = false
+
+struct JacVec{F,T1,T2,xType} <: AutomaticDerivativeOperator
     f::F
     cache1::T1
     cache2::T2
@@ -221,7 +227,7 @@ function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
     end
 end
 
-struct HesVec{F,T1,T2,xType}
+struct HesVec{F,T1,T2,xType} <: AutomaticDerivativeOperator
     f::F
     cache1::T1
     cache2::T2
@@ -256,7 +262,7 @@ function LinearAlgebra.mul!(dy::AbstractVector, L::HesVec, v::AbstractVector)
     end
 end
 
-struct HesVecGrad{G,T1,T2,uType}
+struct HesVecGrad{G,T1,T2,uType} <: AutomaticDerivativeOperator
     g::G
     cache1::T1
     cache2::T2

@@ -13,6 +13,7 @@ using LinearAlgebra
 using SparseArrays, ArrayInterfaceCore
 
 import StaticArrays, ArrayInterfaceStaticArrays
+import SciMLOperators
 
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 using DataStructures: DisjointSets, find_root!, union!

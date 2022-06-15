@@ -1,36 +1,46 @@
-
 ## Hessian tests
 using SparsityDetection, SparseDiffTools
+using ForwardDiff
 using LinearAlgebra, SparseArrays
 
 function fscalar(x)
-    return -dot(x, x)
+    return -dot(x, x) + 2 * x[2] * x[3]^2
 end
 
-x = randn(100)
-hs = hessian_sparsity(fscalar, x)
-col = matrix_colors(hs)
-hescache = ForwardColorHesCache(fscalar, x, col)
+x = randn(5)
+sparsity = hessian_sparsity(fscalar, x)
+colors = matrix_colors(tril(sparsity))
+dx = sqrt(eps())
+ncolors = maximum(colors)
+D = hcat([float.(i .== colors) for i in 1:ncolors]...)
+buffer = similar(D)
+G = zero(x)
+dG = zero(x)
 
-# ForwardColorJacCache(f,x,_chunksize = nothing;
-#                               dx = nothing,
-#                               colorvec=1:length(x),
-#                               sparsity = nothing)
+buffers_tup = SparseDiffTools.make_hessian_buffers(colors, x)
+@test buffers_tup.ncolors == ncolors
+@test buffers_tup.D == D
+@test size(buffers_tup.buffer) == size(buffer)
+@test typeof(buffers_tup.buffer) == typeof(buffer)
+@test buffers_tup.G == G
+@test buffers_tup.dG == dG
 
-# forwarddiff_color_hessian!(J::AbstractMatrix{<:Number},
-#                             f,
-#                             x::AbstractArray{<:Number};
-#                             dx = nothing,
-#                             colorvec = eachindex(x),
-#                             sparsity = nothing)
+hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, G, dG, dx)
+hescache2 = ForwardColorHesCache(fscalar, x, dx, colors, sparsity)
 
-# forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
-#                             f,
-#                             x::AbstractArray{<:Number},
-#                             jac_cache::ForwardColorJacCache)
 
-# jacout = forwarddiff_color_jacobian(g, x,
-#                                     dx = similar(x),
-#                                     colorvec = 1:length(x),
-#                                     sparsity = nothing,
-#                                     jac_prototype = nothing) # matrix w/ sparsity pattern
+Hforward = ForwardDiff.hessian(fscalar, x)
+g(x) = ForwardDiff.gradient(fscalar, x)           # allocating
+g!(G, x) = ForwardDiff.gradient!(G, fscalar, x)   # non-allocating
+
+for hescache in [hescache1, hescache2]
+    H = forwarddiff_color_hessian(fscalar, x, hescache1)
+    @test all(isapprox.(Hforward, H, rtol=1e-6))
+
+    H1 = similar(H)
+    forwarddiff_color_hessian!(H1, fscalar, g!, x, hescache, dx)
+    @test all(isapprox.(H1, H))
+
+    forwarddiff_color_hessian!(H1, fscalar, x, hescache)
+    @test all(isapprox.(H1, H))
+end

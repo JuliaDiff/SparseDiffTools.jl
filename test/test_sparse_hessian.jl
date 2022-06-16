@@ -34,7 +34,7 @@ g(x) = ForwardDiff.gradient(fscalar, x)           # allocating
 g!(G, x) = ForwardDiff.gradient!(G, fscalar, x)   # non-allocating
 
 for hescache in [hescache1, hescache2]
-    H = forwarddiff_color_hessian(fscalar, x, hescache1)
+    H = forwarddiff_color_hessian(fscalar, x, hescache)
     @test all(isapprox.(Hforward, H, rtol=1e-6))
 
     H1 = similar(H)

@@ -32,7 +32,9 @@ function forwarddiff_color_hessian!(H,
                                     d=sqrt(eps(Float64)))
     for j in 1:hes_cache.ncolors
         g!(hes_cache.G, x)
-        g!(hes_cache.dG, x + hes_cache.dx * @view hes_cache.D[:, j])
+        x .+= hes_cache.dx .* @view hes_cache.D[:, j]
+        g!(hes_cache.dG, x)
+        x .-= hes_cache.dx .* @view hes_cache.D[:, j]
         hes_cache.buffer[:, j] .= (hes_cache.dG .- hes_cache.G) ./ hes_cache.dx
     end
     ii, jj, vv = findnz(hes_cache.sparsity)

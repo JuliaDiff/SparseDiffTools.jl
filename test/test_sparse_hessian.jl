@@ -7,7 +7,7 @@ function fscalar(x)
     return -dot(x, x) + 2 * x[2] * x[3]^2
 end
 
-x = randn(50)
+x = randn(5)
 sparsity = hessian_sparsity(fscalar, x)
 colors = matrix_colors(tril(sparsity))
 ncolors = maximum(colors)
@@ -35,29 +35,34 @@ g!(G, x, gconfig) = ForwardDiff.gradient!(G, fscalar, x, gconfig)   # non-alloca
 hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconfig, G, dG)
 hescache2 = ForwardColorHesCache(fscalar, x, g!, colors, sparsity)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
+hescache4 = ForwardColorHesCache(fscalar, x)
 
 for name in [:sparsity, :colors, :ncolors, :D]
     @eval @test hescache1.$name == hescache2.$name
     @eval @test hescache1.$name == hescache3.$name
+    # hescache4 is the default dense version, so only first axis will match
+    @eval @test size(hescache1.$name, 1) == size(hescache4.$name, 1)
 end
 for name in [:buffer, :G, :dG]
     @eval @test size(hescache1.$name) == size(hescache2.$name)
-    @eval @test size(hescache1.$name) == size(hescache2.$name)
+    @eval @test size(hescache1.$name) == size(hescache3.$name)
+    # hescache4 is the default dense version, so only first axis will match
+    @eval @test size(hescache1.$name, 1) == size(hescache4.$name, 1)
+
+    @eval @test eltype(hescache1.$name) == eltype(hescache2.$name)
     @eval @test eltype(hescache1.$name) == eltype(hescache3.$name)
-    @eval @test eltype(hescache1.$name) == eltype(hescache3.$name)
+    @eval @test eltype(hescache1.$name) == eltype(hescache4.$name)
 end
 
 Hforward = ForwardDiff.hessian(fscalar, x)
-for hescache in [hescache1, hescache2, hescache3]
+for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4])
     H = forwarddiff_color_hessian(fscalar, x, hescache)
     @test all(isapprox.(Hforward, H, rtol=1e-6))
 
     H1 = similar(H)
-    forwarddiff_color_hessian!(H1, fscalar, x, colors, sparsity)
+    forwarddiff_color_hessian!(H1, fscalar, x, collect(hescache.colors), hescache.sparsity)
     @test all(isapprox.(H1, H))
 
     forwarddiff_color_hessian!(H1, fscalar, x, hescache)
     @test all(isapprox.(H1, H))
 end
-
-

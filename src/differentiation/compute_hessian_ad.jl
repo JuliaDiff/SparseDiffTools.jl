@@ -10,6 +10,16 @@ struct ForwardColorHesCache{THS, THC, TI<:Integer, TD, TGF, TGC, TG}
     dG::TG
 end
 
+"""ALL-ONE!"""
+struct DrBronnerArray{T,N} <: AbstractArray{T,N}
+    size::NTuple{N, Int}
+end
+DrBronnerArray(T, tup::NTuple{N, Int}) where N = DrBronnerArray{T, N}(tup)
+Base.size(x::DrBronnerArray) = x.size
+Base.getindex(x::DrBronnerArray{T, N}, i::Int) where {T, N} = one(T)
+Base.getindex(x::DrBronnerArray{T, N}, I::Vararg{Int, N}) where {T, N} = one(T)
+
+
 function make_hessian_buffers(colorvec, x)
     ncolors = maximum(colorvec)
     D = hcat([float.(i .== colorvec) for i in 1:ncolors]...)
@@ -22,18 +32,21 @@ end
 function ForwardColorHesCache(f, 
                               x::AbstractVector{<:Number}, 
                               g!,
-                              colorvec::AbstractVector{<:Integer}, 
-                              sparsity::AbstractMatrix{<:Integer})
+                              colorvec::AbstractVector{<:Integer}=eachindex(x), 
+                              sparsity::Union{AbstractMatrix, Nothing}=nothing)
     ncolors, D, buffer, G, dG = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
+    if sparsity === nothing
+        sparsity = sparse(ones(length(x), length(x)))
+    end
     return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g!, grad_config, G, dG)
 end
 
 
 function ForwardColorHesCache(f, 
                               x::AbstractVector{<:Number},
-                              colorvec::AbstractVector{<:Integer},
-                              sparsity::AbstractMatrix{<:Integer})
+                              colorvec::AbstractVector{<:Integer}=eachindex(x),
+                              sparsity::Union{AbstractMatrix, Nothing}=nothing)
     g!(G, x, grad_config) = ForwardDiff.gradient!(G, f, x, grad_config)
     return ForwardColorHesCache(f, x, g!, colorvec, sparsity)
 end
@@ -61,8 +74,8 @@ end
 function forwarddiff_color_hessian!(H::AbstractMatrix{<:Number}, 
                                     f, 
                                     x::AbstractArray{<:Number},
-                                    colorvec::AbstractVector{<:Integer}, 
-                                    sparsity::AbstractMatrix{<:Integer})
+                                    colorvec::AbstractVector{<:Integer}=eachindex(x), 
+                                    sparsity::Union{AbstractMatrix, Nothing}=nothing)
     hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
     forwarddiff_color_hessian!(H, f, x, hes_cache)
     return H

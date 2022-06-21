@@ -10,14 +10,6 @@ struct ForwardColorHesCache{THS, THC, TI<:Integer, TD, TGF, TGC, TG}
     dG::TG
 end
 
-"""ALL-ONE!"""
-struct DrBronnerArray{T,N} <: AbstractArray{T,N}
-    size::NTuple{N, Int}
-end
-DrBronnerArray(T, tup::NTuple{N, Int}) where N = DrBronnerArray{T, N}(tup)
-Base.size(x::DrBronnerArray) = x.size
-Base.getindex(x::DrBronnerArray{T, N}, i::Int) where {T, N} = one(T)
-Base.getindex(x::DrBronnerArray{T, N}, I::Vararg{Int, N}) where {T, N} = one(T)
 
 
 function make_hessian_buffers(colorvec, x)

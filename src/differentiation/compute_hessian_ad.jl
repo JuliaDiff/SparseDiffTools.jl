@@ -84,8 +84,17 @@ end
 function forwarddiff_color_hessian(f, 
                                    x::AbstractArray{<:Number}, 
                                    hes_cache::ForwardColorHesCache)
-    ii, jj, vv = findnz(hes_cache.sparsity)
-    H = sparse(ii, jj, zeros(eltype(x), length(vv)))
+    H = convert.(eltype(x), hes_cache.sparsity)
+    forwarddiff_color_hessian!(H, f, x, hes_cache)
+    return H
+end
+
+function forwarddiff_color_hessian(f,
+                                   x::AbstractArray{<:Number},
+                                   colorvec::AbstractVector{<:Integer}=eachindex(x), 
+                                   sparsity::Union{AbstractMatrix, Nothing}=nothing)
+    hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
+    H = convert.(eltype(x), hes_cache.sparsity)
     forwarddiff_color_hessian!(H, f, x, hes_cache)
     return H
 end

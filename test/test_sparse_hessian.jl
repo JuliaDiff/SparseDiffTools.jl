@@ -35,27 +35,39 @@ g!(G, x, gconfig) = ForwardDiff.gradient!(G, fscalar, x, gconfig)   # non-alloca
 hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconfig, G, dG)
 hescache2 = ForwardColorHesCache(fscalar, x, g!, colors, sparsity)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
-hescache4 = ForwardColorHesCache(fscalar, x)
+# custom gradient function
+hescache4 = ForwardColorHesCache(fscalar, x, (G, x) -> ForwardDiff.gradient!(G, fscalar, x), 
+    colors, sparsity)
+hescache5 = ForwardColorHesCache(fscalar, x)
+# custom gradient has to have 2 or 3 arguments...
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a) -> 1.0, colors, sparsity)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a, b, c, d) -> 1.0, colors, sparsity)
+# ...and needs to accept (Vector, Vector, ForwardDiff.GradientConfig)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a::Int, b::Int) -> 1.0, colors, sparsity)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a::Int, b::Int, c::Int) -> 1.0, colors, sparsity)
 
 for name in [:sparsity, :colors, :ncolors, :D]
     @eval @test hescache1.$name == hescache2.$name
     @eval @test hescache1.$name == hescache3.$name
-    # hescache4 is the default dense version, so only first axis will match
-    @eval @test size(hescache1.$name, 1) == size(hescache4.$name, 1)
+    @eval @test hescache1.$name == hescache4.$name
+    # hescache5 is the default dense version, so only first axis will match
+    @eval @test size(hescache1.$name, 1) == size(hescache5.$name, 1)
 end
 for name in [:buffer, :G, :dG]
     @eval @test size(hescache1.$name) == size(hescache2.$name)
     @eval @test size(hescache1.$name) == size(hescache3.$name)
-    # hescache4 is the default dense version, so only first axis will match
-    @eval @test size(hescache1.$name, 1) == size(hescache4.$name, 1)
+    @eval @test size(hescache1.$name) == size(hescache4.$name)
+    # hescache5 is the default dense version, so only first axis will match
+    @eval @test size(hescache1.$name, 1) == size(hescache5.$name, 1)
 
     @eval @test eltype(hescache1.$name) == eltype(hescache2.$name)
     @eval @test eltype(hescache1.$name) == eltype(hescache3.$name)
     @eval @test eltype(hescache1.$name) == eltype(hescache4.$name)
+    @eval @test eltype(hescache1.$name) == eltype(hescache5.$name)
 end
 
 Hforward = ForwardDiff.hessian(fscalar, x)
-for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4])
+for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hescache5])
     H = forwarddiff_color_hessian(fscalar, x, colors, sparsity)
     H1 = forwarddiff_color_hessian(fscalar, x, hescache)
     H2 = forwarddiff_color_hessian(fscalar, x)

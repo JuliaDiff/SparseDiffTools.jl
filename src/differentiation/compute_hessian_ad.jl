@@ -28,10 +28,23 @@ function ForwardColorHesCache(f,
                               sparsity::Union{AbstractMatrix, Nothing}=nothing)
     ncolors, D, buffer, G, dG = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
+    
+    # If user supplied their own gradient function, make sure it has the right
+    # signature (i.e. g!(G, x) or g!(G, x, grad_config::ForwardDiff.GradientConfig))
+    if ! hasmethod(g!, (typeof(G), typeof(G), typeof(grad_config)))
+        if ! hasmethod(g!, (typeof(G), typeof(G)))
+            throw(ArgumentError("Signature of `g!` must be either `g!(G, x)` or `g!(G, x, grad_config::ForwardDiff.GradientConfig)`"))
+        end
+        # define new method that takes a GradientConfig but doesn't use it
+        g1!(G, x, grad_config) = g!(G, x)
+    else
+        g1! = g!
+    end
+    
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
-    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g!, grad_config, G, dG)
+    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G, dG)
 end
 
 

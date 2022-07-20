@@ -84,4 +84,14 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
 
     forwarddiff_color_hessian!(H1, fscalar, x, hescache)
     @test all(isapprox.(H1, H))
+
+    forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=false)
+    @test all(isapprox.(H1, H))
+
+    # confirm unsafe is faster
+    t_safe = minimum(@elapsed(forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=true))
+        for _ in 1:100)
+    t_unsafe = minimum(@elapsed(forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=false))
+        for _ in 1:100)
+    @test t_unsafe <= t_safe
 end

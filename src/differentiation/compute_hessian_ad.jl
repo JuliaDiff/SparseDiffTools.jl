@@ -10,8 +10,6 @@ struct ForwardColorHesCache{THS, THC, TI<:Integer, TD, TGF, TGC, TG}
     dG::TG
 end
 
-
-
 function make_hessian_buffers(colorvec, x)
     ncolors = maximum(colorvec)
     D = hcat([float.(i .== colorvec) for i in 1:ncolors]...)
@@ -50,7 +48,8 @@ end
 function forwarddiff_color_hessian!(H::AbstractMatrix{<:Number}, 
                                     f, 
                                     x::AbstractArray{<:Number}, 
-                                    hes_cache::ForwardColorHesCache)
+                                    hes_cache::ForwardColorHesCache;
+                                    safe = true)
     ϵ = cbrt(eps(eltype(x)))
     for j in 1:hes_cache.ncolors
         hes_cache.grad!(hes_cache.G, x, hes_cache.grad_config)
@@ -60,6 +59,9 @@ function forwarddiff_color_hessian!(H::AbstractMatrix{<:Number},
         hes_cache.buffer[:, j] .= (hes_cache.dG .- hes_cache.G) ./ ϵ
     end
     ii, jj, vv = findnz(hes_cache.sparsity)
+    if safe
+        fill!(H, false)
+    end
     for (i, j) in zip(ii, jj)
         H[i, j] = hes_cache.buffer[i, hes_cache.colors[j]]
     end

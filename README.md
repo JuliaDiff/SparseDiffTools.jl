@@ -230,7 +230,7 @@ Alternatively, if you have your own custom gradient function `g!`, you can speci
 it as an argument to `ForwardColorHesCache`:
 
 ```julia
-hescache = ForwardColorHesCache(fscalar, x, g!, colorvec, sparsity)
+hescache = ForwardColorHesCache(fscalar, x, colorvec, sparsity, g!)
 ```
 Note that any user-defined gradient needs to have the signature `g!(G, x)`,
 i.e. updating the gradient `G` in place.

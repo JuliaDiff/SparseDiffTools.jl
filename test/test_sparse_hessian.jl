@@ -33,18 +33,18 @@ g(x) = ForwardDiff.gradient(fscalar, x)           # allocating
 g!(G, x, gconfig) = ForwardDiff.gradient!(G, fscalar, x, gconfig)   # non-allocating
 
 hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconfig, G, dG)
-hescache2 = ForwardColorHesCache(fscalar, x, g!, colors, sparsity)
+hescache2 = ForwardColorHesCache(fscalar, x, colors, sparsity, g!)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
 # custom gradient function
-hescache4 = ForwardColorHesCache(fscalar, x, (G, x) -> ForwardDiff.gradient!(G, fscalar, x), 
-    colors, sparsity)
+hescache4 = ForwardColorHesCache(fscalar, x, colors, sparsity,
+    (G, x) -> ForwardDiff.gradient!(G, fscalar, x))
 hescache5 = ForwardColorHesCache(fscalar, x)
 # custom gradient has to have 2 or 3 arguments...
-@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a) -> 1.0, colors, sparsity)
-@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a, b, c, d) -> 1.0, colors, sparsity)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a) -> 1.0)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a, b, c, d) -> 1.0)
 # ...and needs to accept (Vector, Vector, ForwardDiff.GradientConfig)
-@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a::Int, b::Int) -> 1.0, colors, sparsity)
-@test_throws ArgumentError ForwardColorHesCache(fscalar, x, (a::Int, b::Int, c::Int) -> 1.0, colors, sparsity)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a::Int, b::Int) -> 1.0,)
+@test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a::Int, b::Int, c::Int) -> 1.0)
 
 for name in [:sparsity, :colors, :ncolors, :D]
     @eval @test hescache1.$name == hescache2.$name

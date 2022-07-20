@@ -23,9 +23,9 @@ end
 
 function ForwardColorHesCache(f, 
                               x::AbstractVector{<:Number}, 
-                              g!,
                               colorvec::AbstractVector{<:Integer}=eachindex(x), 
-                              sparsity::Union{AbstractMatrix, Nothing}=nothing)
+                              sparsity::Union{AbstractMatrix, Nothing}=nothing,
+                              g! = (G, x, grad_config) -> ForwardDiff.gradient!(G, f, x, grad_config))
     ncolors, D, buffer, G, dG = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
     
@@ -46,16 +46,6 @@ function ForwardColorHesCache(f,
     end
     return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G, dG)
 end
-
-
-function ForwardColorHesCache(f, 
-                              x::AbstractVector{<:Number},
-                              colorvec::AbstractVector{<:Integer}=eachindex(x),
-                              sparsity::Union{AbstractMatrix, Nothing}=nothing)
-    g!(G, x, grad_config) = ForwardDiff.gradient!(G, f, x, grad_config)
-    return ForwardColorHesCache(f, x, g!, colorvec, sparsity)
-end
-
 
 function forwarddiff_color_hessian!(H::AbstractMatrix{<:Number}, 
                                     f, 

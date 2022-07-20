@@ -71,9 +71,9 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
     H = forwarddiff_color_hessian(fscalar, x, colors, sparsity)
     H1 = forwarddiff_color_hessian(fscalar, x, hescache)
     H2 = forwarddiff_color_hessian(fscalar, x)
-    @test all(isapprox.(Hforward, H, rtol=1e-6))
-    @test all(isapprox.(H, H1, rtol=1e-6))
-    @test all(isapprox.(H2, H1, rtol=1e-6))
+    @test all(isapprox.(Hforward, H, rtol=1e-4))
+    @test all(isapprox.(H, H1, rtol=1e-4))
+    @test all(isapprox.(H2, H1, rtol=1e-4))
 
     H1 = similar(H)
     forwarddiff_color_hessian!(H1, fscalar, x, collect(hescache.colors), hescache.sparsity)

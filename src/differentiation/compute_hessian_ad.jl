@@ -61,7 +61,7 @@ function forwarddiff_color_hessian!(H::AbstractMatrix{<:Number},
                                     f, 
                                     x::AbstractArray{<:Number}, 
                                     hes_cache::ForwardColorHesCache)
-    ϵ = sqrt(eps(eltype(x)))
+    ϵ = cbrt(eps(eltype(x)))
     for j in 1:hes_cache.ncolors
         hes_cache.grad!(hes_cache.G, x, hes_cache.grad_config)
         x .+= ϵ .* @view hes_cache.D[:, j]

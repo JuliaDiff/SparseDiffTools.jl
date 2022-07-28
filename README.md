@@ -207,13 +207,13 @@ function, otherwise it will become a dense matrix. If `jac_prototype` and
 function has a *square* Jacobian matrix. If it is not the case, please specify
 the shape of output by giving `dx`.
 
-Similar functionality is available for Hessians. Given a scalar function `f(x)`,
-a vector value for `x`, and a color vector and sparsity pattern, this can be
-accomplished using `forwarddiff_color_hessian` or its in-place form `forwarddiff_color_hessian!`.
+Similar functionality is available for Hessians, using finite differences of forward derivatives. Given a scalar function `f(x)`, a vector value for `x`,
+and a color vector and sparsity pattern, this can be accomplished using
+`numauto_color_hessian` or its in-place form `numauto_color_hessian!`.
 
 ```julia
-H = forwarddiff_color_hessian(fscalar, x, colorvec, sparsity)
-forwarddiff_color_hessian!(H, fscalar, x, colorvec, sparsity)
+H = numauto_color_hessian(fscalar, x, colorvec, sparsity)
+numauto_color_hessian!(H, fscalar, x, colorvec, sparsity)
 ```
 
 To avoid unnecessary allocations every time the Hessian is computed, 
@@ -221,7 +221,7 @@ construct a `ForwardColorHesCache` beforehand:
 
 ```julia
 hescache = ForwardColorHesCache(f, x, colorvec, sparsity)
-fowrwarddif_color_hessian!(H, f, x, hescache)
+numauto_color_hessian!(H, f, x, hescache)
 ```
 
 By default, these methods use a mix of numerical and automatic differentiation,

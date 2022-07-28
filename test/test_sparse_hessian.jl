@@ -68,30 +68,30 @@ end
 
 Hforward = ForwardDiff.hessian(fscalar, x)
 for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hescache5])
-    H = forwarddiff_color_hessian(fscalar, x, colors, sparsity)
-    H1 = forwarddiff_color_hessian(fscalar, x, hescache)
-    H2 = forwarddiff_color_hessian(fscalar, x)
+    H = numauto_color_hessian(fscalar, x, colors, sparsity)
+    H1 = numauto_color_hessian(fscalar, x, hescache)
+    H2 = numauto_color_hessian(fscalar, x)
     @test all(isapprox.(Hforward, H, rtol=1e-4))
     @test all(isapprox.(H, H1, rtol=1e-4))
     @test all(isapprox.(H2, H1, rtol=1e-4))
 
     H1 = similar(H)
-    forwarddiff_color_hessian!(H1, fscalar, x, collect(hescache.colors), hescache.sparsity)
+    numauto_color_hessian!(H1, fscalar, x, collect(hescache.colors), hescache.sparsity)
     @test all(isapprox.(H1, H))
 
-    forwarddiff_color_hessian!(H2, fscalar, x)
+    numauto_color_hessian!(H2, fscalar, x)
     @test all(isapprox.(H2, H))
 
-    forwarddiff_color_hessian!(H1, fscalar, x, hescache)
+    numauto_color_hessian!(H1, fscalar, x, hescache)
     @test all(isapprox.(H1, H))
 
-    forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=false)
+    numauto_color_hessian!(H1, fscalar, x, hescache, safe=false)
     @test all(isapprox.(H1, H))
 
     # confirm unsafe is faster
-    t_safe = minimum(@elapsed(forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=true))
+    t_safe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=true))
         for _ in 1:100)
-    t_unsafe = minimum(@elapsed(forwarddiff_color_hessian!(H1, fscalar, x, hescache, safe=false))
+    t_unsafe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=false))
         for _ in 1:100)
     @test t_unsafe <= t_safe
 end

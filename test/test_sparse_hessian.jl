@@ -13,8 +13,8 @@ colors = matrix_colors(tril(sparsity))
 ncolors = maximum(colors)
 D = hcat([float.(i .== colors) for i in 1:ncolors]...)
 buffer = similar(D)
-G = zero(x)
-dG = zero(x)
+G1 = zero(x)
+G2 = zero(x)
 
 buffers_tup = SparseDiffTools.make_hessian_buffers(colors, x)
 @test buffers_tup.ncolors == ncolors
@@ -22,17 +22,17 @@ buffers_tup = SparseDiffTools.make_hessian_buffers(colors, x)
 @test size(buffers_tup.buffer) == size(buffer)
 @test eltype(buffers_tup.buffer) == eltype(buffer)
 @test typeof(buffers_tup.buffer) == typeof(buffer)
-@test size(buffers_tup.G) == size(G)
-@test eltype(buffers_tup.G) == eltype(G)
-@test size(buffers_tup.dG) == size(dG)
-@test eltype(buffers_tup.dG) == eltype(dG)
+@test size(buffers_tup.G1) == size(G1)
+@test eltype(buffers_tup.G1) == eltype(G1)
+@test size(buffers_tup.G2) == size(G2)
+@test eltype(buffers_tup.G2) == eltype(G2)
 
 
 gconfig = ForwardDiff.GradientConfig(fscalar, x)
 g(x) = ForwardDiff.gradient(fscalar, x)           # allocating
 g!(G, x, gconfig) = ForwardDiff.gradient!(G, fscalar, x, gconfig)   # non-allocating
 
-hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconfig, G, dG)
+hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconfig, G1, G2)
 hescache2 = ForwardColorHesCache(fscalar, x, colors, sparsity, g!)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
 # custom gradient function
@@ -53,7 +53,7 @@ for name in [:sparsity, :colors, :ncolors, :D]
     # hescache5 is the default dense version, so only first axis will match
     @eval @test size(hescache1.$name, 1) == size(hescache5.$name, 1)
 end
-for name in [:buffer, :G, :dG]
+for name in [:buffer, :G1, :G2]
     @eval @test size(hescache1.$name) == size(hescache2.$name)
     @eval @test size(hescache1.$name) == size(hescache3.$name)
     @eval @test size(hescache1.$name) == size(hescache4.$name)
@@ -71,9 +71,9 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
     H = numauto_color_hessian(fscalar, x, colors, sparsity)
     H1 = numauto_color_hessian(fscalar, x, hescache)
     H2 = numauto_color_hessian(fscalar, x)
-    @test all(isapprox.(Hforward, H, rtol=1e-4))
-    @test all(isapprox.(H, H1, rtol=1e-4))
-    @test all(isapprox.(H2, H1, rtol=1e-4))
+    @test all(isapprox.(Hforward, H, rtol=1e-6))
+    @test all(isapprox.(H, H1, rtol=1e-6))
+    @test all(isapprox.(H2, H1, rtol=1e-6))
 
     H1 = similar(H)
     numauto_color_hessian!(H1, fscalar, x, collect(hescache.colors), hescache.sparsity)

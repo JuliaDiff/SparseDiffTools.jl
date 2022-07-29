@@ -6,17 +6,17 @@ struct ForwardColorHesCache{THS, THC, TI<:Integer, TD, TGF, TGC, TG}
     buffer::TD
     grad!::TGF
     grad_config::TGC
-    G::TG
-    dG::TG
+    G1::TG
+    G2::TG
 end
 
 function make_hessian_buffers(colorvec, x)
     ncolors = maximum(colorvec)
     D = hcat([float.(i .== colorvec) for i in 1:ncolors]...)
     buffer = similar(D)
-    G = similar(x)
-    dG = similar(x)
-    return (;ncolors, D, buffer, G, dG)
+    G1 = similar(x)
+    G2 = similar(x)
+    return (;ncolors, D, buffer, G1, G2)
 end
 
 function ForwardColorHesCache(f, 
@@ -24,7 +24,7 @@ function ForwardColorHesCache(f,
                               colorvec::AbstractVector{<:Integer}=eachindex(x), 
                               sparsity::Union{AbstractMatrix, Nothing}=nothing,
                               g! = (G, x, grad_config) -> ForwardDiff.gradient!(G, f, x, grad_config))
-    ncolors, D, buffer, G, dG = make_hessian_buffers(colorvec, x)
+    ncolors, D, buffer, G, G2 = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
     
     # If user supplied their own gradient function, make sure it has the right
@@ -42,7 +42,7 @@ function ForwardColorHesCache(f,
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
-    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G, dG)
+    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G, G2)
 end
 
 function numauto_color_hessian!(H::AbstractMatrix{<:Number}, 
@@ -52,11 +52,12 @@ function numauto_color_hessian!(H::AbstractMatrix{<:Number},
                                     safe = true)
     ϵ = cbrt(eps(eltype(x)))
     for j in 1:hes_cache.ncolors
-        hes_cache.grad!(hes_cache.G, x, hes_cache.grad_config)
         x .+= ϵ .* @view hes_cache.D[:, j]
-        hes_cache.grad!(hes_cache.dG, x, hes_cache.grad_config)
-        x .-= ϵ .* @view hes_cache.D[:, j]
-        hes_cache.buffer[:, j] .= (hes_cache.dG .- hes_cache.G) ./ ϵ
+        hes_cache.grad!(hes_cache.G2, x, hes_cache.grad_config)
+        x .-= 2ϵ .* @view hes_cache.D[:, j]
+        hes_cache.grad!(hes_cache.G1, x, hes_cache.grad_config)
+        hes_cache.buffer[:, j] .= (hes_cache.G2 .- hes_cache.G1) ./ 2ϵ
+        x .+= ϵ .* @view hes_cache.D[:, j] #reset to original value
     end
     ii, jj, vv = findnz(hes_cache.sparsity)
     if safe

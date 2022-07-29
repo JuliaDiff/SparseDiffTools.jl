@@ -88,10 +88,13 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
     numauto_color_hessian!(H1, fscalar, x, hescache, safe=false)
     @test all(isapprox.(H1, H))
 
-    # confirm unsafe is faster
-    t_safe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=true))
-        for _ in 1:100)
-    t_unsafe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=false))
-        for _ in 1:100)
-    @test t_unsafe <= t_safe
+    # the following tests usually pass, but once in a while don't (it's not a big difference
+    # in timing on these small matrices, and sometimes its less than the timing variability).
+    # Commenting out for now to avoid rare stochastic test failures.
+    # # confirm unsafe is faster
+    # t_safe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=true))
+    #     for _ in 1:100)
+    # t_unsafe = minimum(@elapsed(numauto_color_hessian!(H1, fscalar, x, hescache, safe=false))
+    #     for _ in 1:100)
+    # @test t_unsafe <= t_safe
 end

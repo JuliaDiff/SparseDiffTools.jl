@@ -28,6 +28,9 @@ export  contract_color,
         forwarddiff_color_jacobian!,
         forwarddiff_color_jacobian,
         ForwardColorJacCache,
+        numauto_color_hessian!,
+        numauto_color_hessian,
+        ForwardColorHesCache,
         auto_jacvec,auto_jacvec!,
         num_jacvec,num_jacvec!,
         num_vecjac,num_vecjac!,
@@ -48,6 +51,7 @@ include("coloring/greedy_star1_coloring.jl")
 include("coloring/greedy_star2_coloring.jl")
 include("coloring/matrix2graph.jl")
 include("differentiation/compute_jacobian_ad.jl")
+include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
 

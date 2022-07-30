@@ -207,6 +207,35 @@ function, otherwise it will become a dense matrix. If `jac_prototype` and
 function has a *square* Jacobian matrix. If it is not the case, please specify
 the shape of output by giving `dx`.
 
+Similar functionality is available for Hessians, using finite differences of forward derivatives. Given a scalar function `f(x)`, a vector value for `x`,
+and a color vector and sparsity pattern, this can be accomplished using
+`numauto_color_hessian` or its in-place form `numauto_color_hessian!`.
+
+```julia
+H = numauto_color_hessian(fscalar, x, colorvec, sparsity)
+numauto_color_hessian!(H, fscalar, x, colorvec, sparsity)
+```
+
+To avoid unnecessary allocations every time the Hessian is computed, 
+construct a `ForwardColorHesCache` beforehand:
+
+```julia
+hescache = ForwardColorHesCache(f, x, colorvec, sparsity)
+numauto_color_hessian!(H, f, x, hescache)
+```
+
+By default, these methods use a mix of numerical and automatic differentiation,
+namely by taking finite differences of gradients calculated via ForwardDiff.jl.
+Alternatively, if you have your own custom gradient function `g!`, you can specify 
+it as an argument to `ForwardColorHesCache`:
+
+```julia
+hescache = ForwardColorHesCache(fscalar, x, colorvec, sparsity, g!)
+```
+Note that any user-defined gradient needs to have the signature `g!(G, x)`,
+i.e. updating the gradient `G` in place.
+
+
 ### Jacobian-Vector and Hessian-Vector Products
 
 Matrix-free implementations of Jacobian-Vector and Hessian-Vector products is

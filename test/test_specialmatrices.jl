@@ -1,7 +1,9 @@
 using SparseDiffTools
+using SparseArrays
 using LinearAlgebra
 using BandedMatrices
 using BlockBandedMatrices
+using Test
 
 n=10
 dense=fill(1.,(n,n))
@@ -13,6 +15,7 @@ bidiagonalU=Bidiagonal(dense,:U)
 bidiagonalL=Bidiagonal(dense,:L)
 tridiagonal=Tridiagonal(dense)
 symtridiagonal=SymTridiagonal(dense)
+emptymat=sparse(Int[], Int[], true, 1, 1)
 
 banded=BandedMatrix(dense,(1,2))
 blockbanded1=BlockBandedMatrix(dense,[1,2,3,4],[4,3,2,1],(1,0))
@@ -60,3 +63,4 @@ _testvalidity(blockbanded1)
 _testvalidity(blockbanded2)
 _testvalidity(bandedblockbanded1)
 _testvalidity(bandedblockbanded2)
+_testvalidity(emptymat)

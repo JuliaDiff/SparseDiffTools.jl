@@ -5,7 +5,7 @@ Returns a vector of rows where each row contains
 a vector of its column indices.
 """
 function _cols_by_rows(rows_index,cols_index)
-    nrows = maximum(rows_index)
+    nrows = isempty(rows_index) ? 0 : maximum(rows_index)
     cols_by_rows = [eltype(rows_index)[] for _ in 1:nrows]
     for (i,j) in zip(rows_index,cols_index)
         push!(cols_by_rows[i],j)

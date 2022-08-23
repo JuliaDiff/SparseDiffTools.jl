@@ -36,10 +36,8 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
 
     if x isa Array
         p = generate_chunked_partials(x,colorvec,chunksize)
-        t = Array{Dual{T,eltype(x),length(first(first(p)))}}(undef,size(x))
-        for i in eachindex(t)
-            t[i] = Dual{T,eltype(x),length(first(first(p)))}(x[i],ForwardDiff.Partials(first(p)[i]))
-        end
+        DT = Dual{T,eltype(x),length(first(first(p)))}
+        t = _get_t(DT, x, p)
     else
         p = adapt.(parameterless_type(x),generate_chunked_partials(x,colorvec,chunksize))
         _t = Dual{T,eltype(x),getsize(chunksize)}.(vec(x),ForwardDiff.Partials.(first(p)))
@@ -58,6 +56,15 @@ function ForwardColorJacCache(f::F,x,_chunksize = nothing;
     end
 
     ForwardColorJacCache(t,fx,_dx,p,colorvec,sparsity,getsize(chunksize))
+end
+
+# Function barrier for unknown constructor type
+function _get_t(::Type{DT}, x, p) where DT
+    t = similar(x, DT)
+    for i in eachindex(t)
+        t[i] = DT(x[i],ForwardDiff.Partials(first(p)[i]))
+    end
+    t
 end
 
 generate_chunked_partials(x,colorvec,N::Integer) = generate_chunked_partials(x,colorvec,Val(N))

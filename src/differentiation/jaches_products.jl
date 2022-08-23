@@ -1,5 +1,8 @@
 struct DeivVecTag end
 
+get_tag(::Array{Dual{T,V,N}}) where {T,V,N} = T
+get_tag(::Dual{T,V,N}) where {T,V,N} = T
+
 # J(f(x))*v
 function auto_jacvec!(
     dy,
@@ -9,7 +12,7 @@ function auto_jacvec!(
     cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
     cache2 = similar(cache1),
 )
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
+    cache1 .= Dual{get_tag(cache1),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     f(cache2, cache1)
     vecdy = _vec(dy)
     vecdy .= partials.(_vec(cache2), 1)
@@ -135,7 +138,7 @@ function autonum_hesvec!(
 )
     cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
     g = (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
+    cache1 .= Dual{get_tag(cache1),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)
 end
@@ -175,7 +178,7 @@ function auto_hesvecgrad!(
     cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
     cache3 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
 )
-    cache2 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
+    cache2 .= Dual{get_tag(cache2),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache3, cache2)
     dy .= partials.(cache3, 1)
 end

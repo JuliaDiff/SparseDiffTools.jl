@@ -195,10 +195,10 @@ struct JacVec{F,T1,T2,xType}
     autodiff::Bool
 end
 
-function JacVec(f, x::AbstractArray; autodiff = true)
+function JacVec(f, x::AbstractArray, tag = DeivVecTag(); autodiff = true)
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
     else
         cache1 = similar(x)
         cache2 = similar(x)
@@ -264,10 +264,10 @@ struct HesVecGrad{G,T1,T2,uType}
     autodiff::Bool
 end
 
-function HesVecGrad(g, x::AbstractArray; autodiff = false)
+function HesVecGrad(g, x::AbstractArray, tag = DeivVecTag(); autodiff = false)
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag,eltype(x))),eltype(x),1}.(x, ForwardDiff.Partials.(tuple.(x)))
     else
         cache1 = similar(x)
         cache2 = similar(x)

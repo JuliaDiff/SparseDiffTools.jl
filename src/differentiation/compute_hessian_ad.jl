@@ -101,24 +101,33 @@ end
 
 ## autoauto_color_hessian
 
-mutable struct ForwardAutoColorHesCache{TS,TC}
-    jac_cache::Any
-    grad!::Any
+mutable struct ForwardAutoColorHesCache{TJC,TG,TS,TC}
+    jac_cache::TJC
+    grad!TG
     sparsity::TS
     colorvec::TC
 end
 
 function ForwardAutoColorHesCache(f,
-    x::AbstractVector{<:Number},
+    x::AbstractVector{V},
     colorvec::AbstractVector{<:Integer}=eachindex(x),
-    sparsity::Union{AbstractMatrix,Nothing}=nothing)
+    sparsity::Union{AbstractMatrix,Nothing}=nothing) where V
 
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
 
-    jac_cache = nothing
-    g! = nothing
+    tag = ForwardDiff.Tag(f, V)
+    chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
+    chunk = ForwardDiff.Chunk(chunksize)
+
+    jacobian_config = ForwardDiff.JacobianConfig(f, x, chunk, tag)
+    gradient_config = ForwardDiff.GradientConfig(f, jacobian_config.duals, chunk, tag)
+
+    outer_tag = get_tag(jacobian_config.duals)
+    g! = (G, x) -> ForwardDiff.gradient!(G, f, x, gradient_config, Val(false))
+
+    jac_cache = ForwardColorJacCache(g!, x; colorvec, sparsity, tag=outer_tag)
     
     return ForwardAutoColorHesCache(jac_cache, g!, sparsity, colorvec)
 end
@@ -128,17 +137,6 @@ function autoauto_color_hessian!(H::AbstractMatrix{<:Number},
     x::AbstractArray{<:Number},
     hes_cache::ForwardAutoColorHesCache)
 
-    if hes_cache.jac_cache === nothing
-        grad_config = nothing
-        g! = function (G, x)
-            if grad_config === nothing
-                grad_config = ForwardDiff.GradientConfig(f, x)
-            end
-            ForwardDiff.gradient!(G, f, x, grad_config)
-        end
-        hes_cache.grad! = g!
-        hes_cache.jac_cache = ForwardColorJacCache(hes_cache.grad!, x; hes_cache.colorvec, hes_cache.sparsity)
-    end
     forwarddiff_color_jacobian!(H, hes_cache.grad!, x, hes_cache.jac_cache)
 end
 
@@ -154,7 +152,7 @@ end
 
 function autoauto_color_hessian(f,
     x::AbstractArray{<:Number},
-    hes_cache::ForwardColorHesCache)
+    hes_cache::ForwardAutoColorHesCache)
     H = convert.(eltype(x), hes_cache.sparsity)
     autoauto_color_hessian!(H, f, x, hes_cache)
     return H

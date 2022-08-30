@@ -98,3 +98,30 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
     #     for _ in 1:100)
     # @test t_unsafe <= t_safe
 end
+
+
+hescache1 = ForwardAutoColorHesCache(fscalar, x, colors, sparsity)
+hescache2 = ForwardAutoColorHesCache(fscalar, x)
+
+
+for (i, hescache) in enumerate([hescache1, hescache2])
+
+    H = SparseDiffTools.autoauto_color_hessian(fscalar, x, colors, sparsity)
+    H1 = SparseDiffTools.autoauto_color_hessian(fscalar, x, hescache)
+    H2 = SparseDiffTools.autoauto_color_hessian(fscalar, x)
+    @test all(isapprox.(Hforward, H, rtol=1e-6))
+    @test all(isapprox.(H, H1, rtol=1e-6))
+    @test all(isapprox.(H2, H1, rtol=1e-6))
+
+    H1 = similar(H)
+
+    SparseDiffTools.autoauto_color_hessian!(H1, fscalar, x, collect(hescache.colorvec), hescache.sparsity)
+    @test all(isapprox.(H1, H))
+
+    SparseDiffTools.autoauto_color_hessian!(H2, fscalar, x)
+    @test all(isapprox.(H2, H))
+
+    SparseDiffTools.autoauto_color_hessian!(H1, fscalar, x, hescache)
+    @test all(isapprox.(H1, H))
+
+end

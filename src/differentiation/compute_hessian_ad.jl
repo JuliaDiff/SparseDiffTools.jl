@@ -108,6 +108,8 @@ mutable struct ForwardAutoColorHesCache{TJC,TG,TS,TC}
     colorvec::TC
 end
 
+struct AutoAutoTag end
+
 function ForwardAutoColorHesCache(f,
     x::AbstractVector{V},
     colorvec::AbstractVector{<:Integer}=eachindex(x),
@@ -117,7 +119,7 @@ function ForwardAutoColorHesCache(f,
         sparsity = sparse(ones(length(x), length(x)))
     end
 
-    tag = ForwardDiff.Tag(f, V)
+    tag = ForwardDiff.Tag(AutoAutoTag(), V)
     chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
     chunk = ForwardDiff.Chunk(chunksize)
 

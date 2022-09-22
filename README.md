@@ -212,8 +212,8 @@ and a color vector and sparsity pattern, this can be accomplished using
 `numauto_color_hessian` or its in-place form `numauto_color_hessian!`.
 
 ```julia
-H = numauto_color_hessian(fscalar, x, colorvec, sparsity)
-numauto_color_hessian!(H, fscalar, x, colorvec, sparsity)
+H = numauto_color_hessian(f, x, colorvec, sparsity)
+numauto_color_hessian!(H, f, x, colorvec, sparsity)
 ```
 
 To avoid unnecessary allocations every time the Hessian is computed, 
@@ -230,7 +230,7 @@ Alternatively, if you have your own custom gradient function `g!`, you can speci
 it as an argument to `ForwardColorHesCache`:
 
 ```julia
-hescache = ForwardColorHesCache(fscalar, x, colorvec, sparsity, g!)
+hescache = ForwardColorHesCache(f, x, colorvec, sparsity, g!)
 ```
 Note that any user-defined gradient needs to have the signature `g!(G, x)`,
 i.e. updating the gradient `G` in place.

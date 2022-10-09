@@ -1,5 +1,5 @@
 ## Hessian tests
-using SparsityDetection, SparseDiffTools
+using SparseDiffTools
 using ForwardDiff
 using LinearAlgebra, SparseArrays
 

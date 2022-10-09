@@ -11,6 +11,7 @@ using Adapt
 
 using LinearAlgebra
 using SparseArrays, ArrayInterfaceCore
+using Symbolics
 
 import StaticArrays, ArrayInterfaceStaticArrays
 
@@ -25,6 +26,8 @@ export  contract_color,
         greedy_star2_coloring,
         matrix2graph,
         matrix_colors,
+        jacobian_sparsity,
+        hessian_sparsity,
         forwarddiff_color_jacobian!,
         forwarddiff_color_jacobian,
         ForwardColorJacCache,
@@ -57,6 +60,7 @@ include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
+include("differentiation/sparsity_detection.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))

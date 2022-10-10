@@ -11,7 +11,6 @@ using Adapt
 
 using LinearAlgebra
 using SparseArrays, ArrayInterfaceCore
-using Symbolics
 
 import StaticArrays, ArrayInterfaceStaticArrays
 
@@ -60,7 +59,6 @@ include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
-include("differentiation/sparsity_detection.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))

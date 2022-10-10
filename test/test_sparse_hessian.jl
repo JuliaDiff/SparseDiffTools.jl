@@ -1,5 +1,6 @@
 ## Hessian tests
 using SparseDiffTools
+using Symbolics
 using ForwardDiff
 using LinearAlgebra, SparseArrays
 
@@ -8,7 +9,7 @@ function fscalar(x)
 end
 
 x = randn(5)
-sparsity = hessian_sparsity(fscalar, x)
+sparsity = Symbolics.hessian_sparsity(fscalar, x)
 colors = matrix_colors(tril(sparsity))
 ncolors = maximum(colors)
 D = hcat([float.(i .== colors) for i in 1:ncolors]...)

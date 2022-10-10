@@ -1,6 +1,6 @@
 using SparseDiffTools
+using Symbolics
 using FiniteDiff: finite_difference_jacobian, finite_difference_jacobian!
-using SparsityDetection
 
 using LinearAlgebra, SparseArrays, Test
 
@@ -37,7 +37,7 @@ function second_derivative_stencil(N)
 end
 
 output = ones(30); input = ones(30)
-sparsity_pattern = sparsity!(f,output,input)
+sparsity_pattern = Symbolics.jacobian_sparsity(f,output,input)
 true_jac = Float64.(sparse(sparsity_pattern))
 colors = matrix_colors(true_jac)
 @test colors == repeat(1:3,10)

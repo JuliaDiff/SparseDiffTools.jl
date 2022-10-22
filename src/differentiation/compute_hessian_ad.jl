@@ -19,14 +19,14 @@ function make_hessian_buffers(colorvec, x)
     return (;ncolors, D, buffer, G1, G2)
 end
 
-function ForwardColorHesCache(f, 
-                              x::AbstractVector{<:Number}, 
-                              colorvec::AbstractVector{<:Integer}=eachindex(x), 
+function ForwardColorHesCache(f,
+                              x::AbstractVector{<:Number},
+                              colorvec::AbstractVector{<:Integer}=eachindex(x),
                               sparsity::Union{AbstractMatrix, Nothing}=nothing,
                               g! = (G, x, grad_config) -> ForwardDiff.gradient!(G, f, x, grad_config))
     ncolors, D, buffer, G, G2 = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
-    
+
     # If user supplied their own gradient function, make sure it has the right
     # signature (i.e. g!(G, x) or g!(G, x, grad_config::ForwardDiff.GradientConfig))
     if ! hasmethod(g!, (typeof(G), typeof(G), typeof(grad_config)))
@@ -38,16 +38,16 @@ function ForwardColorHesCache(f,
     else
         g1! = g!
     end
-    
+
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
     return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G, G2)
 end
 
-function numauto_color_hessian!(H::AbstractMatrix{<:Number}, 
-                                    f, 
-                                    x::AbstractArray{<:Number}, 
+function numauto_color_hessian!(H::AbstractMatrix{<:Number},
+                                    f,
+                                    x::AbstractArray{<:Number},
                                     hes_cache::ForwardColorHesCache;
                                     safe = true)
     ϵ = cbrt(eps(eltype(x)))
@@ -69,18 +69,18 @@ function numauto_color_hessian!(H::AbstractMatrix{<:Number},
     return H
 end
 
-function numauto_color_hessian!(H::AbstractMatrix{<:Number}, 
-                                    f, 
+function numauto_color_hessian!(H::AbstractMatrix{<:Number},
+                                    f,
                                     x::AbstractArray{<:Number},
-                                    colorvec::AbstractVector{<:Integer}=eachindex(x), 
+                                    colorvec::AbstractVector{<:Integer}=eachindex(x),
                                     sparsity::Union{AbstractMatrix, Nothing}=nothing)
     hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
     numauto_color_hessian!(H, f, x, hes_cache)
     return H
 end
 
-function numauto_color_hessian(f, 
-                                   x::AbstractArray{<:Number}, 
+function numauto_color_hessian(f,
+                                   x::AbstractArray{<:Number},
                                    hes_cache::ForwardColorHesCache)
     H = convert.(eltype(x), hes_cache.sparsity)
     numauto_color_hessian!(H, f, x, hes_cache)
@@ -89,7 +89,7 @@ end
 
 function numauto_color_hessian(f,
                                    x::AbstractArray{<:Number},
-                                   colorvec::AbstractVector{<:Integer}=eachindex(x), 
+                                   colorvec::AbstractVector{<:Integer}=eachindex(x),
                                    sparsity::Union{AbstractMatrix, Nothing}=nothing)
     hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
     H = convert.(eltype(x), hes_cache.sparsity)
@@ -113,13 +113,13 @@ struct AutoAutoTag end
 function ForwardAutoColorHesCache(f,
     x::AbstractVector{V},
     colorvec::AbstractVector{<:Integer}=eachindex(x),
-    sparsity::Union{AbstractMatrix,Nothing}=nothing) where V
+    sparsity::Union{AbstractMatrix,Nothing}=nothing,
+    tag::ForwardDiff.Tag = ForwardDiff.Tag(AutoAutoTag(), V)) where V
 
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
 
-    tag = ForwardDiff.Tag(AutoAutoTag(), V)
     chunksize = ForwardDiff.pickchunksize(maximum(colorvec))
     chunk = ForwardDiff.Chunk(chunksize)
 
@@ -130,7 +130,7 @@ function ForwardAutoColorHesCache(f,
     g! = (G, x) -> ForwardDiff.gradient!(G, f, x, gradient_config, Val(false))
 
     jac_cache = ForwardColorJacCache(g!, x; colorvec, sparsity, tag=outer_tag)
-    
+
     return ForwardAutoColorHesCache(jac_cache, g!, sparsity, colorvec)
 end
 

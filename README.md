@@ -3,8 +3,8 @@
 [![Join the chat at https://julialang.zulipchat.com #sciml-bridged](https://img.shields.io/static/v1?label=Zulip&message=chat&color=9558b2&labelColor=389826)](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
 [![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/SparseDiffTools/stable/)
 
-[![codecov](https://codecov.io/gh/SciML/SparseDiffTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/SciML/SparseDiffTools.jl)
-[![Build Status](https://github.com/SciML/SparseDiffTools.jl/workflows/CI/badge.svg)](https://github.com/SciML/SparseDiffTools.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/JuliaDiff/SparseDiffTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaDiff/SparseDiffTools.jl)
+[![Build Status](https://github.com/JuliaDiff/SparseDiffTools.jl/workflows/CI/badge.svg)](https://github.com/JuliaDiff/SparseDiffTools.jl/actions?query=workflow%3ACI)
 [![buildkite](https://badge.buildkite.com/ea7df061e20328f60d3e0816d97d2d856166f2ea7030748cef.svg)](https://buildkite.com/julialang/sparsedifftools-dot-jl)
 
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)

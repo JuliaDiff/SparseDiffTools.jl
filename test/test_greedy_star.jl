@@ -7,13 +7,13 @@ using Random
 Random.seed!(123)
 
 #= Test data =#
-test_graphs = Array{SimpleGraph, 1}(undef, 0)
+test_graphs = Array{SimpleGraph,1}(undef, 0)
 
-for _ in 1:5
+for _ = 1:5
     nv = rand(5:20)
     ne = rand(1:100)
     graph = SimpleGraph(nv)
-    for e in 1:ne
+    for e = 1:ne
         v1 = rand(1:nv)
         v2 = rand(1:nv)
         while v1 == v2
@@ -49,22 +49,22 @@ colors.
 
 gx = SimpleGraph(4)
 
-add_edge!(gx,1,2)
-add_edge!(gx,1,3)
-add_edge!(gx,2,3)
-add_edge!(gx,3,4)
+add_edge!(gx, 1, 2)
+add_edge!(gx, 1, 3)
+add_edge!(gx, 2, 3)
+add_edge!(gx, 3, 4)
 
 push!(test_graphs, gx)
 
 #begin testing
-for i in 1:6
+for i = 1:6
     g = test_graphs[i]
 
-    out_colors1 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar1Color())
-    out_colors2 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar2Color())
+    out_colors1 = SparseDiffTools.color_graph(g, SparseDiffTools.GreedyStar1Color())
+    out_colors2 = SparseDiffTools.color_graph(g, SparseDiffTools.GreedyStar2Color())
 
     #test condition 1
-    for v = vertices(g)
+    for v in vertices(g)
         color = out_colors1[v]
         for j in inneighbors(g, v)
             @test out_colors1[j] != color
@@ -72,7 +72,7 @@ for i in 1:6
     end
 
     #test condition 2
-    for j = vertices(g)
+    for j in vertices(g)
         walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
@@ -84,7 +84,7 @@ for i in 1:6
     end
 
     #test condition 1
-    for v = vertices(g)
+    for v in vertices(g)
         color = out_colors2[v]
         for j in inneighbors(g, v)
             @test out_colors2[j] != color
@@ -92,7 +92,7 @@ for i in 1:6
     end
 
     #test condition 2
-    for j = vertices(g)
+    for j in vertices(g)
         walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4

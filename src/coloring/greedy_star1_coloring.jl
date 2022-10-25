@@ -25,9 +25,9 @@ function color_graph(g::Graphs.AbstractGraph, ::GreedyStar1Color)
     v = nv(g)
     colorvec = zeros(Int, v)
 
-    forbidden_colors = zeros(Int, v+1)
+    forbidden_colors = zeros(Int, v + 1)
 
-    for vertex_i = vertices(g)
+    for vertex_i in vertices(g)
 
         for w in inneighbors(g, vertex_i)
             if colorvec[w] != 0
@@ -40,7 +40,7 @@ function color_graph(g::Graphs.AbstractGraph, ::GreedyStar1Color)
                         forbidden_colors[colorvec[x]] = vertex_i
                     else
                         for y in inneighbors(g, x)
-                           if colorvec[y] != 0
+                            if colorvec[y] != 0
                                 if y != w && colorvec[y] == colorvec[w]
                                     forbidden_colors[colorvec[x]] = vertex_i
                                     break
@@ -61,7 +61,7 @@ end
 function find_min_color(forbidden_colors::AbstractVector, vertex_i::Integer)
     c = 1
     while (forbidden_colors[c] == vertex_i)
-        c+=1
+        c += 1
     end
     c
 end

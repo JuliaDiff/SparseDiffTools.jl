@@ -15,4 +15,7 @@ makedocs(
     pages = pages,
 )
 
-deploydocs(repo = "https://github.com/JuliaDiff/SparseDiffTools.jl.git"; push_preview = true)
+deploydocs(
+    repo = "https://github.com/JuliaDiff/SparseDiffTools.jl.git";
+    push_preview = true,
+)

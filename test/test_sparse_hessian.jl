@@ -12,7 +12,7 @@ x = randn(5)
 sparsity = Symbolics.hessian_sparsity(fscalar, x)
 colors = matrix_colors(tril(sparsity))
 ncolors = maximum(colors)
-D = hcat([float.(i .== colors) for i = 1:ncolors]...)
+D = hcat([float.(i .== colors) for i in 1:ncolors]...)
 buffer = similar(D)
 G1 = zero(x)
 G2 = zero(x)
@@ -28,7 +28,6 @@ buffers_tup = SparseDiffTools.make_hessian_buffers(colors, x)
 @test size(buffers_tup.G2) == size(G2)
 @test eltype(buffers_tup.G2) == eltype(G2)
 
-
 gconfig = ForwardDiff.GradientConfig(fscalar, x)
 g(x) = ForwardDiff.gradient(fscalar, x)           # allocating
 g!(G, x, gconfig) = ForwardDiff.gradient!(G, fscalar, x, gconfig)   # non-allocating
@@ -37,38 +36,30 @@ hescache1 = ForwardColorHesCache(sparsity, colors, ncolors, D, buffer, g!, gconf
 hescache2 = ForwardColorHesCache(fscalar, x, colors, sparsity, g!)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
 # custom gradient function
-hescache4 = ForwardColorHesCache(
-    fscalar,
-    x,
-    colors,
-    sparsity,
-    (G, x) -> ForwardDiff.gradient!(G, fscalar, x),
-)
+hescache4 = ForwardColorHesCache(fscalar,
+                                 x,
+                                 colors,
+                                 sparsity,
+                                 (G, x) -> ForwardDiff.gradient!(G, fscalar, x))
 hescache5 = ForwardColorHesCache(fscalar, x)
 # custom gradient has to have 2 or 3 arguments...
 @test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a) -> 1.0)
-@test_throws ArgumentError ForwardColorHesCache(
-    fscalar,
-    x,
-    colors,
-    sparsity,
-    (a, b, c, d) -> 1.0,
-)
+@test_throws ArgumentError ForwardColorHesCache(fscalar,
+                                                x,
+                                                colors,
+                                                sparsity,
+                                                (a, b, c, d) -> 1.0)
 # ...and needs to accept (Vector, Vector, ForwardDiff.GradientConfig)
-@test_throws ArgumentError ForwardColorHesCache(
-    fscalar,
-    x,
-    colors,
-    sparsity,
-    (a::Int, b::Int) -> 1.0,
-)
-@test_throws ArgumentError ForwardColorHesCache(
-    fscalar,
-    x,
-    colors,
-    sparsity,
-    (a::Int, b::Int, c::Int) -> 1.0,
-)
+@test_throws ArgumentError ForwardColorHesCache(fscalar,
+                                                x,
+                                                colors,
+                                                sparsity,
+                                                (a::Int, b::Int) -> 1.0)
+@test_throws ArgumentError ForwardColorHesCache(fscalar,
+                                                x,
+                                                colors,
+                                                sparsity,
+                                                (a::Int, b::Int, c::Int) -> 1.0)
 
 for name in [:sparsity, :colors, :ncolors, :D]
     @eval @test hescache1.$name == hescache2.$name
@@ -123,13 +114,10 @@ for (i, hescache) in enumerate([hescache1, hescache2, hescache3, hescache4, hesc
     # @test t_unsafe <= t_safe
 end
 
-
 hescache1 = ForwardAutoColorHesCache(fscalar, x, colors, sparsity)
 hescache2 = ForwardAutoColorHesCache(fscalar, x)
 
-
 for (i, hescache) in enumerate([hescache1, hescache2])
-
     H = SparseDiffTools.autoauto_color_hessian(fscalar, x, colors, sparsity)
     H1 = SparseDiffTools.autoauto_color_hessian(fscalar, x, hescache)
     H2 = SparseDiffTools.autoauto_color_hessian(fscalar, x)
@@ -139,13 +127,11 @@ for (i, hescache) in enumerate([hescache1, hescache2])
 
     H1 = similar(H)
 
-    SparseDiffTools.autoauto_color_hessian!(
-        H1,
-        fscalar,
-        x,
-        collect(hescache.colorvec),
-        hescache.sparsity,
-    )
+    SparseDiffTools.autoauto_color_hessian!(H1,
+                                            fscalar,
+                                            x,
+                                            collect(hescache.colorvec),
+                                            hescache.sparsity)
     @test all(isapprox.(H1, H))
 
     SparseDiffTools.autoauto_color_hessian!(H2, fscalar, x)
@@ -153,5 +139,4 @@ for (i, hescache) in enumerate([hescache1, hescache2])
 
     SparseDiffTools.autoauto_color_hessian!(H1, fscalar, x, hescache)
     @test all(isapprox.(H1, H))
-
 end

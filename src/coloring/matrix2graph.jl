@@ -6,13 +6,12 @@ a vector of its column indices.
 """
 function _cols_by_rows(rows_index, cols_index)
     nrows = isempty(rows_index) ? 0 : maximum(rows_index)
-    cols_by_rows = [eltype(rows_index)[] for _ = 1:nrows]
+    cols_by_rows = [eltype(rows_index)[] for _ in 1:nrows]
     for (i, j) in zip(rows_index, cols_index)
         push!(cols_by_rows[i], j)
     end
     return cols_by_rows
 end
-
 
 """
         _rows_by_cols(rows_index,cols_index)
@@ -23,7 +22,6 @@ a vector of its row indices.
 function _rows_by_cols(rows_index, cols_index)
     return _cols_by_rows(cols_index, rows_index)
 end
-
 
 """
         matrix2graph(sparse_matrix, [partition_by_rows::Bool=true])
@@ -36,11 +34,8 @@ the two columns are mutually orthogonal.
 Note that the sparsity pattern is defined by structural nonzeroes, ie includes
 explicitly stored zeros.
 """
-function matrix2graph(
-    sparse_matrix::SparseMatrixCSC{<:Number,Int},
-    partition_by_rows::Bool = true,
-)
-
+function matrix2graph(sparse_matrix::SparseMatrixCSC{<:Number, Int},
+                      partition_by_rows::Bool = true)
     (rows_index, cols_index, _) = findnz(sparse_matrix)
 
     ncols = size(sparse_matrix, 2)

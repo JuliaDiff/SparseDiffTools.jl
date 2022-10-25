@@ -7,13 +7,13 @@ using Random
 Random.seed!(123)
 
 #= Test data =#
-test_graphs = Array{SimpleGraph,1}(undef, 0)
+test_graphs = Array{SimpleGraph, 1}(undef, 0)
 
-for _ = 1:5
+for _ in 1:5
     nv = rand(5:20)
     ne = rand(1:100)
     graph = SimpleGraph(nv)
-    for e = 1:ne
+    for e in 1:ne
         v1 = rand(1:nv)
         v2 = rand(1:nv)
         while v1 == v2
@@ -36,7 +36,6 @@ In other words, every path on four vertices uses at least three
 colors.
 =#
 
-
 #Sample graph from Gebremedhin AH, Manne F, Pothen A. **What color is your Jacobian? Graph coloring for computing derivatives.**
 
 #=
@@ -57,7 +56,7 @@ add_edge!(gx, 3, 4)
 push!(test_graphs, gx)
 
 #begin testing
-for i = 1:6
+for i in 1:6
     g = test_graphs[i]
 
     out_colors1 = SparseDiffTools.color_graph(g, SparseDiffTools.GreedyStar1Color())
@@ -102,5 +101,4 @@ for i = 1:6
             @test length(unique(walk_colors)) >= 3
         end
     end
-
 end

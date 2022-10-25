@@ -11,11 +11,11 @@ Random.seed!(90)
 test_graphs = Vector{SimpleGraph}(undef, 0)
 test_graphs_dir = Vector{SimpleDiGraph}(undef, 0)
 
-for _ = 1:5
+for _ in 1:5
     nv = rand(5:20)
     ne = rand(1:100)
     graph = SimpleGraph(nv)
-    for e = 1:ne
+    for e in 1:ne
         v1 = rand(1:nv)
         v2 = rand(1:nv)
         while v1 == v2
@@ -37,7 +37,6 @@ involving v and three other vertices  is  impermissible  for  v.
 In other words, every path on four vertices uses at least three
 colors.
 =#
-
 
 #Sample graph from Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 
@@ -95,8 +94,7 @@ for g in test_graphs
     push!(test_graphs_dir, dg)
 end
 
-
-for i = 1:5
+for i in 1:5
     g = test_graphs[i]
     dg = test_graphs_dir[i]
 
@@ -111,7 +109,7 @@ for i = 1:5
     end
 end
 
-for i = 3:4
+for i in 3:4
     g = test_graphs[i]
     dg = test_graphs_dir[i]
 

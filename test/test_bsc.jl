@@ -30,7 +30,6 @@ add_edge!(g0, 3, 6)
 add_edge!(g0, 4, 5)
 add_edge!(g0, 5, 6)
 
-
 #=
         Graph g1
 
@@ -49,7 +48,6 @@ add_edge!(g1, 3, 2)
 add_edge!(g1, 4, 2)
 add_edge!(g1, 5, 2)
 add_edge!(g1, 6, 2)
-
 
 #=
         Graph g2
@@ -75,7 +73,7 @@ coloring0 = SparseDiffTools.color_graph(g0, SparseDiffTools.BacktrackingColor())
 coloring1 = SparseDiffTools.color_graph(g1, SparseDiffTools.BacktrackingColor())
 coloring2 = SparseDiffTools.color_graph(g2, SparseDiffTools.BacktrackingColor())
 
-for v = 1:nv(g0)
+for v in 1:nv(g0)
     color = coloring0[v]
     for j in inneighbors(g0, v)
         if coloring0[j] == color
@@ -84,7 +82,7 @@ for v = 1:nv(g0)
     end
 end
 
-for v = 1:nv(g1)
+for v in 1:nv(g1)
     color = coloring1[v]
     for j in inneighbors(g1, v)
         if coloring1[j] == color
@@ -93,7 +91,7 @@ for v = 1:nv(g1)
     end
 end
 
-for v = 1:nv(g2)
+for v in 1:nv(g2)
     color = coloring2[v]
     for j in inneighbors(g2, v)
         if coloring2[j] == color
@@ -102,12 +100,12 @@ for v = 1:nv(g2)
     end
 end
 
-test_graphs = Array{SimpleGraph,1}(undef, 0)
-for _ = 1:5
+test_graphs = Array{SimpleGraph, 1}(undef, 0)
+for _ in 1:5
     nv = rand(5:20)
     ne = rand(1:100)
     graph = SimpleGraph(nv)
-    for e = 1:ne
+    for e in 1:ne
         v1 = rand(1:nv)
         v2 = rand(1:nv)
         while v1 == v2
@@ -118,8 +116,7 @@ for _ = 1:5
     push!(test_graphs, copy(graph))
 end
 
-
-for i = 1:5
+for i in 1:5
     g = test_graphs[i]
     out_colors = SparseDiffTools.color_graph(g, SparseDiffTools.BacktrackingColor())
 

@@ -13,13 +13,13 @@ function color_graph(g::VSafeGraph, alg::GreedyD1Color)
     result[1] = 1
     available = BitVector(undef, v)
     fill!(available, false)
-    for i = 2:v
+    for i in 2:v
         for j in inneighbors(g, i)
             if result[j] != 0
                 available[result[j]] = true
             end
         end
-        for cr = 1:v
+        for cr in 1:v
             if !available[cr]
                 result[i] = cr
                 break

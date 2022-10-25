@@ -5,15 +5,15 @@ using Graphs
 using Random
 
 n = rand(10:100)
-matrices = Array{SparseMatrixCSC,1}(undef, 0)
+matrices = Array{SparseMatrixCSC, 1}(undef, 0)
 
-for _ = 1:20
+for _ in 1:20
     n = rand(10:100)
     matrix = sprand(Int64, n, n, 0.5)
     push!(matrices, copy(matrix))
 end
 
-for i = 1:20
+for i in 1:20
     matrix = matrices[i]
     g = matrix2graph(matrix, false)
     for e in edges(g)
@@ -26,7 +26,7 @@ for i = 1:20
     end
 end
 
-for i = 1:20
+for i in 1:20
     matrix = matrices[i]
     g = matrix2graph(matrix, true)
     for e in edges(g)
@@ -40,7 +40,7 @@ for i = 1:20
 end
 
 @info "stored zeros"
-for i = 1:20
+for i in 1:20
     matrix = matrices[i]
     g = matrix2graph(matrix)
     # recalculate graph with stored zeros

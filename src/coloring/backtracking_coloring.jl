@@ -189,8 +189,8 @@ end
 Returns least index i such that color of vertex
 A[i] is equal to `opt` (optimal chromatic number)
 """
-                     opt::Integer)
 function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
+                     opt::Integer)
     for i in eachindex(A)
         if F[A[i]] == opt
             return i

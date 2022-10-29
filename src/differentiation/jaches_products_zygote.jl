@@ -24,29 +24,19 @@ function numback_hesvec(f, x, v)
     (gxp - gxm) / (2ϵ)
 end
 
-function autoback_hesvec!(dy,
-                          f,
-                          x,
-                          v,
-                          cache2 = Dual{
-                                        typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
-                                        eltype(x),
-                                        1
+function autoback_hesvec!(dy, f, x, v,
+                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                                        eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))),
-                          cache3 = Dual{
-                                        typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
-                                        eltype(x),
-                                        1
+                          cache3 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                                        eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
-    cache2 .= Dual{
-                   typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
-                   eltype(x),
-                   1
+    cache2 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
     g(cache3, cache2)
     dy .= partials.(cache3, 1)
@@ -54,10 +44,7 @@ end
 
 function autoback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
-    y = Dual{
-             typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
-             eltype(x),
-             1
+    y = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
              }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
     ForwardDiff.partials.(g(y), 1)
 end

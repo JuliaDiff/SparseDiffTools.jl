@@ -19,20 +19,11 @@ out = copy(_J2)
 forwarddiff_color_jacobian!(out, f, x, colorvec = repeat(1:3, 10), sparsity = _J2)
 
 @test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, sparsity = cu(_J1)) isa Nothing
-@test_broken forwarddiff_color_jacobian!(_denseJ1,
-                                         f,
-                                         x,
-                                         colorvec = repeat(1:3, 10),
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3, 10),
                                          sparsity = cu(_J1)) isa Nothing
 _Jt = similar(Tridiagonal(_J1))
-@test_broken forwarddiff_color_jacobian!(_denseJ1,
-                                         f,
-                                         x,
-                                         colorvec = repeat(1:3, 10),
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3, 10),
                                          sparsity = _Jt) isa Nothing
 _Jt2 = similar(Tridiagonal(cu(_J1)))
-@test_broken forwarddiff_color_jacobian!(_denseJ1,
-                                         f,
-                                         x,
-                                         colorvec = repeat(1:3, 10),
+@test_broken forwarddiff_color_jacobian!(_denseJ1, f, x, colorvec = repeat(1:3, 10),
                                          sparsity = _Jt2) isa Nothing

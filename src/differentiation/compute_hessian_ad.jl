@@ -43,14 +43,7 @@ function ForwardColorHesCache(f,
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
-    return ForwardColorHesCache(sparsity,
-                                colorvec,
-                                ncolors,
-                                D,
-                                buffer,
-                                g1!,
-                                grad_config,
-                                G,
+    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G,
                                 G2)
 end
 

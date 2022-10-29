@@ -30,14 +30,8 @@ function color_graph(g::Graphs.AbstractGraph, ::AcyclicColoring)
                 for x in outneighbors(g, w)
                     if color[x] != 0
                         if forbidden_colors[color[x]] != v
-                            prevent_cycle!(first_visit_to_tree,
-                                           forbidden_colors,
-                                           v,
-                                           w,
-                                           x,
-                                           g,
-                                           two_colored_forest,
-                                           color)
+                            prevent_cycle!(first_visit_to_tree, forbidden_colors, v, w, x,
+                                           g, two_colored_forest, color)
                         end
                     end
                 end

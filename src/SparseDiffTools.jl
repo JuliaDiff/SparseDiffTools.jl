@@ -34,25 +34,15 @@ export contract_color,
        autoauto_color_hessian,
        ForwardColorHesCache,
        ForwardAutoColorHesCache,
-       auto_jacvec,
-       auto_jacvec!,
-       num_jacvec,
-       num_jacvec!,
-       num_vecjac,
-       num_vecjac!,
-       num_hesvec,
-       num_hesvec!,
-       numauto_hesvec,
-       numauto_hesvec!,
-       autonum_hesvec,
-       autonum_hesvec!,
-       num_hesvecgrad,
-       num_hesvecgrad!,
-       auto_hesvecgrad,
-       auto_hesvecgrad!,
-       JacVec,
-       HesVec,
-       HesVecGrad
+       auto_jacvec, auto_jacvec!,
+       num_jacvec, num_jacvec!,
+       num_vecjac, num_vecjac!,
+       num_hesvec, num_hesvec!,
+       numauto_hesvec, numauto_hesvec!,
+       autonum_hesvec, autonum_hesvec!,
+       num_hesvecgrad, num_hesvecgrad!,
+       auto_hesvecgrad, auto_hesvecgrad!,
+       JacVec, HesVec, HesVecGrad
 
 include("coloring/high_level.jl")
 include("coloring/backtracking_coloring.jl")
@@ -73,8 +63,8 @@ parameterless_type(x::Type) = __parameterless_type(x)
 
 function __init__()
     @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
-        export numback_hesvec,
-               numback_hesvec!, autoback_hesvec, autoback_hesvec!, auto_vecjac, auto_vecjac!
+        export numback_hesvec, numback_hesvec!, autoback_hesvec, autoback_hesvec!,
+               auto_vecjac, auto_vecjac!
 
         include("differentiation/vecjac_products_zygote.jl")
         include("differentiation/jaches_products_zygote.jl")

@@ -8,17 +8,12 @@ function auto_jacvec!(dy,
                       f,
                       x,
                       v,
-                      cache1 = Dual{
-                                    typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                    eltype(x),
-                                    1
+                      cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+                                    eltype(x), 1
                                     }.(x,
                                        ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
                       cache2 = similar(cache1))
-    cache1 .= Dual{
-                   get_tag(cache1),
-                   eltype(x),
-                   1
+    cache1 .= Dual{get_tag(cache1), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     f(cache2, cache1)
     vecdy = _vec(dy)
@@ -30,10 +25,7 @@ _vec(v::AbstractVector) = v
 
 function auto_jacvec(f, x, v)
     vv = reshape(v, axes(x))
-    y = ForwardDiff.Dual{
-                         typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                         eltype(x),
-                         1
+    y = ForwardDiff.Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
                          }.(x, ForwardDiff.Partials.(tuple.(vv)))
     vec(partials.(vec(f(y)), 1))
 end
@@ -137,24 +129,17 @@ function autonum_hesvec!(dy,
                          f,
                          x,
                          v,
-                         cache1 = Dual{
-                                       typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                       eltype(x),
-                                       1
+                         cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+                                       eltype(x), 1
                                        }.(x,
                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
-                         cache2 = Dual{
-                                       typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                       eltype(x),
-                                       1
+                         cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+                                       eltype(x), 1
                                        }.(x,
                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
     cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
     g = (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
-    cache1 .= Dual{
-                   get_tag(cache1),
-                   eltype(x),
-                   1
+    cache1 .= Dual{get_tag(cache1), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)
@@ -191,32 +176,22 @@ function auto_hesvecgrad!(dy,
                           g,
                           x,
                           v,
-                          cache2 = Dual{
-                                        typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                        eltype(x),
-                                        1
+                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+                                        eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
-                          cache3 = Dual{
-                                        typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                        eltype(x),
-                                        1
+                          cache3 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+                                        eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
-    cache2 .= Dual{
-                   get_tag(cache2),
-                   eltype(x),
-                   1
+    cache2 .= Dual{get_tag(cache2), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache3, cache2)
     dy .= partials.(cache3, 1)
 end
 
 function auto_hesvecgrad(g, x, v)
-    y = Dual{
-             typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-             eltype(x),
-             1
+    y = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
              }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     partials.(g(y), 1)
 end
@@ -233,15 +208,9 @@ end
 
 function JacVec(f, x::AbstractArray, tag = DeivVecTag(); autodiff = true)
     if autodiff
-        cache1 = Dual{
-                      typeof(ForwardDiff.Tag(tag, eltype(x))),
-                      eltype(x),
-                      1
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
                       }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{
-                      typeof(ForwardDiff.Tag(tag, eltype(x))),
-                      eltype(x),
-                      1
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
                       }.(x, ForwardDiff.Partials.(tuple.(x)))
     else
         cache1 = similar(x)
@@ -254,7 +223,8 @@ Base.eltype(L::JacVec) = eltype(L.x)
 Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
 Base.size(L::JacVec, i::Int) = length(L.cache1)
 function Base.:*(L::JacVec, v::AbstractVector)
-    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) : num_jacvec(_x -> L.f(_x), L.x, v)
+    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) :
+    num_jacvec(_x -> L.f(_x), L.x, v)
 end
 
 function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
@@ -311,15 +281,9 @@ end
 
 function HesVecGrad(g, x::AbstractArray, tag = DeivVecTag(); autodiff = false)
     if autodiff
-        cache1 = Dual{
-                      typeof(ForwardDiff.Tag(tag, eltype(x))),
-                      eltype(x),
-                      1
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
                       }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{
-                      typeof(ForwardDiff.Tag(tag, eltype(x))),
-                      eltype(x),
-                      1
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
                       }.(x, ForwardDiff.Partials.(tuple.(x)))
     else
         cache1 = similar(x)
@@ -334,7 +298,9 @@ function Base.:*(L::HesVecGrad, v::AbstractVector)
     L.autodiff ? auto_hesvecgrad(L.g, L.x, v) : num_hesvecgrad(L.g, L.x, v)
 end
 
-function LinearAlgebra.mul!(dy::AbstractVector, L::HesVecGrad, v::AbstractVector)
+function LinearAlgebra.mul!(dy::AbstractVector,
+                            L::HesVecGrad,
+                            v::AbstractVector)
     if L.autodiff
         auto_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
     else

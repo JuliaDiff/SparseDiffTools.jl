@@ -16,9 +16,7 @@ gettag(::Type{ForwardDiff.Dual{T}}) where {T} = T
 const default_chunk_size = ForwardDiff.pickchunksize
 const SMALLTAG = typeof(ForwardDiff.Tag(missing, Float64))
 
-function ForwardColorJacCache(f::F,
-                              x,
-                              _chunksize = nothing;
+function ForwardColorJacCache(f::F, x, _chunksize = nothing;
                               dx = nothing,
                               tag = nothing,
                               colorvec = 1:length(x),
@@ -114,8 +112,7 @@ function forwarddiff_color_jacobian(f::F,
     if sparsity === nothing && jac_prototype === nothing
         cfg = if chunksize === nothing
             if typeof(x) <: StaticArrays.StaticArray
-                ForwardDiff.JacobianConfig(f,
-                                           x,
+                ForwardDiff.JacobianConfig(f, x,
                                            ForwardDiff.Chunk{StaticArrays.Size(vec(x))[1]}())
             else
                 ForwardDiff.JacobianConfig(f, x)
@@ -128,19 +125,14 @@ function forwarddiff_color_jacobian(f::F,
     if dx isa Nothing
         dx = f(x)
     end
-    return forwarddiff_color_jacobian(f,
-                                      x,
-                                      ForwardColorJacCache(f,
-                                                           x,
-                                                           chunksize,
-                                                           dx = dx,
+    return forwarddiff_color_jacobian(f, x,
+                                      ForwardColorJacCache(f, x, chunksize, dx = dx,
                                                            colorvec = colorvec,
                                                            sparsity = sparsity),
                                       jac_prototype)
 end
 
-function forwarddiff_color_jacobian(J::AbstractArray{<:Number},
-                                    f::F,
+function forwarddiff_color_jacobian(J::AbstractArray{<:Number}, f::F,
                                     x::AbstractArray{<:Number};
                                     colorvec = 1:length(x),
                                     sparsity = nothing,
@@ -152,19 +144,13 @@ function forwarddiff_color_jacobian(J::AbstractArray{<:Number},
               ForwardDiff.JacobianConfig(f, x, ForwardDiff.Chunk(getsize(chunksize)))
         return ForwardDiff.jacobian(f, x, cfg)
     end
-    return forwarddiff_color_jacobian(J,
-                                      f,
-                                      x,
-                                      ForwardColorJacCache(f,
-                                                           x,
-                                                           chunksize,
-                                                           dx = dx,
+    return forwarddiff_color_jacobian(J, f, x,
+                                      ForwardColorJacCache(f, x, chunksize, dx = dx,
                                                            colorvec = colorvec,
                                                            sparsity = sparsity))
 end
 
-function forwarddiff_color_jacobian(f::F,
-                                    x::AbstractArray{<:Number},
+function forwarddiff_color_jacobian(f::F, x::AbstractArray{<:Number},
                                     jac_cache::ForwardColorJacCache,
                                     jac_prototype = nothing) where {F}
     if jac_prototype isa Nothing ? ArrayInterfaceCore.ismutable(x) :
@@ -184,8 +170,7 @@ function forwarddiff_color_jacobian(f::F,
 end
 
 # When J is mutable, this version of forwarddiff_color_jacobian will mutate J to avoid allocations
-function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},
-                                    f::F,
+function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
                                     x::AbstractArray{<:Number},
                                     jac_cache::ForwardColorJacCache) where {F}
     t = jac_cache.t
@@ -230,8 +215,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},
                     perm_rows = sortperm(vcat(rows_index_c, unused_rows))
                     cols_index_c = vcat(cols_index_c, zeros(Int, nrows - len_rows))[perm_rows]
                     Ji = [j == cols_index_c[i] ? dx[i] : false
-                          for i in 1:nrows,
-                              j in 1:ncols]
+                          for i in 1:nrows, j in 1:ncols]
                 end
                 if j == 1 && i == 1
                     J .= Ji # overwrite pre-allocated matrix J
@@ -247,8 +231,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},
                 (col_index > ncols) && return J
                 Ji = mapreduce(i -> i == col_index ? partials.(vec(fx), j) :
                                     adapt(parameterless_type(J), zeros(eltype(J), nrows)),
-                               hcat,
-                               1:ncols)
+                               hcat, 1:ncols)
                 if j == 1 && i == 1
                     J .= (size(Ji) != size(J) ? reshape(Ji, size(J)) : Ji) # overwrite pre-allocated matrix
                 else
@@ -261,8 +244,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number},
 end
 
 # When J is immutable, this version of forwarddiff_color_jacobian will avoid mutating J
-function forwarddiff_color_jacobian_immutable(f,
-                                              x::AbstractArray{<:Number},
+function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
                                               jac_cache::ForwardColorJacCache,
                                               jac_prototype = nothing)
     t = jac_cache.t
@@ -307,8 +289,7 @@ function forwarddiff_color_jacobian_immutable(f,
                     perm_rows = sortperm(vcat(rows_index_c, unused_rows))
                     cols_index_c = vcat(cols_index_c, zeros(Int, nrows - len_rows))[perm_rows]
                     Ji = [j == cols_index_c[i] ? dx[i] : false
-                          for i in 1:nrows,
-                              j in 1:ncols]
+                          for i in 1:nrows, j in 1:ncols]
                 end
                 J = J + Ji
                 color_i += 1
@@ -320,8 +301,7 @@ function forwarddiff_color_jacobian_immutable(f,
                 (col_index > ncols) && return J
                 Ji = mapreduce(i -> i == col_index ? partials.(vec(fx), j) :
                                     adapt(parameterless_type(J), zeros(eltype(J), nrows)),
-                               hcat,
-                               1:ncols)
+                               hcat, 1:ncols)
                 J = J + (size(Ji) != size(J) ? reshape(Ji, size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
             end
         end
@@ -336,9 +316,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                                      colorvec = 1:length(x),
                                      sparsity = ArrayInterfaceCore.has_sparsestruct(J) ? J :
                                                 nothing)
-    forwarddiff_color_jacobian!(J,
-                                f,
-                                x,
+    forwarddiff_color_jacobian!(J, f, x,
                                 ForwardColorJacCache(f, x, dx = dx, colorvec = colorvec,
                                                      sparsity = sparsity))
 end
@@ -409,14 +387,8 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     if sparseCSC_common_sparsity
                         FiniteDiff._colorediteration!(J, vecdx, colorvec, color_i, ncols)
                     else
-                        FiniteDiff._colorediteration!(J,
-                                                      sparsity,
-                                                      rows_index,
-                                                      cols_index,
-                                                      vecdx,
-                                                      colorvec,
-                                                      color_i,
-                                                      ncols)
+                        FiniteDiff._colorediteration!(J, sparsity, rows_index, cols_index,
+                                                      vecdx, colorvec, color_i, ncols)
                     end
                 else
                     #=
@@ -430,8 +402,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                             @. void_setindex!(Ref(nonzeros(J)),
                                               getindex(Ref(nonzeros(J)), rows_index) +
                                               (getindex(Ref(adaptedcolorvec), cols_index) ==
-                                               color_i) *
-                                              getindex(Ref(vecdx), rows_index),
+                                               color_i) * getindex(Ref(vecdx), rows_index),
                                               rows_index)
                         else
                             nzval = @view nonzeros(J)[rows_index]
@@ -444,8 +415,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                         @. void_setindex!(Ref(J),
                                           getindex(Ref(J), rows_index, cols_index) +
                                           (getindex(Ref(colorvec), cols_index) == color_i) *
-                                          getindex(Ref(vecdx), rows_index),
-                                          rows_index,
+                                          getindex(Ref(vecdx), rows_index), rows_index,
                                           cols_index)
                     end
                 end

@@ -189,9 +189,8 @@ end
 Returns least index i such that color of vertex
 A[i] is equal to `opt` (optimal chromatic number)
 """
-function least_index(F::AbstractVector{<:Integer},
-                     A::AbstractVector{<:Integer},
                      opt::Integer)
+function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
     for i in eachindex(A)
         if F[A[i]] == opt
             return i
@@ -205,8 +204,7 @@ end
 Uncolors all vertices A[i] where i is
 greater than or equal to start
 """
-function uncolor_all!(F::AbstractVector{<:Integer},
-                      A::AbstractVector{<:Integer},
+function uncolor_all!(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
                       start::Integer)
     for i in start:length(A)
         F[A[i]] = 0

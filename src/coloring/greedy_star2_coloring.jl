@@ -27,9 +27,9 @@ function color_graph(g::Graphs.AbstractGraph, ::GreedyStar2Color)
     v = nv(g)
     colorvec = zeros(Int, v)
 
-    forbidden_colors = zeros(Int, v+1)
+    forbidden_colors = zeros(Int, v + 1)
 
-    for vertex_i = vertices(g)
+    for vertex_i in vertices(g)
         for w in inneighbors(g, vertex_i)
             if colorvec[w] != 0
                 forbidden_colors[colorvec[w]] = vertex_i

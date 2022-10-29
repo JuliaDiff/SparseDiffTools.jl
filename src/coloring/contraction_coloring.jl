@@ -4,41 +4,39 @@
 Find a coloring of the graph g such that no two vertices connected
 by an edge have the same color.
 """
-function color_graph(G::VSafeGraph,::ContractionColor)
-
+function color_graph(G::VSafeGraph, ::ContractionColor)
     colornumber = 0
     V = nv(G)
-    colors = zeros(Int,V)
+    colors = zeros(Int, V)
 
     while (V > 0)
         x = max_degree_vertex(G)
         colornumber = colornumber + 1
         colors[x] = colornumber
-        nn = non_neighbors(G,x)
+        nn = non_neighbors(G, x)
         while (length(nn) > 0)
             maxcn = -1
             ydegree = -1
             for z in nn
-                cn = length_common_neighbor(G,z,x)
-                if (cn > maxcn) || (cn == maxcn && vertex_degree(G,z) < ydegree)
+                cn = length_common_neighbor(G, z, x)
+                if (cn > maxcn) || (cn == maxcn && vertex_degree(G, z) < ydegree)
                     y = z
-                    ydegree = vertex_degree(G,y)
+                    ydegree = vertex_degree(G, y)
                     maxcn = cn
                 end
             end
             if (maxcn == 0)
-                y = max_degree_vertex(G,nn)
+                y = max_degree_vertex(G, nn)
             end
             colors[y] = colornumber
-            contract!(G,y,x)
-            nn = non_neighbors(G,x)
+            contract!(G, y, x)
+            nn = non_neighbors(G, x)
         end
-        rem_vertex!(G,x)
+        rem_vertex!(G, x)
         V = nv(G)
     end
     return colors
 end
-
 
 """
     max_degree_vertex(G, nn)
@@ -50,7 +48,7 @@ function max_degree_vertex(G::VSafeGraph, nn::Vector{Int})
     max_degree = -1
     max_degree_vertex = -1
     for v in nn
-        v_degree = length(inneighbors(G,v))
+        v_degree = length(inneighbors(G, v))
         if v_degree > max_degree
             max_degree = v_degree
             max_degree_vertex = v
@@ -58,7 +56,6 @@ function max_degree_vertex(G::VSafeGraph, nn::Vector{Int})
     end
     return max_degree_vertex
 end
-
 
 """
     max_degree_vertex(G)
@@ -66,11 +63,10 @@ end
 Find the vertex in graph with highest degree.
 """
 function max_degree_vertex(G::VSafeGraph)
-
     max_degree = -1
     max_degree_vertex = -1
     for v in vertices(G)
-        v_degree = length(inneighbors(G,v))
+        v_degree = length(inneighbors(G, v))
         if v_degree > max_degree
             max_degree = v_degree
             max_degree_vertex = v
@@ -78,7 +74,6 @@ function max_degree_vertex(G::VSafeGraph)
     end
     return max_degree_vertex
 end
-
 
 """
     non_neighbors(G, x)
@@ -87,19 +82,17 @@ Find the set of vertices belonging to the graph G which do
 not share an edge with the vertex x.
 """
 function non_neighbors(G::VSafeGraph, x::Integer)
-
     nn = zeros(Int, 0)
     for v in vertices(G)
         if v == x
             continue
         end
-        if !(v in inneighbors(G,x))
+        if !(v in inneighbors(G, x))
             push!(nn, v)
         end
     end
     return nn
 end
-
 
 """
     length_common_neighbor(g, z, x)
@@ -120,13 +113,12 @@ function length_common_neighbor(g::VSafeGraph, z::Int, x::Int)
     return num_common_vertices
 end
 
-
 """
     vertex_degree(g, z)
 
 Find the degree of the vertex z which belongs to the graph g.
 """
-vertex_degree(G::VSafeGraph,z::Int) = length(inneighbors(G,z))
+vertex_degree(G::VSafeGraph, z::Int) = length(inneighbors(G, z))
 
 """
     contract!(g, y, x)

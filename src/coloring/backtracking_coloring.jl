@@ -14,7 +14,7 @@ function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
     #F is the coloring of vertices, 0 means uncolored
     #Fopt is the optimal coloring of the graph
     F = zeros(Int, v)
-    Fopt= zeros(Int, v)
+    Fopt = zeros(Int, v)
 
     start = 1
 
@@ -37,11 +37,10 @@ function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
     freeColors[x] = copy(U)
 
     while (start >= 1)
-
         back = false
-        for i = start:v
+        for i in start:v
             if i > start
-                x = uncolored_vertex_of_maximal_degree(A,F)
+                x = uncolored_vertex_of_maximal_degree(A, F)
                 U = free_colors(x, A, colors, F, g, opt)
                 sort!(U)
             end
@@ -51,14 +50,14 @@ function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
                 cp = F[x]
                 deleteat!(U, 1)
                 freeColors[x] = copy(U)
-                if i==1
+                if i == 1
                     l = 0
                 else
-                    l = colors[i-1]
+                    l = colors[i - 1]
                 end
                 colors[i] = max(k, l)
             else
-                start = i-1
+                start = i - 1
                 back = true
                 break
             end
@@ -72,9 +71,9 @@ function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
             end
         else
             Fopt = copy(F)
-            opt = colors[v-1]
-            i = least_index(F,A,opt)
-            start = i-1
+            opt = colors[v - 1]
+            i = least_index(F, A, opt)
+            start = i - 1
             if start < 1
                 break
             end
@@ -82,7 +81,7 @@ function color_graph(g::Graphs.AbstractGraph, ::BacktrackingColor)
             #uncolor all vertices A[i] with i >= start
             uncolor_all!(F, A, start)
 
-            for i = 1:start+1
+            for i in 1:(start + 1)
                 x = A[i]
                 U = freeColors[x]
 
@@ -115,14 +114,14 @@ end
 Returns an uncolored vertex from the partially
 colored graph which has the highest degree
 """
-function uncolored_vertex_of_maximal_degree(A::AbstractVector{<:Integer},F::AbstractVector{<:Integer})
+function uncolored_vertex_of_maximal_degree(A::AbstractVector{<:Integer},
+                                            F::AbstractVector{<:Integer})
     for v in A
         if F[v] == 0
             return v
         end
     end
 end
-
 
 """
     free_colors(x::Integer,
@@ -146,11 +145,11 @@ g: Graph to be colored
 opt: Current optimal number of colors to be used in the coloring of graph g
 """
 function free_colors(x::Integer,
-                    A::AbstractVector{<:Integer},
-                    colors::AbstractVector{<:Integer},
-                    F::Array{Integer,1},
-                    g::Graphs.AbstractGraph,
-                    opt::Integer)
+                     A::AbstractVector{<:Integer},
+                     colors::AbstractVector{<:Integer},
+                     F::Array{Integer, 1},
+                     g::Graphs.AbstractGraph,
+                     opt::Integer)
     index = -1
 
     freecolors = zeros(Int, 0)
@@ -165,11 +164,11 @@ function free_colors(x::Integer,
     if index == 1
         colors_used = 0
     else
-        colors_used = colors[index-1]
+        colors_used = colors[index - 1]
     end
 
     colors_used += 1
-    for c = 1:colors_used
+    for c in 1:colors_used
         c_allowed = true
         for w in inneighbors(g, x)
             if F[w] == c
@@ -190,7 +189,8 @@ end
 Returns least index i such that color of vertex
 A[i] is equal to `opt` (optimal chromatic number)
 """
-function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, opt::Integer)
+function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
+                     opt::Integer)
     for i in eachindex(A)
         if F[A[i]] == opt
             return i
@@ -204,8 +204,9 @@ end
 Uncolors all vertices A[i] where i is
 greater than or equal to start
 """
-function uncolor_all!(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer}, start::Integer)
-    for i = start:length(A)
+function uncolor_all!(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
+                      start::Integer)
+    for i in start:length(A)
         F[A[i]] = 0
     end
 end

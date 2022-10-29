@@ -40,7 +40,7 @@ for i in 1:20
 end
 
 @info "stored zeros"
-for i in 1:20  
+for i in 1:20
     matrix = matrices[i]
     g = matrix2graph(matrix)
     # recalculate graph with stored zeros
@@ -55,5 +55,5 @@ for i in 1:20
     end
     for e in edges(g_sz)
         @test has_edge(g, e)
-    end    
+    end
 end

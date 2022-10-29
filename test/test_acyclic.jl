@@ -38,7 +38,6 @@ In other words, every path on four vertices uses at least three
 colors.
 =#
 
-
 #Sample graph from Gebremedhin AH, Manne F, Pothen A. **New Acyclic and Star Coloring Algorithms with Application to Computing Hessians**
 
 #=
@@ -59,27 +58,27 @@ colors.
 
 gx = SimpleGraph(13)
 
-add_edge!(gx,1,2)
-add_edge!(gx,1,5)
-add_edge!(gx,1,6)
-add_edge!(gx,2,3)
-add_edge!(gx,2,6)
-add_edge!(gx,3,4)
-add_edge!(gx,3,7)
-add_edge!(gx,4,8)
-add_edge!(gx,5,6)
-add_edge!(gx,5,9)
-add_edge!(gx,6,7)
-add_edge!(gx,6,10)
-add_edge!(gx,7,8)
-add_edge!(gx,7,11)
-add_edge!(gx,7,12)
-add_edge!(gx,8,13)
-add_edge!(gx,9,10)
-add_edge!(gx,9,12)
-add_edge!(gx,10,11)
-add_edge!(gx,10,12)
-add_edge!(gx,12,13)
+add_edge!(gx, 1, 2)
+add_edge!(gx, 1, 5)
+add_edge!(gx, 1, 6)
+add_edge!(gx, 2, 3)
+add_edge!(gx, 2, 6)
+add_edge!(gx, 3, 4)
+add_edge!(gx, 3, 7)
+add_edge!(gx, 4, 8)
+add_edge!(gx, 5, 6)
+add_edge!(gx, 5, 9)
+add_edge!(gx, 6, 7)
+add_edge!(gx, 6, 10)
+add_edge!(gx, 7, 8)
+add_edge!(gx, 7, 11)
+add_edge!(gx, 7, 12)
+add_edge!(gx, 8, 13)
+add_edge!(gx, 9, 10)
+add_edge!(gx, 9, 12)
+add_edge!(gx, 10, 11)
+add_edge!(gx, 10, 12)
+add_edge!(gx, 12, 13)
 
 push!(test_graphs, gx)
 
@@ -94,7 +93,6 @@ for g in test_graphs
     end
     push!(test_graphs_dir, dg)
 end
-
 
 for i in 1:5
     g = test_graphs[i]

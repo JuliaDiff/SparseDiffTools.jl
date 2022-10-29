@@ -36,7 +36,6 @@ In other words, every path on four vertices uses at least three
 colors.
 =#
 
-
 #Sample graph from Gebremedhin AH, Manne F, Pothen A. **What color is your Jacobian? Graph coloring for computing derivatives.**
 
 #=
@@ -49,10 +48,10 @@ colors.
 
 gx = SimpleGraph(4)
 
-add_edge!(gx,1,2)
-add_edge!(gx,1,3)
-add_edge!(gx,2,3)
-add_edge!(gx,3,4)
+add_edge!(gx, 1, 2)
+add_edge!(gx, 1, 3)
+add_edge!(gx, 2, 3)
+add_edge!(gx, 3, 4)
 
 push!(test_graphs, gx)
 
@@ -60,11 +59,11 @@ push!(test_graphs, gx)
 for i in 1:6
     g = test_graphs[i]
 
-    out_colors1 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar1Color())
-    out_colors2 = SparseDiffTools.color_graph(g,SparseDiffTools.GreedyStar2Color())
+    out_colors1 = SparseDiffTools.color_graph(g, SparseDiffTools.GreedyStar1Color())
+    out_colors2 = SparseDiffTools.color_graph(g, SparseDiffTools.GreedyStar2Color())
 
     #test condition 1
-    for v = vertices(g)
+    for v in vertices(g)
         color = out_colors1[v]
         for j in inneighbors(g, v)
             @test out_colors1[j] != color
@@ -72,7 +71,7 @@ for i in 1:6
     end
 
     #test condition 2
-    for j = vertices(g)
+    for j in vertices(g)
         walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
@@ -84,7 +83,7 @@ for i in 1:6
     end
 
     #test condition 1
-    for v = vertices(g)
+    for v in vertices(g)
         color = out_colors2[v]
         for j in inneighbors(g, v)
             @test out_colors2[j] != color
@@ -92,7 +91,7 @@ for i in 1:6
     end
 
     #test condition 2
-    for j = vertices(g)
+    for j in vertices(g)
         walk = Graphs.self_avoiding_walk(g, j, 4)
         walk_colors = zeros(Int64, 0)
         if length(walk) >= 4
@@ -102,5 +101,4 @@ for i in 1:6
             @test length(unique(walk_colors)) >= 3
         end
     end
-
 end

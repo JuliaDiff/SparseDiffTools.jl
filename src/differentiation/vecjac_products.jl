@@ -40,18 +40,18 @@ mutable struct VecJac{iip,T,F,T1,T2,uType,pType,tType,O} <: SciMLOperators.Abstr
     ishermitian::Bool
     opnorm::O
 
-    function VecJac{T}(f,u::AbstractArray,p = nothing,t::Union{Nothing,Number} = nothing;
-                   autodiff = true, ishermitian = false, opnorm = true) where {T}
+    function VecJac{iip}(f::FWrapper{iip,F,pType,tType},u::AbstractArray;
+                   autodiff = true, ishermitian = false, opnorm::O = true) where {iip,F,pType,tType,O}
         cache1 = similar(u)
         cache2 = similar(u)
-        new{t,typeof(f),typeof(cache1),typeof(cache2),
-            typeof(u),P,tType,typeof(opnorm)}(
+        new{T,eltype(u),F,typeof(cache1),typeof(cache2),
+            typeof(u),pType,tType,O}(
             f,cache1,cache2,u,p,t,autodiff,ishermitian,
             opnorm)
     end
 
-    function VecJac(f, u, args...; kwargs...)
-        VecJac{eltype(u)}(f, u, args...; kwargs...)
+    function VecJac(f, u, p = nothing, t = nothing; kwargs...)
+        VecJac(FWrapper(f,p,t), u, args...; kwargs...)
     end
 end
 

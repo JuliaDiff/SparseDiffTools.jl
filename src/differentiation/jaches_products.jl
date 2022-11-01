@@ -238,7 +238,7 @@ function JacVec(f, u::AbstractArray, p=nothing, t=nothing; autodiff = true)
         cache1 = similar(u)
         cache2 = similar(u)
     end
-    JacVec(FWrapper(f,p,t), cache1, cache2, u, p, t, autodiff)
+    JacVec(FWrapper(f,p,t), cache1, cache2, u, autodiff)
 end
 
 Base.eltype(L::JacVec) = eltype(L.u)

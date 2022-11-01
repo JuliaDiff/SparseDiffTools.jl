@@ -198,112 +198,173 @@ end
 
 ### Operator Forms
 
-struct JacVec{F, T1, T2, xType}
+abstract type AutomaticDerivativeOperator{iip} <: SciMLOperators.AbstractSciMLLinearOperator end
+
+SciMLOperators.update_coefficients(A::AutomaticDerivativeOperator,u,p,t) = typeof(A)(FWrapper(A.f,p,t),A.cache1,A.cache2,u,A.autodiff)
+SciMLOperators.update_coefficients!(A::AutomaticDerivativeOperator,u,p,t) = (A.u .= u, A.f.p = p; A.f.t = t; A)
+SciMLOperators.isconstant(A) = false
+
+mutable struct FWrapper{iip,F,pType,tType}
     f::F
+    p::pType
+    t::tType
+    FWrapper(f,p,t) = new{true,typeof(f),typeof(p),typeof(t)}(f,p,t)
+end
+
+(f::FWrapper{true})(du,u) = f.f(du,u,f.p,f.t)
+(f::FWrapper{false})(du,u) = du .= f.f(u,f.p,f.t)
+(f::FWrapper{true})(u) = (du = similar(u); f.f(du,u,f.p,f.t); du)
+(f::FWrapper{false})(u) = f.f(u,f.p,f.t)
+
+struct WrapOut{F,T}
+    f::F
+    out::T
+end
+(f::WrapOut)(u) = (f.f(f.out,u); f.out)
+
+struct JacVec{iip,F,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator{iip}
+    f::FWrapper{iip,F,pType,tType}
     cache1::T1
     cache2::T2
-    x::xType
+    u::uType
     autodiff::Bool
 end
 
-function JacVec(f, x::AbstractArray, tag = DeivVecTag(); autodiff = true)
+function JacVec(f, u::AbstractArray, p=nothing, t=nothing; autodiff = true)
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
     else
-        cache1 = similar(x)
-        cache2 = similar(x)
+        cache1 = similar(u)
+        cache2 = similar(u)
     end
-    JacVec(f, cache1, cache2, x, autodiff)
+    JacVec(FWrapper(f,p,t), cache1, cache2, u, p, t, autodiff)
 end
 
-Base.eltype(L::JacVec) = eltype(L.x)
+Base.eltype(L::JacVec) = eltype(L.u)
 Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
 Base.size(L::JacVec, i::Int) = length(L.cache1)
-function Base.:*(L::JacVec, v::AbstractVector)
-    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) :
-    num_jacvec(_x -> L.f(_x), L.x, v)
+
+function Base.:*(L::JacVec{true}, v::AbstractVector)
+    out = similar(v)
+    if L.autodiff
+        auto_jacvec(WrapOut(L.f,out), L.u, v)
+    else
+        num_jacvec(WrapOut(L.f,out), L.u, v)
+    end
+    out
 end
 
-function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
+function Base.:*(L::JacVec{false}, v::AbstractVector)
     if L.autodiff
-        auto_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
+        auto_jacvec(L.f, L.u, v)
     else
-        num_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
+        num_jacvec(L.f, L.u, v)
     end
 end
 
-struct HesVec{F, T1, T2, xType}
-    f::F
+function LinearAlgebra.mul!(du::AbstractVector, L::JacVec, v::AbstractVector)
+    if L.autodiff
+        auto_jacvec!(du, L.f, L.u, v, L.cache1, L.cache2)
+    else
+        num_jacvec!(du, L.f, L.u, v, L.cache1, L.cache2)
+    end
+end
+
+mutable struct HesVec{iip,F,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator{iip}
+    f::FWrapper{iip,F,pType,tType}
     cache1::T1
     cache2::T2
     cache3::T2
-    x::xType
+    u::uType
     autodiff::Bool
 end
 
-function HesVec(f, x::AbstractArray; autodiff = true)
+function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+    _f = FWrapper(f,p,t)
     if autodiff
-        cache1 = ForwardDiff.GradientConfig(f, x)
-        cache2 = similar(x)
-        cache3 = similar(x)
+        cache1 = ForwardDiff.GradientConfig(_f, u)
+        cache2 = similar(u)
+        cache3 = similar(u)
     else
-        cache1 = similar(x)
-        cache2 = similar(x)
-        cache3 = similar(x)
+        cache1 = similar(u)
+        cache2 = similar(u)
+        cache3 = similar(u)
     end
-    HesVec(f, cache1, cache2, cache3, x, autodiff)
+    HesVec(_f, cache1, cache2, cache3, u, autodiff)
 end
 
 Base.size(L::HesVec) = (length(L.cache2), length(L.cache2))
 Base.size(L::HesVec, i::Int) = length(L.cache2)
-function Base.:*(L::HesVec, v::AbstractVector)
-    L.autodiff ? numauto_hesvec(L.f, L.x, v) : num_hesvec(L.f, L.x, v)
-end
 
-function LinearAlgebra.mul!(dy::AbstractVector, L::HesVec, v::AbstractVector)
+function Base.:*(L::HesVec{true}, v::AbstractVector)
+    out = similar(v)
     if L.autodiff
-        numauto_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
+        numauto_hesvec(WrapOut(L.f,out), L.u, v)
     else
-        num_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
+        num_hesvec(WrapOut(L.f,out), L.u, v)
     end
 end
 
-struct HesVecGrad{G, T1, T2, uType}
-    g::G
+function Base.:*(L::HesVec{true}, v::AbstractVector)
+    if L.autodiff
+        numauto_hesvec(L.f, L.u, v)
+    else
+        num_hesvec(L.f, L.u, v)
+    end
+end
+
+function LinearAlgebra.mul!(du::AbstractVector, L::HesVec, v::AbstractVector)
+    if L.autodiff
+        numauto_hesvec!(du, L.f, L.u, v, L.cache1, L.cache2, L.cache3)
+    else
+        num_hesvec!(du, L.f, L.u, v, L.cache1, L.cache2, L.cache3)
+    end
+end
+
+struct HesVecGrad{iip,G,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator
+    g::FWrapper{iip,G,pType,tType}
     cache1::T1
     cache2::T2
-    x::uType
+    u::uType
     autodiff::Bool
 end
 
-function HesVecGrad(g, x::AbstractArray, tag = DeivVecTag(); autodiff = false)
+function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = false)
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
     else
-        cache1 = similar(x)
-        cache2 = similar(x)
+        cache1 = similar(u)
+        cache2 = similar(u)
     end
-    HesVecGrad(g, cache1, cache2, x, autodiff)
+    HesVecGrad(FWrapper(g,p,t), cache1, cache2, u, autodiff)
 end
 
 Base.size(L::HesVecGrad) = (length(L.cache2), length(L.cache2))
 Base.size(L::HesVecGrad, i::Int) = length(L.cache2)
-function Base.:*(L::HesVecGrad, v::AbstractVector)
-    L.autodiff ? auto_hesvecgrad(L.g, L.x, v) : num_hesvecgrad(L.g, L.x, v)
+
+function Base.:*(L::HesVecGrad{true}, v::AbstractVector)
+    out = similar(v)
+    if L.autodiff
+        auto_hesvecgrad(WrapOut(L.g,out), L.u, v)
+    else
+        num_hesvecgrad(WrapOut(L.g,out), L.u, v)
+    end
 end
 
-function LinearAlgebra.mul!(dy::AbstractVector,
-                            L::HesVecGrad,
-                            v::AbstractVector)
+function Base.:*(L::HesVecGrad{false}, v::AbstractVector)
     if L.autodiff
-        auto_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+        auto_hesvecgrad(L.g, L.u, v)
     else
-        num_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+        num_hesvecgrad(L.g, L.u, v)
+    end
+end
+
+function LinearAlgebra.mul!(du::AbstractVector,L::HesVecGrad,v::AbstractVector)
+    if L.autodiff
+        auto_hesvecgrad!(du, L.g, L.u, v, L.cache1, L.cache2)
+    else
+        num_hesvecgrad!(du, L.g, L.u, v, L.cache1, L.cache2)
     end
 end

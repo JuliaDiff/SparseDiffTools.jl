@@ -183,6 +183,10 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 `dx` is a pre-allocated output vector which is used to declare the output size,
 and thus allows for specifying a non-square Jacobian.
 
+Also, it is possible retrieve the function value via `value(jac_cache)` or 
+`value!(result, jac_cache)`
+
+
 If one is using an out-of-place function `f(x)`, then the alternative form
 ca be used:
 

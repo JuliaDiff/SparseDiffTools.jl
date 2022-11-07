@@ -42,7 +42,8 @@ export contract_color,
        autonum_hesvec, autonum_hesvec!,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
-       JacVec, HesVec, HesVecGrad
+       JacVec, HesVec, HesVecGrad,
+       value!
 
 include("coloring/high_level.jl")
 include("coloring/backtracking_coloring.jl")

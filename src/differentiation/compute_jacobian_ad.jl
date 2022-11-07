@@ -8,6 +8,10 @@ struct ForwardColorJacCache{T, T2, T3, T4, T5, T6}
     chunksize::Int
 end
 
+
+ForwardDiff.value(cache::ForwardColorJacCache)= ForwardDiff.value.(cache.fx)
+value!(fx,cache::ForwardColorJacCache)= fx.=ForwardDiff.value.(cache.fx)
+
 getsize(::Val{N}) where {N} = N
 getsize(N::Integer) = N
 void_setindex!(args...) = (setindex!(args...); return)

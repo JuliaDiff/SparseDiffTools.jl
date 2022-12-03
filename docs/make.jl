@@ -11,5 +11,5 @@ makedocs(sitename = "SparseDiffTools.jl",
                                   canonical = "https://docs.sciml.ai/SparseDiffTools/stable/"),
          pages = pages)
 
-deploydocs(repo = "https://github.com/JuliaDiff/SparseDiffTools.jl.git";
+deploydocs(repo = "github.com/JuliaDiff/SparseDiffTools.jl.git";
            push_preview = true)

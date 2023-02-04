@@ -20,13 +20,7 @@ using DataStructures: DisjointSets, find_root!, union!
 using ArrayInterface: matrix_colors
 
 using SciMLOperators
-using SciMLOperaotrs: AbstractSciMLOperator
-import SciMLOperators: update_coefficients, update_coefficients!,
-                       getops, isconstant, iscached, islinear, issquare,
-                       has_adjoint, has_expmv, has_expmv!, has_exp,
-                       has_mul, has_mul!, has_ldiv, has_ldiv!
-
-abstract type AutomaticDerivativeOperator{T, iip} <: AbstractSciMLOperator{T} end
+import SciMLOperators: update_coefficients, update_coefficients!
 
 export contract_color,
        greedy_d1,

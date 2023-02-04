@@ -28,6 +28,7 @@ ForwardDiff = "0.10"
 Graphs = "1"
 Requires = "1.0"
 StaticArrays = "1"
+SciMLOperators = "0.1.19" # TODO "0.1.20" when https://github.com/SciML/SciMLOperators.jl/pull/147
 VertexSafeGraphs = "0.2"
 julia = "1.6"
 

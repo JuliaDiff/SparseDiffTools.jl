@@ -229,6 +229,12 @@ end
 
 ########
 
+# fold this into FunctionOperator???
+#   - u,p,t can live there
+#   - so can outside cache (5 arg mul!)
+#   - all weould need to provide is op(u,p,t), op(du, u, p, t)
+#   - does outside cache need to be a dual?
+
 mutable struct ForwardDiffVecProd{T,
                                   iip,
                                   ad,
@@ -251,7 +257,6 @@ end
 function Base.:*(L::ForwardDiffVecProd{T,true}, v) where{T}
     L.vecprod(L.f, L.u, v)
 end
-#Base.:\(L::ForwardDiffVecProd, v)
 
 function LinearAlgebra.mul!(du::AbstractVecOrMat,
                             L::ForwardDiffVecProd,

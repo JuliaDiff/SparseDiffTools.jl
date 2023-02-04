@@ -86,7 +86,7 @@ function(L::VecJac)(u, p, t::Number)
     L * u
 end
 
-functions(L::VecJac)(du, u, p, t::Number)
+function(L::VecJac)(du, u, p, t::Number)
     update_coefficients!(L, u, p, t)
     mul!(du, L, u)
 end

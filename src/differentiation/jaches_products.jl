@@ -218,12 +218,26 @@ end
 
 ########
 
-mutable struct AutoDiffVecProd{iip,ad,T,F,V,V!,C}
-    u::T
+mutable struct AutoDiffVecProd{iip,Tu,F,V,V!,C}
+    u::Tu
     f::F
     vecprod::V
     vecprod!::V!
     cache::C
+
+    function AutoDiffVecProd(u, f, vecprod, vecprod!, cache;
+                             isinplace = isinplace
+                            )
+        new{
+            isinplace,
+            typeof(u),
+            typeof(vecprod),
+            typeof(vecprod!),
+            typeof(cache)
+           }(
+             u, f, vecprod, vecprod!, cache,
+            )
+    end
 end
 
 function update_coefficients(A::AutoDiffVecProd, u, p, t)
@@ -235,9 +249,8 @@ function update_coefficients!(A::AutomaticDerivativeOperator,u,p,t)
     A
 end
 
-function (L::AutoDiffVecProd{false})(u, p, t)
-    out = similar(v)
-    L.vecprod(WrapOut(L.f,out), L.u, v)
+function (L::AutoDiffVecProd{false})(v, p, t)
+    L.vecprod(L.f, L.u, v)
 end
 
 function (L::AutoDiffVecProd{true})(v, p, t)
@@ -266,7 +279,10 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
     cache = (cache1, cache2,)
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache)
+    isinplace = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+
+    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
@@ -292,7 +308,10 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
     cache = (cache1, cache2, cache3,)
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache)
+    isinplace = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+
+    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
@@ -318,157 +337,14 @@ function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = fa
 
     cache = (cache1, cache2,)
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache)
+    isinplace = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+
+    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
                     )
 end
-
-## JacVec - Jacobian-vector product
-
-struct JacVec{T,iip,F,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator{T, iip}
-    f::FWrapper{iip,F,pType,tType}
-    cache1::T1
-    cache2::T2
-    u::uType
-    autodiff::Bool
-end
-
-function JacVec(f, u::AbstractArray, p=nothing, t=nothing; autodiff = true)
-    if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
-    else
-        cache1 = similar(u)
-        cache2 = similar(u)
-    end
-    JacVec(FWrapper(f,p,t), cache1, cache2, u, p, t, autodiff)
-end
-
-Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
-
-function Base.:*(L::JacVec{true}, v::AbstractVector)
-    out = similar(v)
-    if L.autodiff 
-        auto_jacvec(WrapOut(L.f,out), L.u, v)
-    else
-        num_jacvec(WrapOut(L.f,out), L.u, v)
-    end
-    out
-end
-
-function Base.:*(L::JacVec{false}, v::AbstractVector)
-    if L.autodiff
-        auto_jacvec(L.f, L.u, v)
-    else
-        num_jacvec(L.f, L.u, v)
-    end
-end
-
-function LinearAlgebra.mul!(du::AbstractVector, L::JacVec, v::AbstractVector)
-    if L.autodiff
-        auto_jacvec!(du, L.f, L.u, v, L.cache1, L.cache2)
-    else
-        num_jacvec!(du, L.f, L.u, v, L.cache1, L.cache2)
-    end
-end
-
-## HesVec - Hessian-vector product
-
-mutable struct HesVec{iip,F,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator{iip}
-    f::FWrapper{iip,F,pType,tType}
-    cache1::T1
-    cache2::T2
-    cache3::T2
-    u::uType
-    autodiff::Bool
-end
-
-function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
-    _f = FWrapper(f,p,t)
-    if autodiff
-        cache1 = ForwardDiff.GradientConfig(_f, u)
-        cache2 = similar(u)
-        cache3 = similar(u)
-    else
-        cache1 = similar(u)
-        cache2 = similar(u)
-        cache3 = similar(u)
-    end
-    HesVec(_f, cache1, cache2, cache3, u, autodiff)
-end
-
-Base.size(L::HesVec) = (length(L.cache2), length(L.cache2))
-
-function Base.:*(L::HesVec{true}, v::AbstractVector)
-    out = similar(v)
-    if L.autodiff 
-        numauto_hesvec(WrapOut(L.f,out), L.u, v) 
-    else
-        num_hesvec(WrapOut(L.f,out), L.u, v)
-    end
-end
-
-function Base.:*(L::HesVec{true}, v::AbstractVector)
-    if L.autodiff 
-        numauto_hesvec(L.f, L.u, v) 
-    else
-        num_hesvec(L.f, L.u, v)
-    end
-end
-
-function LinearAlgebra.mul!(du::AbstractVector, L::HesVec, v::AbstractVector)
-    if L.autodiff
-        numauto_hesvec!(du, L.f, L.u, v, L.cache1, L.cache2, L.cache3)
-    else
-        num_hesvec!(du, L.f, L.u, v, L.cache1, L.cache2, L.cache3)
-    end
-end
-
-### HesVecGrad - Hessian- gradient vector product
-
-struct HesVecGrad{iip,G,T1,T2,uType,pType,tType} <: AutomaticDerivativeOperator{T}
-    g::FWrapper{iip,G,pType,tType}
-    cache1::T1
-    cache2::T2
-    u::uType
-    autodiff::Bool
-end
-
-function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = false)
-    if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))),eltype(u),1}.(u, ForwardDiff.Partials.(tuple.(u)))
-    else
-        cache1 = similar(u)
-        cache2 = similar(u)
-    end
-    HesVecGrad(FWrapper(g,p,t), cache1, cache2, u, autodiff)
-end
-
-function Base.:*(L::HesVecGrad{true}, v::AbstractVector)
-    out = similar(v)
-    if L.autodiff 
-        auto_hesvecgrad(WrapOut(L.g,out), L.u, v) 
-    else 
-        num_hesvecgrad(WrapOut(L.g,out), L.u, v)
-    end
-end
-
-function Base.:*(L::HesVecGrad{false}, v::AbstractVector)
-    if L.autodiff 
-        auto_hesvecgrad(L.g, L.u, v) 
-    else 
-        num_hesvecgrad(L.g, L.u, v)
-    end
-end
-
-function LinearAlgebra.mul!(du::AbstractVector,L::HesVecGrad,v::AbstractVector)
-    if L.autodiff
-        auto_hesvecgrad!(du, L.g, L.u, v, L.cache1, L.cache2)
-    else
-        num_hesvecgrad!(du, L.g, L.u, v, L.cache1, L.cache2)
-    end
-end
+#

@@ -37,60 +37,31 @@ end
 
 ## Operators
 
-mutable struct VecJac{iip,T,F,T1,T2,uType,pType,tType,O} <: AbstractSciMLOperator{T}
-    f::FWrapper{iip,F,pType,tType}
-    cache1::T1
-    cache2::T2
-    u::uType
-    autodiff::Bool
-    ishermitian::Bool
-    opnorm::O
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
-    function VecJac{T}(f,u::AbstractArray,
-                       p = nothing,t::Union{Nothing,Number} = nothing;
-                       autodiff = true,
-                       ishermitian = false,
-                       opnorm = true
-                      ) where {T}
+    vecprod  = autodiff ? __  : __
+    vecprod! = autodiff ? __! : __!
 
-        cache1 = similar(u)
-        cache2 = similar(u)
+    cache = (similar(u), similar(u),)
 
-        new{t,typeof(f),typeof(cache1),typeof(cache2),
-            typeof(u),P,tType,typeof(opnorm)}(
-            f,cache1,cache2,u,p,t,autodiff,ishermitian,
-            opnorm)
-    end
+    isinplace = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    function VecJac(f, u, args...; kwargs...)
-        VecJac{eltype(u)}(f, u, args...; kwargs...)
-    end
+    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                     ishermititan = false, opnorm = true,
+                    )
 end
-
-LinearAlgebra.opnorm(L::VecJac, p::Real = 2) = L.opnorm
-LinearAlgebra.ishermitian(L::VecJac) = L.ishermitian
-
-Base.size(L::VecJac) = (length(L.cache1), length(L.cache1))
-Base.size(L::VecJac, i::Int) = length(L.cache1)
 
 function update_coefficients!(L::VecJac, u, p, t)
     L.u = u
-    L.p = p
-    L.t = t
     !L.autodiff && L.cache1 !== nothing && L.f(L.cache1, L.u, L.p, L.t)
 end
 
 # Interpret the call as df/du' * u
-function(L::VecJac)(u, p, t::Number)
-    update_coefficients!(L, u, p, t)
-    L * u
-end
-
-function(L::VecJac)(du, u, p, t::Number)
-    update_coefficients!(L, u, p, t)
-    mul!(du, L, u)
-end
-
 
 function Base.:*(L::VecJac, x::AbstractVector)
     if hasmethod(L.f, typeof.((L.u, L.p, L.t)))
@@ -132,7 +103,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
                     )
                 end
             end
-            else
+        else
             if L.autodiff
                 # For autodiff prefer non-inplace function
                 if hasmethod(L.f, typeof.((L.u, L.p, L.t)))
@@ -141,8 +112,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
                         _u -> L.f(_u, p, t),
                         L.u,
                         x,
-                        L.cache1,
-                        L.cache2,
+                        L.cache...
                     )
                 else
                     auto_vecjac!(
@@ -150,8 +120,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
                         (_du, _u) -> L.f(_du, _u, p, t),
                         L.u,
                         x,
-                        L.cache1,
-                        L.cache2,
+                        L.cache...
                     )
                 end
             else
@@ -161,8 +130,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
                         (_du, _u) -> L.f(_du, _u, p, t),
                         L.u,
                         x,
-                        L.cache1,
-                        L.cache2;
+                        L.cache...;
                         compute_f0 = true,
                     )
                 else
@@ -171,8 +139,7 @@ function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
                         _u -> L.f(_u, p, t),
                         L.u,
                         x,
-                        L.cache1,
-                        L.cache2;
+                        L.cache...;
                         compute_f0 = true,
                     )
                 end

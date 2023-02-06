@@ -194,24 +194,28 @@ function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
     L.vecprod!(dv, (_du, _u) -> L.f(_du, _u, p, t), L.u, v, L.cache...)
 end
 
-function VecJacProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function VecJacProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true,
+                    ishermitian = false, opnrom = true)
 
     cache = (similar(u), similar(u),)
 
     vecprod  = autodiff ? auto_vecjac  : num_vecjac
     vecprod! = autodiff ? auto_vecjac! : num_vecjac!
 
-    iip = static_hasmethod(f, typeof((u, p, t)))
-    oop = static_hasmethod(f, typeof((u, u, p, t)))
+    isinplace  = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    !(iip) & !(oop) && error("$f must have signature f(u, p, t), or f(du, u, p, t)")
+    if !(iip) & !(oop)
+        error("$f must have signature f(u, p, t), or f(du, u, p, t)")
+    end
 
-    L = RevModeAutoDiffVecProd{autodiff, iip, oop}(f, u, vecprod, vecprod!, cache)
+    L = RevModeAutoDiffVecProd(f, u, vecprod, vecprod!, cache; autodiff = autodiff,
+                               isinplace = isinplace, outofplace = outofplace)
 
     FunctionOperator(L, u, u;
-                     isinplace = iip, outofplace = oop,
+                     isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     ishermititan = false, opnorm = true,
+                     ishermititan = ishermitian, opnorm = opnorm,
                     )
 end
 #

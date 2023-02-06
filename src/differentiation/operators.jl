@@ -30,18 +30,6 @@ end
 
 function JacVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
-    # signature
-    # vecprod(_u -> L.f(_u), L.u, v) # *(L, v)
-    # vecprod!(dv, (_v, _u) -> L.f(_v, _u), L.u, v, L.cache1, L.cache2) # mul!(dv,L,v)
-
-    function _f(_u)
-        f(_u)
-    end
-
-    function _f(_v, _u)
-        f(_v, _u)
-    end
-
     if autodiff
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
@@ -58,7 +46,7 @@ function JacVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
     vecprod  = autodiff ? auto_jacvec  : num_jacvec
     vecprod! = autodiff ? auto_jacvec! : num_jacvec!
 
-    L = FwdModeAutoDiffVecProd(_f, u, cache, vecprod, vecprod!)
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u; # should cache1/cache2 be input/output
                      isinplace = true, outofplace = true,
@@ -67,10 +55,6 @@ function JacVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
 end
 
 function HesVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
-
-    # signature
-    # vecprod(L.f, L.u, v) # *(L, v)
-    # vecprod!(dv, L.f, L.u, v, L.cache1, L.cache2, L.cache3) # mul!(dv, L, v)
 
     if autodiff
         cache1 = ForwardDiff.GradientConfig(f, u)
@@ -97,10 +81,6 @@ end
 
 function HesVecGradProd(f, u::AbstractArray, p = nothing, t = nothing;
                         autodiff = true)
-
-    # signature
-    # vecprod(L.f, L.u, v) # *(L, v)
-    # vecprod!(dv, L.f, L.u, v, L.cache1, L.cache2) # mul!(dy, L, v)
 
     if autodiff
         cache1 = Dual{

@@ -21,6 +21,7 @@ using ArrayInterface: matrix_colors
 
 using SciMLOperators
 import SciMLOperators: update_coefficients, update_coefficients!
+using Tricks: static_hasmethod
 
 export contract_color,
        greedy_d1,

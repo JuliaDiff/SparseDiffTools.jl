@@ -37,17 +37,43 @@ end
 
 ## Operators
 
+mutable struct ReverseDiffVecProd{iip,oop,Tu,F,V,V!,C} <: AbstractAutoDiffVecProd
+    u::Tu
+    f::F
+    vecprod::V
+    vecprod!::V!
+    cache::C
+
+    function ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
+                             isinplace = nothing,
+                             outofplace = nothing,
+                            )
+        new{
+            isinplace,
+            outofplace,
+            typeof(u),
+            typeof(f),
+            typeof(vecprod),
+            typeof(vecprod!),
+            typeof(cache)
+           }(
+             u, f, vecprod, vecprod!, cache,
+            )
+    end
+end
+
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
-    vecprod  = autodiff ? __  : __
-    vecprod! = autodiff ? __! : __!
+    vecprod  = autodiff ? auto_vecjac  : num_vecjac
+    vecprod! = autodiff ? auto_vecjac! : num_vecjac!
 
     cache = (similar(u), similar(u),)
 
     isinplace = static_hasmethod(f, typeof((u, p, t)))
     outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
+    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache;
+                        isinplace = isinplace, outofplace = outofplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
@@ -56,6 +82,7 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
                     )
 end
 
+#=
 function update_coefficients!(L::VecJac, u, p, t)
     L.u = u
     !L.autodiff && L.cache1 !== nothing && L.f(L.cache1, L.u, L.p, L.t)
@@ -75,77 +102,76 @@ end
 
 function LinearAlgebra.mul!(du::AbstractVector,L::VecJac,x::AbstractVector)
     du = reshape(du, size(L.u))
-    let p = L.p, t = L.t
-        if L.cache1 === nothing
-            if L.autodiff
-                # For autodiff prefer non-inplace function
-                if hasmethod(L.f, typeof.((L.u, L.p, L.t)))
-                    auto_vecjac!(du, _u -> L.f(_u, p, t), L.u, x)
-                else
-                    auto_vecjac!(du, (_du, _u) -> L.f(_du, _u, p, t), L.u, x)
-                end
+    if L.cache1 === nothing
+        if L.autodiff
+            # For autodiff prefer non-inplace function
+            if L.outofplace
+                auto_vecjac!(du, _u -> L.f(_u, p, t), L.u, x)
             else
-                if hasmethod(L.f, typeof.((du, L.u, L.p, L.t)))
-                    num_vecjac!(
-                        du,
-                        (_du, _u) -> L.f(_du, _u, p, t),
-                        L.u,
-                        x;
-                        compute_f0 = true,
-                    )
-                else
-                    num_vecjac!(
-                        du,
-                        _u -> L.f(_u, p, t),
-                        L.u,
-                        x;
-                        compute_f0 = true,
-                    )
-                end
+                auto_vecjac!(du, (_du, _u) -> L.f(_du, _u, p, t), L.u, x)
             end
         else
-            if L.autodiff
-                # For autodiff prefer non-inplace function
-                if hasmethod(L.f, typeof.((L.u, L.p, L.t)))
-                    auto_vecjac!(
-                        du,
-                        _u -> L.f(_u, p, t),
-                        L.u,
-                        x,
-                        L.cache...
-                    )
-                else
-                    auto_vecjac!(
-                        du,
-                        (_du, _u) -> L.f(_du, _u, p, t),
-                        L.u,
-                        x,
-                        L.cache...
-                    )
-                end
+            if L.isinplace
+                num_vecjac!(
+                    du,
+                    (_du, _u) -> L.f(_du, _u, p, t),
+                    L.u,
+                    x;
+                    compute_f0 = true,
+                )
             else
-                if hasmethod(L.f, typeof.((du, L.u, L.p, L.t)))
-                    num_vecjac!(
-                        du,
-                        (_du, _u) -> L.f(_du, _u, p, t),
-                        L.u,
-                        x,
-                        L.cache...;
-                        compute_f0 = true,
-                    )
-                else
-                    num_vecjac!(
-                        du,
-                        _u -> L.f(_u, p, t),
-                        L.u,
-                        x,
-                        L.cache...;
-                        compute_f0 = true,
-                    )
-                end
+                num_vecjac!(
+                    du,
+                    _u -> L.f(_u, p, t),
+                    L.u,
+                    x;
+                    compute_f0 = true,
+                )
+            end
+        end
+    else
+        if L.autodiff
+            # For autodiff prefer non-inplace function
+            if L.outofplace
+                auto_vecjac!(
+                    du,
+                    _u -> L.f(_u, p, t),
+                    L.u,
+                    x,
+                    L.cache...
+                )
+            else
+                auto_vecjac!(
+                    du,
+                    (_du, _u) -> L.f(_du, _u, p, t),
+                    L.u,
+                    x,
+                    L.cache...
+                )
+            end
+        else
+            if L.isinplace
+                num_vecjac!(
+                    du,
+                    (_du, _u) -> L.f(_du, _u, p, t),
+                    L.u,
+                    x,
+                    L.cache...;
+                    compute_f0 = true,
+                )
+            else
+                num_vecjac!(
+                    du,
+                    _u -> L.f(_u, p, t),
+                    L.u,
+                    x,
+                    L.cache...;
+                    compute_f0 = true,
+                )
             end
         end
     end
+    
     return vec(du)
 end
 
@@ -153,3 +179,4 @@ function Base.resize!(J::VecJac, i)
     resize!(J.cache1, i)
     resize!(J.cache2, i)
 end
+=#

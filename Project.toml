@@ -16,6 +16,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLOperators = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
@@ -26,9 +27,9 @@ DataStructures = "0.18"
 FiniteDiff = "2.8.1"
 ForwardDiff = "0.10"
 Graphs = "1"
-Requires = "1.0"
+Requires = "1"
+SciMLOperators = "0.1.19"
 StaticArrays = "1"
-SciMLOperators = "0.1.19" # TODO "0.1.20" when https://github.com/SciML/SciMLOperators.jl/pull/147
 VertexSafeGraphs = "0.2"
 julia = "1.6"
 

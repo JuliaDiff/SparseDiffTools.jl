@@ -197,40 +197,31 @@ function auto_hesvecgrad(g, x, v)
 end
 
 ### Operator Forms
+#
+# match *, mul! definitions
+# https://github.com/JuliaDiff/SparseDiffTools.jl/blob/master/src/differentiation/jaches_products.jl
+#
+# just make it work.
+#
 
-mutable struct FWrapper{iip,F,pType,tType}
-    f::F
-    p::pType
-    t::tType
-    FWrapper(f,p,t) = new{true,typeof(f),typeof(p),typeof(t)}(f,p,t)
-end
+abstract type AbstractAutoDiffVecProd end
 
-(f::FWrapper{true})(du,u) = f.f(du,u,f.p,f.t)
-(f::FWrapper{false})(du,u) = du .= f.f(u,f.p,f.t)
-(f::FWrapper{true})(u) = (du = similar(u); f.f(du,u,f.p,f.t); du)
-(f::FWrapper{false})(u) = f.f(u,f.p,f.t)
-
-struct WrapOut{F,T}
-    f::F
-    out::T
-end
-(f::WrapOut)(u) = (f.f(f.out,u); f.out)
-
-########
-
-mutable struct AutoDiffVecProd{iip,Tu,F,V,V!,C}
+mutable struct ForwardDiffVecProd{iip,oop,Tu,F,V,V!,C} <: AbstractAutoDiffVecProd
     u::Tu
     f::F
     vecprod::V
     vecprod!::V!
     cache::C
 
-    function AutoDiffVecProd(u, f, vecprod, vecprod!, cache;
-                             isinplace = isinplace
+    function ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
+                             isinplace = nothing,
+                             outofplace = nothing,
                             )
         new{
             isinplace,
+            outofplace,
             typeof(u),
+            typeof(f),
             typeof(vecprod),
             typeof(vecprod!),
             typeof(cache)
@@ -240,28 +231,30 @@ mutable struct AutoDiffVecProd{iip,Tu,F,V,V!,C}
     end
 end
 
-function update_coefficients(A::AutoDiffVecProd, u, p, t)
-    AutoDiffVecProd(u, A.f, A.vecprod, A.vecprod!, A.cache)
+function update_coefficients(A::ForwardDiffVecProd, u, p, t)
+    ForwardDiffVecProd(u, A.f, A.vecprod, A.vecprod!, A.cache)
 end
 
-function update_coefficients!(A::AutomaticDerivativeOperator,u,p,t)
+function update_coefficients!(A::ForwardDiffVecProd, u, p, t)
     A.u .= u
     A
 end
 
-function (L::AutoDiffVecProd{false})(v, p, t)
+function (L::ForwardDiffVecProd{false})(v, p, t)
     L.vecprod(L.f, L.u, v)
 end
 
-function (L::AutoDiffVecProd{true})(v, p, t)
+function (L::ForwardDiffVecProd{true})(v, p, t)
     L.vecprod(L.f, L.u, v)
 end
 
-function (L::AutoDiffVecProd)(du, v, p, t)
+function (L::ForwardDiffVecProd)(du, v, p, t)
     L.vecprod!(du, L.f, L.u, v, L.cache...)
 end
 
 function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+
+    # fix function signature here
 
     vecprod  = autodiff ? auto_jacvec  : num_jacvec
     vecprod! = autodiff ? auto_jacvec! : num_jacvec!
@@ -282,7 +275,9 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
     isinplace = static_hasmethod(f, typeof((u, p, t)))
     outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
+    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
+                        isinplace = isinplace, outofplace = outofplace)
+
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
@@ -291,6 +286,8 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 end
 
 function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+
+    # fix function signature here
 
     vecprod  = autodiff ? numauto_hesvec  : num_hesvec
     vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
@@ -311,7 +308,9 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
     isinplace = static_hasmethod(f, typeof((u, p, t)))
     outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
+    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
+                        isinplace = isinplace, outofplace = outofplace)
+
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
@@ -320,6 +319,8 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 end
 
 function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = false)
+
+    # fix function signature here
 
     vecprod  = autodiff ? numauto_hesvecgrad  : num_hesvecgrad
     vecprod! = autodiff ? numauto_hesvecgrad! : num_hesvecgrad!
@@ -340,7 +341,8 @@ function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = fa
     isinplace = static_hasmethod(f, typeof((u, p, t)))
     outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    L = AutoDiffVecProd(u, f, vecprod, vecprod!, cache; isinplace = isinplace)
+    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
+                        isinplace = isinplace, outofplace = outofplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,

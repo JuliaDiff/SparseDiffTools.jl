@@ -198,161 +198,112 @@ end
 
 ### Operator Forms
 
-#
-# match *, mul! definitions
-# https://github.com/JuliaDiff/SparseDiffTools.jl/blob/master/src/differentiation/jaches_products.jl
-#
-# just make it work.
-#
-
-abstract type AbstractAutoDiffVecProd end
-
-mutable struct ForwardDiffVecProd{iip,oop,Tu,F,V,V!,C} <: AbstractAutoDiffVecProd
-    u::Tu
+struct JacVec{F, T1, T2, xType}
     f::F
-    vecprod::V
-    vecprod!::V!
-    cache::C
-
-    function ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
-                             isinplace = nothing,
-                             outofplace = nothing,
-                            )
-        new{
-            isinplace,
-            outofplace,
-            typeof(u),
-            typeof(f),
-            typeof(vecprod),
-            typeof(vecprod!),
-            typeof(cache)
-           }(
-             u, f, vecprod, vecprod!, cache,
-            )
-    end
+    cache1::T1
+    cache2::T2
+    x::xType
+    autodiff::Bool
 end
 
-function update_coefficients(A::ForwardDiffVecProd, u, p, t)
-    ForwardDiffVecProd(u, A.f, A.vecprod, A.vecprod!, A.cache)
-end
-
-function update_coefficients!(A::ForwardDiffVecProd, u, p, t)
-    A.u .= u
-    A
-end
-
-function (L::ForwardDiffVecProd{false})(v, p, t)
-    L.vecprod(L.f, L.u, v)
-end
-
-function (L::ForwardDiffVecProd{true})(v, p, t)
-    L.vecprod(L.f, L.u, v)
-end
-
-function (L::ForwardDiffVecProd)(du, v, p, t)
-    L.vecprod!(du, L.f, L.u, v, L.cache...)
-end
-
-function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
-
-    vecprod  = autodiff ? auto_jacvec  : num_jacvec
-    vecprod! = autodiff ? auto_jacvec! : num_jacvec!
-
-    # vecprod(_u -> L.f(_u), L.u, v) # *(L, v)
-    # vecprod!(dv, (_v, _u) -> L.f(_v, _u), L.u, v, L.cache1, L.cache2) # mul!(dy,L,v)
-
-    #_f  = _u -> L.f(_u)
-    #_f! = (_v, _u) -> L.f(_v, _u)
-
+function JacVec(f, x::AbstractArray, tag = DeivVecTag(); autodiff = true)
     if autodiff
-        cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
-                     }.(u, ForwardDiff.Partials.(tuple.(u)))
-
-        cache2 = copy(cache1)
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
+                      }.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
+                      }.(x, ForwardDiff.Partials.(tuple.(x)))
     else
-        cache1 = similar(u)
-        cache2 = similar(u)
+        cache1 = similar(x)
+        cache2 = similar(x)
     end
-
-    cache = (cache1, cache2,)
-
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
-
-    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
-                           isinplace = isinplace, outofplace = outofplace)
-
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     isinplace = isinplace, outofplace = outofplace,
-                     p = p, t = t, islinear = true,
-                    )
+    JacVec(f, cache1, cache2, x, autodiff)
 end
 
-function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+Base.eltype(L::JacVec) = eltype(L.x)
+Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
+Base.size(L::JacVec, i::Int) = length(L.cache1)
+function Base.:*(L::JacVec, v::AbstractVector)
+    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) :
+    num_jacvec(_x -> L.f(_x), L.x, v)
+end
 
-    vecprod  = autodiff ? numauto_hesvec  : num_hesvec
-    vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
+function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
+    if L.autodiff
+        auto_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
+    else
+        num_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
+    end
+end
 
-    # vecprod(L.f, L.u, v) # *(L, v)
-    # vecprod!(dv, L.f, L.u, v, L.cache1, L.cache2, L.cache3) # mul!(dy, L, v)
+struct HesVec{F, T1, T2, xType}
+    f::F
+    cache1::T1
+    cache2::T2
+    cache3::T2
+    x::xType
+    autodiff::Bool
+end
 
-    _f = FWrapper(f,p,t)
+function HesVec(f, x::AbstractArray; autodiff = true)
     if autodiff
-        cache1 = ForwardDiff.GradientConfig(_f, u)
-        cache2 = similar(u)
-        cache3 = similar(u)
+        cache1 = ForwardDiff.GradientConfig(f, x)
+        cache2 = similar(x)
+        cache3 = similar(x)
     else
-        cache1 = similar(u)
-        cache2 = similar(u)
-        cache3 = similar(u)
+        cache1 = similar(x)
+        cache2 = similar(x)
+        cache3 = similar(x)
     end
-
-    cache = (cache1, cache2, cache3,)
-
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
-
-    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
-                           isinplace = isinplace, outofplace = outofplace)
-
-
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     isinplace = isinplace, outofplace = outofplace,
-                     p = p, t = t, islinear = true,
-                    )
+    HesVec(f, cache1, cache2, cache3, x, autodiff)
 end
 
-function HesVecGrad(g, u::AbstractArray, p = nothing, t = nothing; autodiff = false)
+Base.size(L::HesVec) = (length(L.cache2), length(L.cache2))
+Base.size(L::HesVec, i::Int) = length(L.cache2)
+function Base.:*(L::HesVec, v::AbstractVector)
+    L.autodiff ? numauto_hesvec(L.f, L.x, v) : num_hesvec(L.f, L.x, v)
+end
 
-    vecprod  = autodiff ? numauto_hesvecgrad  : num_hesvecgrad
-    vecprod! = autodiff ? numauto_hesvecgrad! : num_hesvecgrad!
+function LinearAlgebra.mul!(dy::AbstractVector, L::HesVec, v::AbstractVector)
+    if L.autodiff
+        numauto_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
+    else
+        num_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
+    end
+end
 
-    # vecprod(L.f, L.u, v) # *(L, v)
-    # vecprod!(dv, L.f, L.u, v, L.cache1, L.cache2) # mul!(dy, L, v)
+struct HesVecGrad{G, T1, T2, uType}
+    g::G
+    cache1::T1
+    cache2::T2
+    x::uType
+    autodiff::Bool
+end
 
+function HesVecGrad(g, x::AbstractArray, tag = DeivVecTag(); autodiff = false)
     if autodiff
-        cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
-                     }.(u, ForwardDiff.Partials.(tuple.(u)))
-
-        cache2 = copy(cache1)
+        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
+                      }.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
+                      }.(x, ForwardDiff.Partials.(tuple.(x)))
     else
-        cache1 = similar(u)
-        cache2 = similar(u)
+        cache1 = similar(x)
+        cache2 = similar(x)
     end
-
-    cache = (cache1, cache2,)
-
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
-
-    L = ForwardDiffVecProd(u, f, vecprod, vecprod!, cache;
-                           isinplace = isinplace, outofplace = outofplace)
-
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     isinplace = isinplace, outofplace = outofplace,
-                     p = p, t = t, islinear = true,
-                    )
+    HesVecGrad(g, cache1, cache2, x, autodiff)
 end
-#
+
+Base.size(L::HesVecGrad) = (length(L.cache2), length(L.cache2))
+Base.size(L::HesVecGrad, i::Int) = length(L.cache2)
+function Base.:*(L::HesVecGrad, v::AbstractVector)
+    L.autodiff ? auto_hesvecgrad(L.g, L.x, v) : num_hesvecgrad(L.g, L.x, v)
+end
+
+function LinearAlgebra.mul!(dy::AbstractVector,
+                            L::HesVecGrad,
+                            v::AbstractVector)
+    if L.autodiff
+        auto_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+    else
+        num_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+    end
+end

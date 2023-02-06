@@ -58,14 +58,10 @@ function JacVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
     vecprod  = autodiff ? auto_jacvec  : num_jacvec
     vecprod! = autodiff ? auto_jacvec! : num_jacvec!
 
-    L = FwdModeAutoDiffVecProd(_f, u, vecprod, vecprod!, cache)
-
-    # verif
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+    L = FwdModeAutoDiffVecProd(_f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     #isinplace = isinplace, outofplace = outofplace,
+                     isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )
 end
@@ -91,14 +87,10 @@ function HesVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
     vecprod  = autodiff ? numauto_hesvec  : num_hesvec
     vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
 
-    L = FwdModeAutoDiffVecProd(f, u, vecprod, vecprod!, cache)
-
-    # verif
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     #isinplace = isinplace, outofplace = outofplace,
+                     isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )
 end
@@ -123,16 +115,13 @@ function HesVecGradProd(f, u::AbstractArray, p = nothing, t = nothing;
 
     cache = (cache1, cache2,)
 
-    vecprod  = autodiff ? numauto_hesvecgrad  : num_hesvecgrad
-    vecprod! = autodiff ? numauto_hesvecgrad! : num_hesvecgrad!
+    vecprod  = autodiff ? auto_hesvecgrad  : num_hesvecgrad
+    vecprod! = autodiff ? auto_hesvecgrad! : num_hesvecgrad!
 
-    L = FwdModeAutoDiffVecProd(f, u, vecprod, vecprod!, cache)
-
-    isinplace = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u; # should cache1/cache2 be input/output
-                     isinplace = isinplace, outofplace = outofplace,
+                     isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )
 end

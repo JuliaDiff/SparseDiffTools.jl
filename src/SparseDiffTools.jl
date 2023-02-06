@@ -47,6 +47,8 @@ export contract_color,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
        JacVec, HesVec, HesVecGrad,
+       JacVecProd, HesVecProd, HesVecGradProd, VecJacProd,
+       update_coefficients, update_coefficients!,
        value!
 
 include("coloring/high_level.jl")

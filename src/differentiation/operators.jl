@@ -48,7 +48,7 @@ function JacVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
 
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
+    FunctionOperator(L, u, u;
                      isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )
@@ -73,7 +73,7 @@ function HesVecProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
 
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
+    FunctionOperator(L, u, u;
                      isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )
@@ -100,7 +100,7 @@ function HesVecGradProd(f, u::AbstractArray, p = nothing, t = nothing;
 
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
-    FunctionOperator(L, u, u; # should cache1/cache2 be input/output
+    FunctionOperator(L, u, u;
                      isinplace = true, outofplace = true,
                      p = p, t = t, islinear = true,
                     )

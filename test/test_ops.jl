@@ -73,4 +73,16 @@ update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈numauto_hesvec(g, v, v) rtol=1e-8
 
 # VecJacProd
+
+f(du,u,p,t) = mul!(du, A, u)
+f(u,p,t) = A * u
+
+x = rand(Float32, 300)
+v = rand(Float32, 300)
+
+L = VecJacProd(f, x)
+actual_vjp = Zygote.jacobian(x -> f(x, nothing, 0.0), x)[1]' * v
+@test L * v ≈ actual_vjp
+L = VecJacProd(f, x; autodiff = false)
+@test L * v ≈ actual_vjp
 #

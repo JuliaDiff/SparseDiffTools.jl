@@ -174,17 +174,17 @@ function VecJacProd(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
     isinplace  = static_hasmethod(f, typeof((u, p, t)))
     outofplace = static_hasmethod(f, typeof((u, u, p, t)))
 
-    if !(iip) & !(oop)
+    if !(isinplace) & !(outofplace)
         error("$f must have signature f(u, p, t), or f(du, u, p, t)")
     end
 
-    L = RevModeAutoDiffVecProd(f, u, vecprod, vecprod!, cache; autodiff = autodiff,
+    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = autodiff,
                                isinplace = isinplace, outofplace = outofplace)
 
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     ishermititan = ishermitian, opnorm = opnorm,
+                     ishermitian = ishermitian, opnorm = opnorm,
                     )
 end
 #

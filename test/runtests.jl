@@ -22,8 +22,7 @@ if GROUP == "All"
     @time @safetestset "Integration test" begin include("test_integration.jl") end
     @time @safetestset "Special matrices" begin include("test_specialmatrices.jl") end
     @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
-    @time @safetestset "Operator tests" begin include("test_ops.jl") end
-
+    @time @safetestset "Vec Jac Products" begin include("test_vecjac_products.jl") end
 end
 
 if GROUP == "GPU"

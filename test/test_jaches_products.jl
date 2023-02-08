@@ -3,12 +3,13 @@ using LinearAlgebra, Test
 
 using Random
 Random.seed!(123)
-
-const A = rand(300, 300)
+N = 300
+const A = rand(N, N)
 f(y, x) = mul!(y, A, x)
 f(x) = A * x
-x = rand(300)
-v = rand(300)
+x = rand(N)
+v = rand(N)
+a, b = rand(2)
 dy = similar(x)
 g(x) = sum(abs2, x)
 function h(x)
@@ -20,8 +21,7 @@ end
 
 cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), eltype(x))),
                           eltype(x), 1}.(x, ForwardDiff.Partials.(Tuple.(v)))
-cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), eltype(x))),
-                          eltype(x), 1}.(x, ForwardDiff.Partials.(Tuple.(v)))
+cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), eltype(x))), eltype(x), 1}.(x, ForwardDiff.Partials.(Tuple.(v)))
 @test num_jacvec!(dy, f, x, v)≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
 @test num_jacvec!(dy, f, x, v, similar(v),
                   similar(v))≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
@@ -65,61 +65,90 @@ cache4 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(Nothing, eltype(x))), eltype(x)
 @test auto_hesvecgrad!(dy, h, x, v, cache1, cache2)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 @test auto_hesvecgrad(h, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 
+# JacVec
+
 L = JacVec(f, x)
 @test L * x ≈ auto_jacvec(f, x, x)
 @test L * v ≈ auto_jacvec(f, x, v)
 @test mul!(dy, L, v) ≈ auto_jacvec(f, x, v)
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*auto_jacvec(f,x,v) + b*_dy
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v) ≈ auto_jacvec(f, v, v)
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*auto_jacvec(f,x,v) + b*_dy
 
 L = JacVec(f, x, autodiff = false)
 @test L * x ≈ num_jacvec(f, x, x)
 @test L * v ≈ num_jacvec(f, x, v)
-L.x == x
 @test mul!(dy, L, v)≈num_jacvec(f, x, v) rtol=1e-6
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_jacvec(f,x,v) + b*_dy rtol=1e-6
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈num_jacvec(f, v, v) rtol=1e-6
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_jacvec(f,x,v) + b*_dy rtol=1e-6
 
-### Integration test with IterativeSolvers
 out = similar(v)
 gmres!(out, L, v)
 
-x = rand(300)
-v = rand(300)
+#=
+ff1 = ODEFunction(lorenz, jac_prototype = JacVec{Float64}(lorenz, u0))
+ff2 = ODEFunction(lorenz, jac_prototype = JacVec{Float64}(lorenz, u0, autodiff=false))
+
+for ff in [ff1, ff2]
+    prob = ODEProblem(ff, u0, tspan)
+    @test solve(prob, TRBDF2()).retcode == :Success
+    @test solve(prob, TRBDF2(linsolve = KrylovJL_GMRES())).retcode == :Success
+    @test solve(prob, Exprb32()).retcode == :Success
+    @test solve(prob, Rosenbrock23()).retcode == :Success
+    @test solve(prob, Rosenbrock23(linsolve = KrylovJL_GMRES())).retcode == :Success
+end
+=#
+
+# HesVec
+
+x = rand(N)
+v = rand(N)
 L = HesVec(g, x, autodiff = false)
 @test L * x ≈ num_hesvec(g, x, x)
 @test L * v ≈ num_hesvec(g, x, v)
 @test mul!(dy, L, v)≈num_hesvec(g, x, v) rtol=1e-2
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_hesvec(g,x,v) + b*_dy rtol=1e-2
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈num_hesvec(g, v, v) rtol=1e-2
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_hesvec(g,x,v) + b*_dy rtol=1e-2
 
 L = HesVec(g, x)
 @test L * x ≈ numauto_hesvec(g, x, x)
 @test L * v ≈ numauto_hesvec(g, x, v)
 @test mul!(dy, L, v)≈numauto_hesvec(g, x, v) rtol=1e-8
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈numauto_hesvec(g, v, v) rtol=1e-8
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
 
-### Integration test with IterativeSolvers
 out = similar(v)
 gmres!(out, L, v)
 
-x = rand(300)
-v = rand(300)
+# HesVecGrad
+
+x = rand(N)
+v = rand(N)
 L = HesVecGrad(h, x, autodiff = false)
 @test L * x ≈ num_hesvec(g, x, x)
 @test L * v ≈ num_hesvec(g, x, v)
 @test mul!(dy, L, v)≈num_hesvec(g, x, v) rtol=1e-2
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*num_hesvec(g,x,v)+b*_dy rtol=1e-2
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈num_hesvec(g, v, v) rtol=1e-2
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*num_hesvec(g,x,v)+b*_dy rtol=1e-2
 
 L = HesVecGrad(h, x, autodiff = true)
 @test L * x ≈ autonum_hesvec(g, x, x)
 @test L * v ≈ numauto_hesvec(g, x, v)
 @test mul!(dy, L, v)≈numauto_hesvec(g, x, v) rtol=1e-8
-L.x .= v
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(L, v, nothing, 0.0)
 @test mul!(dy, L, v)≈numauto_hesvec(g, v, v) rtol=1e-8
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
 
-### Integration test with IterativeSolvers
 out = similar(v)
 gmres!(out, L, v)
+#

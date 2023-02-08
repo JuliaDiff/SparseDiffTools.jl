@@ -5,7 +5,6 @@ using Random
 Random.seed!(123)
 N = 300
 const A = rand(N, N)
-a, b = rand(2)
 
 x = rand(Float32, N)
 v = rand(Float32, N)
@@ -22,6 +21,4 @@ update_coefficients!(L, v, nothing, 0.0)
 L = VecJac(f, x; autodiff = false)
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
-#dy=rand(N); @test mul!(dy, L, v) ≈ actual_vjp
-#dy=rand(N); _dy=copy(dy); @test mul!(dy,L,v,a,b) ≈ a * actual_vjp + b * _dy
 #

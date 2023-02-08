@@ -35,3 +35,85 @@ function num_vecjac(f, x, v, f0 = nothing)
     return vec(du)
 end
 
+### Operator Forms
+
+mutable struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
+    f::F
+    u::U
+    cache::C
+    vecprod::V
+    vecprod!::V!
+
+    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = false,
+                                    isinplace = false, outofplace = true)
+        @assert isinplace || outofplace
+
+        new{
+            autodiff,
+            isinplace,
+            outofplace,
+            typeof(f),
+            typeof(u),
+            typeof(cache),
+            typeof(vecprod),
+            typeof(vecprod!),
+           }(
+             f, u, cache, vecprod, vecprod!,
+            )
+    end
+end
+
+function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
+    RevModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+end
+
+function update_coefficients!(L::RevModeAutoDiffVecProd{true}, u, p, t)
+    L.u .= u
+    L
+end
+
+function update_coefficients!(L::RevModeAutoDiffVecProd{false}, u, p, t)
+    L.u .= u
+    L.f(L.cache1, L.u, L.p, L.t)
+    L
+end
+
+# Interpret the call as df/du' * u
+function (L::RevModeAutoDiffVecProd)(v, p, t)
+    L.vecprod(_u -> L.f(_u, p, t), L.u, v)
+end
+
+# prefer non in-place method
+function (L::RevModeAutoDiffVecProd{ad,iip,true})(dv, v, p, t) where{ad,iip}
+    L.vecprod!(dv, _u -> L.f(_u, p, t), L.u, v, L.cache...)
+end
+
+function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
+    L.vecprod!(dv, (_du, _u) -> L.f(_du, _u, p, t), L.u, v, L.cache...)
+end
+
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true,
+                ishermitian = false, opnrom = true)
+
+    cache = (similar(u), similar(u),)
+
+    vecprod  = autodiff ? auto_vecjac  : num_vecjac
+    vecprod! = autodiff ? auto_vecjac! : num_vecjac!
+
+    isinplace  = static_hasmethod(f, typeof((u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u, p, t), or f(du, u, p, t)")
+    end
+
+    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = autodiff,
+                               isinplace = isinplace, outofplace = outofplace)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                     ishermitian = ishermitian, opnorm = opnorm,
+                    )
+end
+#

@@ -23,6 +23,8 @@ using SciMLOperators
 import SciMLOperators: update_coefficients, update_coefficients!
 using Tricks: static_hasmethod
 
+abstract type AbstractAutoDiffVecProd end
+
 export contract_color,
        greedy_d1,
        greedy_star1_coloring,
@@ -46,8 +48,7 @@ export contract_color,
        autonum_hesvec, autonum_hesvec!,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
-       JacVec, HesVec, HesVecGrad,
-       JacVecProd, HesVecProd, HesVecGradProd, VecJacProd,
+       JacVec, HesVec, HesVecGrad, VecJac,
        update_coefficients, update_coefficients!,
        value!
 
@@ -63,8 +64,6 @@ include("differentiation/compute_jacobian_ad.jl")
 include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
-
-include("differentiation/operators.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))

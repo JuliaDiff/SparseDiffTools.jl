@@ -67,14 +67,8 @@ function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
     RevModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
 end
 
-function update_coefficients!(L::RevModeAutoDiffVecProd{true}, u, p, t)
+function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
     L.u .= u
-    L
-end
-
-function update_coefficients!(L::RevModeAutoDiffVecProd{false}, u, p, t)
-    L.u .= u
-    L.f(L.cache[1], L.u, L.p, L.t)
     L
 end
 

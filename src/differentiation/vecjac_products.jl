@@ -74,7 +74,7 @@ end
 
 function update_coefficients!(L::RevModeAutoDiffVecProd{false}, u, p, t)
     L.u .= u
-    L.f(L.cache1, L.u, L.p, L.t)
+    L.f(L.cache[1], L.u, L.p, L.t)
     L
 end
 

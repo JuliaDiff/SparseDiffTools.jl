@@ -65,7 +65,7 @@ cache4 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(Nothing, eltype(x))), eltype(x)
 @test auto_hesvecgrad!(dy, h, x, v, cache1, cache2)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 @test auto_hesvecgrad(h, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 
-# JacVec
+### JacVec
 
 L = JacVec(f, x)
 @test L * x ≈ auto_jacvec(f, x, x)
@@ -88,21 +88,7 @@ dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_jacvec(f,x,v) + b*_dy r
 out = similar(v)
 gmres!(out, L, v)
 
-#=
-ff1 = ODEFunction(lorenz, jac_prototype = JacVec{Float64}(lorenz, u0))
-ff2 = ODEFunction(lorenz, jac_prototype = JacVec{Float64}(lorenz, u0, autodiff=false))
-
-for ff in [ff1, ff2]
-    prob = ODEProblem(ff, u0, tspan)
-    @test solve(prob, TRBDF2()).retcode == :Success
-    @test solve(prob, TRBDF2(linsolve = KrylovJL_GMRES())).retcode == :Success
-    @test solve(prob, Exprb32()).retcode == :Success
-    @test solve(prob, Rosenbrock23()).retcode == :Success
-    @test solve(prob, Rosenbrock23(linsolve = KrylovJL_GMRES())).retcode == :Success
-end
-=#
-
-# HesVec
+### HesVec
 
 x = rand(N)
 v = rand(N)
@@ -127,7 +113,7 @@ dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy r
 out = similar(v)
 gmres!(out, L, v)
 
-# HesVecGrad
+### HesVecGrad
 
 x = rand(N)
 v = rand(N)

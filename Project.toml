@@ -30,6 +30,7 @@ Graphs = "1"
 Requires = "1"
 SciMLOperators = "0.1.19"
 StaticArrays = "1"
+Tricks = "0.1.6"
 VertexSafeGraphs = "0.2"
 julia = "1.6"
 

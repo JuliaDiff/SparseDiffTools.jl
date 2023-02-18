@@ -241,10 +241,17 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
     vecprod  = autodiff ? auto_jacvec  : num_jacvec
     vecprod! = autodiff ? auto_jacvec! : num_jacvec!
 
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u, u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u), or f(du, u).")
+    end
+
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u;
-                     isinplace = true, outofplace = true,
+                     isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
                     )
 end
@@ -266,10 +273,17 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
     vecprod  = autodiff ? numauto_hesvec  : num_hesvec
     vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
 
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u).")
+    end
+
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u;
-                     isinplace = true, outofplace = true,
+                     isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
                     )
 end
@@ -292,10 +306,17 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = tr
     vecprod  = autodiff ? auto_hesvecgrad  : num_hesvecgrad
     vecprod! = autodiff ? auto_hesvecgrad! : num_hesvecgrad!
 
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u, u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u), or f(du, u).")
+    end
+
     L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
 
     FunctionOperator(L, u, u;
-                     isinplace = true, outofplace = true,
+                     isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
                     )
 end

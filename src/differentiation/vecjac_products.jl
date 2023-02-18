@@ -94,8 +94,8 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true,
     vecprod  = autodiff ? auto_vecjac  : num_vecjac
     vecprod! = autodiff ? auto_vecjac! : num_vecjac!
 
-    isinplace  = static_hasmethod(f, typeof((u, p, t)))
-    outofplace = static_hasmethod(f, typeof((u, u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u, p, t)))
+    isinplace  = static_hasmethod(f, typeof((u, u, p, t)))
 
     if !(isinplace) & !(outofplace)
         error("$f must have signature f(u, p, t), or f(du, u, p, t)")

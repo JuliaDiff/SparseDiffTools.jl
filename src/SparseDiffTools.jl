@@ -10,14 +10,14 @@ using VertexSafeGraphs
 using Adapt
 
 using LinearAlgebra
-using SparseArrays, ArrayInterfaceCore
+using SparseArrays, ArrayInterface
 
-import StaticArrays, ArrayInterfaceStaticArrays
+import StaticArrays
 
 using ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 using DataStructures: DisjointSets, find_root!, union!
 
-using ArrayInterfaceCore: matrix_colors
+using ArrayInterface: matrix_colors
 
 export contract_color,
        greedy_d1,

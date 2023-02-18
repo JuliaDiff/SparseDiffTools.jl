@@ -44,14 +44,14 @@ function ForwardColorJacCache(f::F, x, _chunksize = nothing;
         p = adapt.(parameterless_type(x), generate_chunked_partials(x, colorvec, chunksize))
         _t = Dual{T, eltype(x), getsize(chunksize)
                   }.(vec(x), ForwardDiff.Partials.(first(p)))
-        t = ArrayInterfaceCore.restructure(x, _t)
+        t = ArrayInterface.restructure(x, _t)
     end
 
     if dx isa Nothing
         fx = similar(t)
         _dx = similar(x)
     else
-        tup = ArrayInterfaceCore.allowed_getindex(ArrayInterfaceCore.allowed_getindex(p, 1),
+        tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p, 1),
                                                   1) .* false
         _pi = adapt(parameterless_type(dx), [tup for i in 1:length(dx)])
         fx = reshape(Dual{T, eltype(dx), length(tup)}.(vec(dx), ForwardDiff.Partials.(_pi)),
@@ -156,8 +156,8 @@ end
 function forwarddiff_color_jacobian(f::F, x::AbstractArray{<:Number},
                                     jac_cache::ForwardColorJacCache,
                                     jac_prototype = nothing) where {F}
-    if jac_prototype isa Nothing ? ArrayInterfaceCore.ismutable(x) :
-       ArrayInterfaceCore.ismutable(jac_prototype)
+    if jac_prototype isa Nothing ? ArrayInterface.ismutable(x) :
+       ArrayInterface.ismutable(jac_prototype)
         # Whenever J is mutable, we mutate it to avoid allocations
         dx = jac_cache.dx
         vecx = vec(x)
@@ -190,7 +190,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
     nrows, ncols = size(J)
 
     if !(sparsity isa Nothing)
-        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
         rows_index = [rows_index[i] for i in 1:length(rows_index)]
         cols_index = [cols_index[i] for i in 1:length(cols_index)]
     end
@@ -267,7 +267,7 @@ function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
     nrows, ncols = size(J)
 
     if !(sparsity isa Nothing)
-        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
         rows_index = [rows_index[i] for i in 1:length(rows_index)]
         cols_index = [cols_index[i] for i in 1:length(cols_index)]
     end
@@ -317,7 +317,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                                      x::AbstractArray{<:Number};
                                      dx = similar(x, size(J, 1)),
                                      colorvec = 1:length(x),
-                                     sparsity = ArrayInterfaceCore.has_sparsestruct(J) ? J :
+                                     sparsity = ArrayInterface.has_sparsestruct(J) ? J :
                                                 nothing)
     forwarddiff_color_jacobian!(J, f, x,
                                 ForwardColorJacCache(f, x, dx = dx, colorvec = colorvec,
@@ -347,7 +347,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     end
 
     if FiniteDiff._use_findstructralnz(sparsity)
-        rows_index, cols_index = ArrayInterfaceCore.findstructralnz(sparsity)
+        rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
     else
         rows_index = 1:size(J, 1)
         cols_index = 1:size(J, 2)
@@ -385,7 +385,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                     dx .= partials.(fx, j)
                 end
 
-                if ArrayInterfaceCore.fast_scalar_indexing(dx)
+                if ArrayInterface.fast_scalar_indexing(dx)
                     #dx is implicitly used in vecdx
                     if sparseCSC_common_sparsity
                         FiniteDiff._colorediteration!(J, vecdx, colorvec, color_i, ncols)

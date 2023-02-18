@@ -4,8 +4,7 @@ using SparseArrays, Test
 using LinearAlgebra
 using BlockBandedMatrices, ArrayInterfaceBlockBandedMatrices
 using BandedMatrices, ArrayInterfaceBandedMatrices
-using StaticArrays
-using ArrayInterfaceStaticArrays
+using StaticArrays#, StaticArrayInterface
 
 fcalls = 0
 function f(dx, x)

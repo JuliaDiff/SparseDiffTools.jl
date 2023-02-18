@@ -113,6 +113,33 @@ dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy r
 out = similar(v)
 gmres!(out, L, v)
 
+@info "ZygoteHesVec"
+using Zygote
+x = rand(N)
+v = rand(N)
+
+L = ZygoteHesVec(g, x, autodiff = false)
+@test L * x ≈ numback_hesvec(g, x, x) rtol = 1e-2
+@test L * v ≈ numback_hesvec(g, x, v) rtol = 1e-2
+@test mul!(dy, L, v)≈numback_hesvec(g, x, v) rtol=1e-2
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*numback_hesvec(g,x,v) + b*_dy rtol=1e-2
+update_coefficients!(L, v, nothing, 0.0)
+@test mul!(dy, L, v)≈numback_hesvec(g, v, v) rtol=1e-2
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*numback_hesvec(g,x,v) + b*_dy rtol=1e-2
+
+L = HesVec(g, x)
+@test L * x ≈ autoback_hesvec(g, x, x)
+@test L * v ≈ autoback_hesvec(g, x, v)
+@test mul!(dy, L, v)≈autoback_hesvec(g, x, v) rtol=1e-8
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*autoback_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(L, v, nothing, 0.0)
+@test mul!(dy, L, v)≈autoback_hesvec(g, v, v) rtol=1e-8
+dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*autoback_hesvec(g,x,v)+b*_dy rtol=1e-8
+
+out = similar(v)
+gmres!(out, L, v)
+
+
 @info "HesVecGrad"
 
 x = rand(N)

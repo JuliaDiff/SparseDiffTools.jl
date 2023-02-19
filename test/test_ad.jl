@@ -2,9 +2,9 @@ using SparseDiffTools
 using ForwardDiff: Dual, jacobian, value
 using SparseArrays, Test
 using LinearAlgebra
-using BlockBandedMatrices, ArrayInterfaceBlockBandedMatrices
-using BandedMatrices, ArrayInterfaceBandedMatrices
-using StaticArrays#, StaticArrayInterface
+using BlockBandedMatrices
+using BandedMatrices
+using StaticArrays
 
 fcalls = 0
 function f(dx, x)

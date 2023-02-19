@@ -86,8 +86,12 @@ function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
     L.vecprod!(dv, (_du, _u) -> L.f(_du, _u, p, t), L.u, v, L.cache...)
 end
 
-function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true,
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = false,
                 ishermitian = false, opnrom = true)
+
+    if autodiff
+        @assert isdefined(SparseDiffTools, :auto_vecjac) "Please load Zygote with `using Zygote`, or `import Zygote` to use VecJac with `autodiff = true`."
+    end
 
     cache = (similar(u), similar(u),)
 

@@ -8,5 +8,7 @@ function auto_vecjac(f, x, v)
     return vec(back(reshape(v, size(vv)))[1])
 end
 
-const ZygoteVecJac = VecJac
+#ZygoteVecJac = VecJac
+ZygoteVecJac(args...; autodiff = true, kwargs...) = VecJac(args...; autodiff = autodiff, kwargs...)
+
 #

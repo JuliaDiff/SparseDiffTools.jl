@@ -37,7 +37,7 @@ end
 
 ### Operator Forms
 
-mutable struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
+struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
     f::F
     u::U
     cache::C
@@ -68,7 +68,7 @@ function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
 end
 
 function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
-    L.u .= u
+    copy!(L.u, u)
     L
 end
 

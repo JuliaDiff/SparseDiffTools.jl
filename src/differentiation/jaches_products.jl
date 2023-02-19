@@ -198,7 +198,7 @@ end
 
 ### Operator Forms
 
-mutable struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
+struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
     f::F
     u::U
     cache::C
@@ -211,7 +211,7 @@ function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
 end
 
 function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
-    L.u .= u
+    copy!(L.u, u)
     L
 end
 

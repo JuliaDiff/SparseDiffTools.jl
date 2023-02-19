@@ -19,6 +19,12 @@ using DataStructures: DisjointSets, find_root!, union!
 
 using ArrayInterface: matrix_colors
 
+using SciMLOperators
+import SciMLOperators: update_coefficients, update_coefficients!
+using Tricks: static_hasmethod
+
+abstract type AbstractAutoDiffVecProd end
+
 export contract_color,
        greedy_d1,
        greedy_star1_coloring,
@@ -42,7 +48,8 @@ export contract_color,
        autonum_hesvec, autonum_hesvec!,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
-       JacVec, HesVec, HesVecGrad,
+       JacVec, HesVec, HesVecGrad, VecJac,
+       update_coefficients, update_coefficients!,
        value!
 
 include("coloring/high_level.jl")
@@ -64,8 +71,10 @@ parameterless_type(x::Type) = __parameterless_type(x)
 
 function __init__()
     @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
-        export numback_hesvec, numback_hesvec!, autoback_hesvec, autoback_hesvec!,
-               auto_vecjac, auto_vecjac!
+        export numback_hesvec, numback_hesvec!,
+               autoback_hesvec, autoback_hesvec!,
+               auto_vecjac, auto_vecjac!,
+               ZygoteVecJac, ZygoteHesVec
 
         include("differentiation/vecjac_products_zygote.jl")
         include("differentiation/jaches_products_zygote.jl")

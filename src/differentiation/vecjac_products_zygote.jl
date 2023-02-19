@@ -7,3 +7,8 @@ function auto_vecjac(f, x, v)
     vv, back = Zygote.pullback(f, x)
     return vec(back(reshape(v, size(vv)))[1])
 end
+
+#ZygoteVecJac = VecJac
+ZygoteVecJac(args...; autodiff = true, kwargs...) = VecJac(args...; autodiff = autodiff, kwargs...)
+
+#

@@ -1,7 +1,7 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "1.31.0"
+version = "2.00.0"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -13,8 +13,10 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+SciMLOperators = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [compat]
@@ -25,8 +27,10 @@ DataStructures = "0.18"
 FiniteDiff = "2.8.1"
 ForwardDiff = "0.10"
 Graphs = "1"
-Requires = "1.0"
+Requires = "1"
+SciMLOperators = "0.1.19"
 StaticArrays = "1"
+Tricks = "0.1.6"
 VertexSafeGraphs = "0.2"
 julia = "1.6"
 

@@ -198,112 +198,126 @@ end
 
 ### Operator Forms
 
-struct JacVec{F, T1, T2, xType}
+struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
     f::F
-    cache1::T1
-    cache2::T2
-    x::xType
-    autodiff::Bool
+    u::U
+    cache::C
+    vecprod::V
+    vecprod!::V!
 end
 
-function JacVec(f, x::AbstractArray, tag = DeivVecTag(); autodiff = true)
+function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
+    FwdModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+end
+
+function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
+    copy!(L.u, u)
+    L
+end
+
+function (L::FwdModeAutoDiffVecProd)(v, p, t)
+    L.vecprod(L.f, L.u, v)
+end
+
+function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
+    L.vecprod!(dv, L.f, L.u, v, L.cache...)
+end
+
+function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
+        cache1 = Dual{
+                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
+                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+
+        cache2 = copy(cache1)
     else
-        cache1 = similar(x)
-        cache2 = similar(x)
+        cache1 = similar(u)
+        cache2 = similar(u)
     end
-    JacVec(f, cache1, cache2, x, autodiff)
-end
 
-Base.eltype(L::JacVec) = eltype(L.x)
-Base.size(L::JacVec) = (length(L.cache1), length(L.cache1))
-Base.size(L::JacVec, i::Int) = length(L.cache1)
-function Base.:*(L::JacVec, v::AbstractVector)
-    L.autodiff ? auto_jacvec(_x -> L.f(_x), L.x, v) :
-    num_jacvec(_x -> L.f(_x), L.x, v)
-end
+    cache = (cache1, cache2,)
 
-function LinearAlgebra.mul!(dy::AbstractVector, L::JacVec, v::AbstractVector)
-    if L.autodiff
-        auto_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
-    else
-        num_jacvec!(dy, (_y, _x) -> L.f(_y, _x), L.x, v, L.cache1, L.cache2)
+    vecprod  = autodiff ? auto_jacvec  : num_jacvec
+    vecprod! = autodiff ? auto_jacvec! : num_jacvec!
+
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u, u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u), or f(du, u).")
     end
+
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                    )
 end
 
-struct HesVec{F, T1, T2, xType}
-    f::F
-    cache1::T1
-    cache2::T2
-    cache3::T2
-    x::xType
-    autodiff::Bool
-end
+function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
-function HesVec(f, x::AbstractArray; autodiff = true)
     if autodiff
-        cache1 = ForwardDiff.GradientConfig(f, x)
-        cache2 = similar(x)
-        cache3 = similar(x)
+        cache1 = ForwardDiff.GradientConfig(f, u)
+        cache2 = similar(u)
+        cache3 = similar(u)
     else
-        cache1 = similar(x)
-        cache2 = similar(x)
-        cache3 = similar(x)
+        cache1 = similar(u)
+        cache2 = similar(u)
+        cache3 = similar(u)
     end
-    HesVec(f, cache1, cache2, cache3, x, autodiff)
-end
 
-Base.size(L::HesVec) = (length(L.cache2), length(L.cache2))
-Base.size(L::HesVec, i::Int) = length(L.cache2)
-function Base.:*(L::HesVec, v::AbstractVector)
-    L.autodiff ? numauto_hesvec(L.f, L.x, v) : num_hesvec(L.f, L.x, v)
-end
+    cache = (cache1, cache2, cache3,)
 
-function LinearAlgebra.mul!(dy::AbstractVector, L::HesVec, v::AbstractVector)
-    if L.autodiff
-        numauto_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
-    else
-        num_hesvec!(dy, L.f, L.x, v, L.cache1, L.cache2, L.cache3)
+    vecprod  = autodiff ? numauto_hesvec  : num_hesvec
+    vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
+
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u).")
     end
+
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                    )
 end
 
-struct HesVecGrad{G, T1, T2, uType}
-    g::G
-    cache1::T1
-    cache2::T2
-    x::uType
-    autodiff::Bool
-end
+function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
-function HesVecGrad(g, x::AbstractArray, tag = DeivVecTag(); autodiff = false)
     if autodiff
-        cache1 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
-        cache2 = Dual{typeof(ForwardDiff.Tag(tag, eltype(x))), eltype(x), 1
-                      }.(x, ForwardDiff.Partials.(tuple.(x)))
-    else
-        cache1 = similar(x)
-        cache2 = similar(x)
-    end
-    HesVecGrad(g, cache1, cache2, x, autodiff)
-end
+        cache1 = Dual{
+                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                     }.(u, ForwardDiff.Partials.(tuple.(u)))
 
-Base.size(L::HesVecGrad) = (length(L.cache2), length(L.cache2))
-Base.size(L::HesVecGrad, i::Int) = length(L.cache2)
-function Base.:*(L::HesVecGrad, v::AbstractVector)
-    L.autodiff ? auto_hesvecgrad(L.g, L.x, v) : num_hesvecgrad(L.g, L.x, v)
-end
-
-function LinearAlgebra.mul!(dy::AbstractVector,
-                            L::HesVecGrad,
-                            v::AbstractVector)
-    if L.autodiff
-        auto_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+        cache2 = copy(cache1)
     else
-        num_hesvecgrad!(dy, L.g, L.x, v, L.cache1, L.cache2)
+        cache1 = similar(u)
+        cache2 = similar(u)
     end
+
+    cache = (cache1, cache2,)
+
+    vecprod  = autodiff ? auto_hesvecgrad  : num_hesvecgrad
+    vecprod! = autodiff ? auto_hesvecgrad! : num_hesvecgrad!
+
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u, u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u), or f(du, u).")
+    end
+
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                    )
 end
+#

@@ -1,3 +1,2 @@
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-ArrayInterfaceGPUArrays = "6ba088a2-8465-4c0a-af30-387133b534db"

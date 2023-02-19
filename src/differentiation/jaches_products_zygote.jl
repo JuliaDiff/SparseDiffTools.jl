@@ -25,21 +25,21 @@ function numback_hesvec(f, x, v)
 end
 
 function autoback_hesvec!(dy, f, x, v,
-                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
                                         eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))),
-                          cache3 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
                                         eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
-    cache2 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
+    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
-    g(cache3, cache2)
-    dy .= partials.(cache3, 1)
+    g(cache2, cache1)
+    dy .= partials.(cache2, 1)
 end
 
 function autoback_hesvec(f, x, v)
@@ -48,3 +48,38 @@ function autoback_hesvec(f, x, v)
              }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
     ForwardDiff.partials.(g(y), 1)
 end
+
+### Operator Forms
+
+function ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+
+    if autodiff
+        cache1 = Dual{
+                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
+                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+        cache2 = copy(u)
+    else
+        cache1 = similar(u)
+        cache2 = similar(u)
+    end
+
+    cache = (cache1, cache2,)
+
+    vecprod  = autodiff ? autoback_hesvec  : numback_hesvec 
+    vecprod! = autodiff ? autoback_hesvec! : numback_hesvec!
+
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u).")
+    end
+
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                    )
+end
+#

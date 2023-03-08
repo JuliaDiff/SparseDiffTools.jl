@@ -8,7 +8,7 @@ using SparseDiffTools: DeviVecTag, FwdModeAutoDiffVecProd
 using SparseDiffTools.ForwardDiff
 using ForwardDiff: Dual, Tag
 
-using SciMLOperators: FunctionOperator
+using SparseDiffTools.SciMLOperators: FunctionOperator
 using SparseDiffTools.Tricks: static_hasmethod
 
 export

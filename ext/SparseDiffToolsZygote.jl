@@ -9,7 +9,7 @@ using ForwardDiff
 using ForwardDiff: Dual, Tag
 
 using SciMLOperators: FunctionOperator
-using Tricks: static_hasmethod
+using SparseDiffTools.Tricks: static_hasmethod
 
 export
        numback_hesvec, numback_hesvec!,

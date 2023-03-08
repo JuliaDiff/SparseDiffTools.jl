@@ -68,16 +68,16 @@ Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))
 parameterless_type(x::Type) = __parameterless_type(x)
 
-#if !isdefined(Base, :get_extension)
+if !isdefined(Base, :get_extension)
     using Requires
-#end
+end
 
 function __init__()
-    #@static if !isdefined(Base, :get_extension)
+    @static if !isdefined(Base, :get_extension)
         @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
             include("../ext/SparseDiffToolsZygote.jl")
         end
-    #end
+    end
 end
 
 end # module

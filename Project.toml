@@ -19,6 +19,12 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
+[weakdeps]
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[extensions]
+SparseDiffToolsZygote = "Zygote"
+
 [compat]
 Adapt = "3.0"
 ArrayInterface = "6, 7"

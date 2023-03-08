@@ -5,7 +5,7 @@ import Zygote
 using SparseDiffTools
 using SparseDiffTools: DeviVecTag, FwdModeAutoDiffVecProd
 
-using ForwardDiff
+using SparseDiffTools.ForwardDiff
 using ForwardDiff: Dual, Tag
 
 using SciMLOperators: FunctionOperator

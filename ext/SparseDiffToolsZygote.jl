@@ -2,14 +2,16 @@ module SparseDiffToolsZygote
 
 if isdefined(Base, :get_extension)
     import Zygote
-    using SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd
+    using LinearAlgebra
+    using SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd, VecJac
     using ForwardDiff: ForwardDiff, Dual
     using SciMLOperators: FunctionOperator
     using Tricks: static_hasmethod
 else
     import ..Zygote
-    using ..SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd
-    using ..ForwardDiff: ForwardDiff, Dual
+    using ..LinearAlgebra
+    using ..SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd, VecJac
+    using ..ForwardDiff: ForwardDiff, Dual, partials
     using ..SciMLOperators: FunctionOperator
     using ..Tricks: static_hasmethod
 end

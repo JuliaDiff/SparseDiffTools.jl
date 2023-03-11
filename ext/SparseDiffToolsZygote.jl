@@ -1,15 +1,18 @@
 module SparseDiffToolsZygote
 
-import Zygote
-
-using SparseDiffTools
-using SparseDiffTools: DeviVecTag, FwdModeAutoDiffVecProd
-
-using SparseDiffTools.ForwardDiff
-using ForwardDiff: Dual, Tag
-
-using SparseDiffTools.SciMLOperators: FunctionOperator
-using SparseDiffTools.Tricks: static_hasmethod
+if isdefined(Base, :get_extension)
+    import Zygote
+    using SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd
+    using ForwardDiff: ForwardDiff, Dual
+    using SciMLOperators: FunctionOperator
+    using Tricks: static_hasmethod
+else
+    import ..Zygote
+    using ..SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd
+    using ..ForwardDiff: ForwardDiff, Dual
+    using ..SciMLOperators: FunctionOperator
+    using ..Tricks: static_hasmethod
+end
 
 export
        numback_hesvec, numback_hesvec!,

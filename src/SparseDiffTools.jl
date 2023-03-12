@@ -7,6 +7,8 @@ using Graphs
 using Graphs: SimpleGraph
 using VertexSafeGraphs
 using Adapt
+using Reexport
+@reexport using ADTypes
 
 using LinearAlgebra
 using SparseArrays, ArrayInterface
@@ -69,7 +71,6 @@ parameterless_type(x) = parameterless_type(typeof(x))
 parameterless_type(x::Type) = __parameterless_type(x)
 
 import Requires
-import Reexport
 
 function numback_hesvec end
 function numback_hesvec! end
@@ -84,7 +85,7 @@ function ZygoteHesVec end
     function __init__()
         Requires.@require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
             include("../ext/SparseDiffToolsZygote.jl")
-            Reexport.@reexport using .SparseDiffToolsZygote
+            @reexport using .SparseDiffToolsZygote
         end
     end
 end

@@ -7,6 +7,7 @@ if isdefined(Base, :get_extension)
     using ForwardDiff: ForwardDiff, Dual, partials
     using SciMLOperators: FunctionOperator
     using Tricks: static_hasmethod
+    using ADTypes
 else
     import ..Zygote
     using ..LinearAlgebra
@@ -14,6 +15,7 @@ else
     using ..ForwardDiff: ForwardDiff, Dual, partials
     using ..SciMLOperators: FunctionOperator
     using ..Tricks: static_hasmethod
+    using ..ADTypes
 end
 
 ### Jac, Hes products
@@ -71,22 +73,21 @@ end
 
 # Operator Forms
 
-function SparseDiffTools.ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function SparseDiffTools.ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoZygote())
 
-    if autodiff
+    cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
+        cache1 = similar(u)
+        cache2 = similar(u)
+
+        (cache1, cache2), SparseDiffTools.numback_hesvec, SparseDiffTools.numback_hesvec!
+    elseif autodiff isa AutoZygote
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
                      }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(u)
-    else
-        cache1 = similar(u)
-        cache2 = similar(u)
+
+        (cache1, cache2), SparseDiffTools.autoback_hesvec, SparseDiffTools.autoback_hesvec!
     end
-
-    cache = (cache1, cache2,)
-
-    vecprod  = autodiff ? SparseDiffTools.autoback_hesvec  : SparseDiffTools.numback_hesvec 
-    vecprod! = autodiff ? SparseDiffTools.autoback_hesvec! : SparseDiffTools.numback_hesvec!
 
     outofplace = static_hasmethod(f, typeof((u,)))
     isinplace  = static_hasmethod(f, typeof((u,)))
@@ -115,8 +116,8 @@ function SparseDiffTools.auto_vecjac(f, x, v)
     return vec(back(reshape(v, size(vv)))[1])
 end
 
-function SparseDiffTools.ZygoteVecJac(args...; autodiff = true, kwargs...)
-    VecJac(args...; autodiff = autodiff, kwargs...)
+function SparseDiffTools.ZygoteVecJac(args...; kwargs...)
+    VecJac(args...; autodiff = AutoZygote(), kwargs...)
 end
 
 end # module

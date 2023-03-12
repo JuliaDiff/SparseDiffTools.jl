@@ -223,23 +223,24 @@ function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
-function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
 
-    if autodiff
+    cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
+        cache1 = similar(u)
+        cache2 = similar(u)
+
+        (cache1, cache2), num_jacvec, num_jacvec!
+    elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
                      }.(u, ForwardDiff.Partials.(tuple.(u)))
 
         cache2 = copy(cache1)
+
+        (cache1, cache2), auto_jacvec, auto_jacvec!
     else
-        cache1 = similar(u)
-        cache2 = similar(u)
+        @error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
-
-    cache = (cache1, cache2,)
-
-    vecprod  = autodiff ? auto_jacvec  : num_jacvec
-    vecprod! = autodiff ? auto_jacvec! : num_jacvec!
 
     outofplace = static_hasmethod(f, typeof((u,)))
     isinplace  = static_hasmethod(f, typeof((u, u,)))
@@ -256,22 +257,23 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
                     )
 end
 
-function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
 
-    if autodiff
-        cache1 = ForwardDiff.GradientConfig(f, u)
-        cache2 = similar(u)
-        cache3 = similar(u)
-    else
+    cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
         cache3 = similar(u)
+
+        (cache1, cache2, cache3), num_hesvec, num_hesvec!
+    elseif autodiff isa AutoForwardDiff
+        cache1 = ForwardDiff.GradientConfig(f, u)
+        cache2 = similar(u)
+        cache3 = similar(u)
+
+        (cache1, cache2, cache3), numauto_hesvec, numauto_hesvec!
+    else
+        @error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
-
-    cache = (cache1, cache2, cache3,)
-
-    vecprod  = autodiff ? numauto_hesvec  : num_hesvec
-    vecprod! = autodiff ? numauto_hesvec! : num_hesvec!
 
     outofplace = static_hasmethod(f, typeof((u,)))
     isinplace  = static_hasmethod(f, typeof((u,)))
@@ -288,23 +290,23 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
                     )
 end
 
-function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
 
-    if autodiff
+    cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
+        cache1 = similar(u)
+        cache2 = similar(u)
+
+        (cache1, cache2), num_hesvecgrad, num_hesvecgrad!
+    elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
                      }.(u, ForwardDiff.Partials.(tuple.(u)))
-
         cache2 = copy(cache1)
+
+        (cache1, cache2), auto_hesvecgrad, auto_hesvecgrad!
     else
-        cache1 = similar(u)
-        cache2 = similar(u)
+        @error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
-
-    cache = (cache1, cache2,)
-
-    vecprod  = autodiff ? auto_hesvecgrad  : num_hesvecgrad
-    vecprod! = autodiff ? auto_hesvecgrad! : num_hesvecgrad!
 
     outofplace = static_hasmethod(f, typeof((u,)))
     isinplace  = static_hasmethod(f, typeof((u, u,)))

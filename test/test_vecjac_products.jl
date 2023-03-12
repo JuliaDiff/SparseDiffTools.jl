@@ -18,7 +18,7 @@ L = VecJac(f, x)
 actual_vjp = Zygote.jacobian(x -> f(x, nothing, 0.0), x)[1]' * v
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
-L = VecJac(f, x; autodiff = false)
+L = VecJac(f, x; autodiff = AutoFiniteDiff())
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
 
@@ -28,7 +28,7 @@ L = ZygoteVecJac(f, x)
 actual_vjp = Zygote.jacobian(x -> f(x, nothing, 0.0), x)[1]' * v
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
-L = ZygoteVecJac(f, x; autodiff = false)
+L = ZygoteVecJac(f, x; autodiff = AutoFiniteDiff())
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
 #

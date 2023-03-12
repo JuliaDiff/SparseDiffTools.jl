@@ -4,7 +4,7 @@ if isdefined(Base, :get_extension)
     import Zygote
     using LinearAlgebra
     using SparseDiffTools: SparseDiffTools, DeivVecTag, FwdModeAutoDiffVecProd, VecJac
-    using ForwardDiff: ForwardDiff, Dual
+    using ForwardDiff: ForwardDiff, Dual, partials
     using SciMLOperators: FunctionOperator
     using Tricks: static_hasmethod
 else
@@ -18,7 +18,7 @@ end
 
 ### Jac, Hes products
 
-function numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))
+function SparseDiffTools.numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
@@ -32,7 +32,7 @@ function numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 
-function numback_hesvec(f, x, v)
+function SparseDiffTools.numback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
     T = eltype(x)
     # Should it be min? max? mean?
@@ -44,7 +44,7 @@ function numback_hesvec(f, x, v)
     (gxp - gxm) / (2ϵ)
 end
 
-function autoback_hesvec!(dy, f, x, v,
+function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
                           cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
                                         eltype(x), 1
                                         }.(x,
@@ -62,7 +62,7 @@ function autoback_hesvec!(dy, f, x, v,
     dy .= partials.(cache2, 1)
 end
 
-function autoback_hesvec(f, x, v)
+function SparseDiffTools.autoback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
     y = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
              }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
@@ -71,7 +71,7 @@ end
 
 # Operator Forms
 
-function ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
+function SparseDiffTools.ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = true)
 
     if autodiff
         cache1 = Dual{
@@ -85,8 +85,8 @@ function ZygoteHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = 
 
     cache = (cache1, cache2,)
 
-    vecprod  = autodiff ? autoback_hesvec  : numback_hesvec 
-    vecprod! = autodiff ? autoback_hesvec! : numback_hesvec!
+    vecprod  = autodiff ? SparseDiffTools.autoback_hesvec  : SparseDiffTools.numback_hesvec 
+    vecprod! = autodiff ? SparseDiffTools.autoback_hesvec! : SparseDiffTools.numback_hesvec!
 
     outofplace = static_hasmethod(f, typeof((u,)))
     isinplace  = static_hasmethod(f, typeof((u,)))
@@ -105,16 +105,18 @@ end
 
 ## VecJac products
 
-function auto_vecjac!(du, f, x, v, cache1 = nothing, cache2 = nothing)
+function SparseDiffTools.auto_vecjac!(du, f, x, v, cache1 = nothing, cache2 = nothing)
     !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = false")
-    du .= reshape(auto_vecjac(f, x, v), size(du))
+    du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
 
-function auto_vecjac(f, x, v)
+function SparseDiffTools.auto_vecjac(f, x, v)
     vv, back = Zygote.pullback(f, x)
     return vec(back(reshape(v, size(vv)))[1])
 end
 
-ZygoteVecJac(args...; autodiff = true, kwargs...) = VecJac(args...; autodiff = autodiff, kwargs...)
+function SparseDiffTools.ZygoteVecJac(args...; autodiff = true, kwargs...)
+    VecJac(args...; autodiff = autodiff, kwargs...)
+end
 
 end # module

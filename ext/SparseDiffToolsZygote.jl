@@ -16,12 +16,6 @@ else
     using ..Tricks: static_hasmethod
 end
 
-export
-       numback_hesvec, numback_hesvec!,
-       autoback_hesvec, autoback_hesvec!,
-       auto_vecjac, auto_vecjac!,
-       ZygoteVecJac, ZygoteHesVec
-
 ### Jac, Hes products
 
 function numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))

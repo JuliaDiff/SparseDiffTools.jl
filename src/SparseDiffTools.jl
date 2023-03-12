@@ -5,7 +5,6 @@ using FiniteDiff
 using ForwardDiff
 using Graphs
 using Graphs: SimpleGraph
-using Requires
 using VertexSafeGraphs
 using Adapt
 
@@ -21,7 +20,7 @@ using ArrayInterface: matrix_colors
 
 using SciMLOperators
 import SciMLOperators: update_coefficients, update_coefficients!
-using Tricks: static_hasmethod
+using Tricks: Tricks, static_hasmethod
 
 abstract type AbstractAutoDiffVecProd end
 
@@ -69,16 +68,31 @@ Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))
 parameterless_type(x::Type) = __parameterless_type(x)
 
-function __init__()
-    @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
-        export numback_hesvec, numback_hesvec!,
-               autoback_hesvec, autoback_hesvec!,
-               auto_vecjac, auto_vecjac!,
-               ZygoteVecJac, ZygoteHesVec
+import Requires
+import Reexport
 
-        include("differentiation/vecjac_products_zygote.jl")
-        include("differentiation/jaches_products_zygote.jl")
+function numback_hesvec end
+function numback_hesvec! end
+function autoback_hesvec end
+function autoback_hesvec! end
+function auto_vecjac end
+function auto_vecjac! end
+function ZygoteVecJac end
+function ZygoteHesVec end
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        Requires.@require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+            include("../ext/SparseDiffToolsZygote.jl")
+            Reexport.@reexport using .SparseDiffToolsZygote
+        end
     end
 end
+
+export
+       numback_hesvec, numback_hesvec!,
+       autoback_hesvec, autoback_hesvec!,
+       auto_vecjac, auto_vecjac!,
+       ZygoteVecJac, ZygoteHesVec
 
 end # module

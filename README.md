@@ -128,7 +128,7 @@ this can be significant savings.
 The API for computing the colorvec vector is:
 
 ```julia
-matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color();
+matrix_colors(A::AbstractMatrix,alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color();
               partition_by_rows::Bool = false)
 ```
 

@@ -290,6 +290,39 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
                     )
 end
 
+function BackHesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff())
+
+    cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
+        cache1 = similar(u)
+        cache2 = similar(u)
+
+        (cache1, cache2), numback_hesvec, numback_hesvec!
+    elseif autodiff isa AutoZygote
+        @assert static_hasmethod(autoback_hesvec, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
+
+        cache1 = Dual{
+                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
+                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+        cache2 = copy(u)
+
+        (cache1, cache2), autoback_hesvec, autoback_hesvec!
+    end
+
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u,)))
+
+    if !(isinplace) & !(outofplace)
+        error("$f must have signature f(u).")
+    end
+
+    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
+
+    FunctionOperator(L, u, u;
+                     isinplace = isinplace, outofplace = outofplace,
+                     p = p, t = t, islinear = true,
+                    )
+end
+
 function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
 
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff

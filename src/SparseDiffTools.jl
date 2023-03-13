@@ -49,7 +49,7 @@ export contract_color,
        autonum_hesvec, autonum_hesvec!,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
-       JacVec, HesVec, HesVecGrad, VecJac,
+       JacVec, HesVec, BackHesVec, HesVecGrad, VecJac,
        update_coefficients, update_coefficients!,
        value!
 
@@ -78,8 +78,6 @@ function autoback_hesvec end
 function autoback_hesvec! end
 function auto_vecjac end
 function auto_vecjac! end
-function ZygoteVecJac end
-function ZygoteHesVec end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -93,7 +91,6 @@ end
 export
        numback_hesvec, numback_hesvec!,
        autoback_hesvec, autoback_hesvec!,
-       auto_vecjac, auto_vecjac!,
-       ZygoteVecJac, ZygoteHesVec
+       auto_vecjac, auto_vecjac!
 
 end # module

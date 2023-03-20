@@ -49,7 +49,7 @@ export contract_color,
        autonum_hesvec, autonum_hesvec!,
        num_hesvecgrad, num_hesvecgrad!,
        auto_hesvecgrad, auto_hesvecgrad!,
-       JacVec, HesVec, BackHesVec, HesVecGrad, VecJac,
+       JacVec, HesVec, HesVecGrad, VecJac,
        update_coefficients, update_coefficients!,
        value!
 

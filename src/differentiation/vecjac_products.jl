@@ -44,12 +44,13 @@ struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
     vecprod::V
     vecprod!::V!
 
-    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = false,
+    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!;
+                                    autodiff = AutoFiniteDiff(),
                                     isinplace = false, outofplace = true)
         @assert isinplace || outofplace
 
         new{
-            autodiff,
+            typeof(autodiff),
             isinplace,
             outofplace,
             typeof(f),
@@ -86,17 +87,18 @@ function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
     L.vecprod!(dv, (_du, _u) -> L.f(_du, _u, p, t), L.u, v, L.cache...)
 end
 
-function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = false,
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
                 ishermitian = false, opnrom = true)
 
-    if autodiff
-        @assert isdefined(SparseDiffTools, :auto_vecjac) "Please load Zygote with `using Zygote`, or `import Zygote` to use VecJac with `autodiff = true`."
+    vecprod, vecprod! = if autodiff isa AutoFiniteDiff
+        num_vecjac, num_vecjac!
+    elseif autodiff isa AutoZygote
+        @assert static_hasmethod(auto_vecjac, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
+
+        auto_vecjac, auto_vecjac!
     end
 
     cache = (similar(u), similar(u),)
-
-    vecprod  = autodiff ? auto_vecjac  : num_vecjac
-    vecprod! = autodiff ? auto_vecjac! : num_vecjac!
 
     outofplace = static_hasmethod(f, typeof((u, p, t)))
     isinplace  = static_hasmethod(f, typeof((u, u, p, t)))

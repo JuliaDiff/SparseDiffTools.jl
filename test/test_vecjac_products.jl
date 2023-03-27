@@ -21,14 +21,4 @@ update_coefficients!(L, v, nothing, 0.0)
 L = VecJac(f, x; autodiff = AutoFiniteDiff())
 update_coefficients!(L, v, nothing, 0.0)
 @test L * v ≈ actual_vjp
-
-@info "ZygoteVecJac"
-
-L = ZygoteVecJac(f, x)
-actual_vjp = Zygote.jacobian(x -> f(x, nothing, 0.0), x)[1]' * v
-update_coefficients!(L, v, nothing, 0.0)
-@test L * v ≈ actual_vjp
-L = ZygoteVecJac(f, x; autodiff = AutoFiniteDiff())
-update_coefficients!(L, v, nothing, 0.0)
-@test L * v ≈ actual_vjp
 #

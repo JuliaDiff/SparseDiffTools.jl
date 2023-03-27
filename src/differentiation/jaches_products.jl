@@ -223,7 +223,8 @@ function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
-function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
+function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
+                kwargs...)
 
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
@@ -254,10 +255,12 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
+                     kwargs...,
                     )
 end
 
-function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
+function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
+                kwargs...)
 
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
@@ -296,10 +299,12 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
+                     kwargs...,
                     )
 end
 
-function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff())
+function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
+                    kwargs...)
 
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
@@ -329,6 +334,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = Au
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
+                     kwargs...,
                     )
 end
 #

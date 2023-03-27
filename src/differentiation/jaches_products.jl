@@ -239,7 +239,7 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
 
         (cache1, cache2), auto_jacvec, auto_jacvec!
     else
-        @error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
+        error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))
@@ -281,7 +281,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
 
         (cache1, cache2), autoback_hesvec, autoback_hesvec!
     else
-        @error("Set autodiff to either AutoForwardDiff(), AutoZygote(), or AutoFiniteDiff()")
+        error("Set autodiff to either AutoForwardDiff(), AutoZygote(), or AutoFiniteDiff()")
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))
@@ -314,7 +314,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = Au
 
         (cache1, cache2), auto_hesvecgrad, auto_hesvecgrad!
     else
-        @error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
+        error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))

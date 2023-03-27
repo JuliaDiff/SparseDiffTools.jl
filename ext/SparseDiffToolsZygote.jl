@@ -41,18 +41,18 @@ function SparseDiffTools.numback_hesvec(f, x, v)
 end
 
 function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
-                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
                                         eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))),
-                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
                                         eltype(x), 1
                                         }.(x,
                                            ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
+    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
                    }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)

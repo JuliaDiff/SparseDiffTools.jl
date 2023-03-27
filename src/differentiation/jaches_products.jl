@@ -207,10 +207,12 @@ struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
 end
 
 function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
-    FwdModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+    f = update_coefficients(L.f, u, p, t)
+    FwdModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
 end
 
 function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
+    update_coefficients!(L.f, u, p, t)
     copy!(L.u, u)
     L
 end

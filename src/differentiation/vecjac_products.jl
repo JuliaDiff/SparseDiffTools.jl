@@ -65,10 +65,12 @@ struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
 end
 
 function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
-    RevModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+    f = update_coefficients(L.f, u, p, t)
+    RevModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
 end
 
 function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
+    update_coefficients!(L.f, u, p, t)
     copy!(L.u, u)
     L
 end

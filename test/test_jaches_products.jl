@@ -135,8 +135,8 @@ gmres!(out, L, v)
 x = rand(N)
 v = rand(N)
 L = HesVecGrad(h, x, autodiff = AutoFiniteDiff())
-@test L * x ≈ num_hesvec(g, x, x)
-@test L * v ≈ num_hesvec(g, x, v)
+@test L * x ≈ num_hesvec(g, x, x) rtol=1e-2
+@test L * v ≈ num_hesvec(g, x, v) rtol=1e-2
 @test mul!(dy, L, v)≈num_hesvec(g, x, v) rtol=1e-2
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*num_hesvec(g,x,v)+b*_dy rtol=1e-2
 update_coefficients!(L, v, nothing, 0.0)

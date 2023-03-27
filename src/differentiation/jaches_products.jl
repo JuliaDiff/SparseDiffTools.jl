@@ -218,10 +218,12 @@ function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
 end
 
 function (L::FwdModeAutoDiffVecProd)(v, p, t)
+    L = update_coefficients(L, v, p, t)
     L.vecprod(L.f, L.u, v)
 end
 
 function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
+    update_coefficients!(L, v, p, t)
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 

@@ -22,36 +22,10 @@ function _h(dy, x)
     FiniteDiff.finite_difference_gradient!(dy, _g, x)
 end
 
-# Define state-dependent (i.e. dependent on u/p/t) functions for tests of operators
+# Define state-dependent functions for operator tests 
 
-mutable struct WrapFunc{F,U,P,T}
-    func::F
-    u::U
-    p::P
-    t::T
-end
-
-(w::WrapFunc)(u) = sum(w.u) * w.p * w.t * w.func(u) 
-function (w::WrapFunc)(v, u) 
-    w.func(v, u)
-    lmul!(sum(w.u) * w.p * w.t, v)
-end
-
-update_coefficients(w::WrapFunc, u, p, t) = WrapFunc(w.func, u, p, t)
-function update_coefficients!(w::WrapFunc, u, p, t)
-    w.u = u
-    w.p = p
-    w.t = t
-end
-
-# Helper function for testing correct update coefficients behaviour of operators
-function update_coefficients_for_test!(L, u, p, t)
-    update_coefficients!(L, u, p, t)
-    # Force function hiding inside L to update. Should be a null-op if previous line works correctly
-    update_coefficients!(L.op.f, u, p, t) 
-end
-
-f = WrapFunc(_f, ones(N) * 2, 1.0, 1.0)
+include("update_coeffs_testutils.jl")
+f = WrapFunc(_f, ones(N), 1.0, 1.0)
 g = WrapFunc(_g, ones(N), 1.0, 1.0)
 h = WrapFunc(_h, ones(N), 1.0, 1.0)
 

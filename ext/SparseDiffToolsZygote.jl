@@ -41,19 +41,19 @@ function SparseDiffTools.numback_hesvec(f, x, v)
 end
 
 function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
-                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
                                         eltype(x), 1
                                         }.(x,
-                                           ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))),
-                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))),
+                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
+                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
                                         eltype(x), 1
                                         }.(x,
-                                           ForwardDiff.Partials.(Tuple.(reshape(v, size(x))))))
+                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
-                   }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
+    # Reset each dual number in cache1 to primal = dual = 1.
+    cache1 .= eltype(cache1).(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)
 end
@@ -61,7 +61,7 @@ end
 function SparseDiffTools.autoback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
     y = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
-             }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
+             }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     ForwardDiff.partials.(g(y), 1)
 end
 

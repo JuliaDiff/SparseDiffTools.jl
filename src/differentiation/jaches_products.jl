@@ -277,7 +277,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
                      }.(u, ForwardDiff.Partials.(tuple.(u)))
-        cache2 = copy(u)
+        cache2 = copy(cache1)
 
         (cache1, cache2), autoback_hesvec, autoback_hesvec!
     else

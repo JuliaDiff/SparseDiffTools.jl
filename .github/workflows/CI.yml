@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         group:
-          - Core
+          - All
         version:
           - '1' # Latest Release
           - '~1.6' # Current LTS

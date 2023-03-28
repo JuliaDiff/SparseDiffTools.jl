@@ -1,6 +1,5 @@
 using SparseDiffTools, ForwardDiff, FiniteDiff, Zygote, IterativeSolvers
 using LinearAlgebra, Test
-import SciMLOperators: update_coefficients, update_coefficients!
 
 using Random
 Random.seed!(123)
@@ -85,9 +84,12 @@ update_coefficients!(f, x, 1.0, 1.0)
 @test L * v ≈ auto_jacvec(f, x, v)
 @test mul!(dy, L, v) ≈ auto_jacvec(f, x, v)
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*auto_jacvec(f,x,v) + b*_dy
-update_coefficients_for_test!(L, v, 3.0, 4.0)
+update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(f, v, 3.0, 4.0)
 @test mul!(dy, L, v) ≈ auto_jacvec(f, v, v)
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*auto_jacvec(f,x,v) + b*_dy
+update_coefficients!(f, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ auto_jacvec(f,x,v)
 
 L = JacVec(f, x, 1.0, 1.0; autodiff = AutoFiniteDiff())
 update_coefficients!(f, x, 1.0, 1.0)
@@ -95,12 +97,15 @@ update_coefficients!(f, x, 1.0, 1.0)
 @test L * v ≈ num_jacvec(f, x, v)
 @test mul!(dy, L, v)≈num_jacvec(f, x, v) rtol=1e-6
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_jacvec(f,x,v) + b*_dy rtol=1e-6
-update_coefficients_for_test!(L, v, 3.0, 4.0)
+update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(f, v, 3.0, 4.0)
 @test mul!(dy, L, v)≈num_jacvec(f, v, v) rtol=1e-6
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_jacvec(f,x,v) + b*_dy rtol=1e-6
+update_coefficients!(f, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ num_jacvec(f,x,v) rtol=1e-6
 
 out = similar(v)
-gmres!(out, L, v)
+@test_nowarn gmres!(out, L, v)
 
 @info "HesVec"
 
@@ -113,9 +118,12 @@ num_hesvec(g, x, x)
 @test L * v ≈ num_hesvec(g, x, v) rtol=1e-2
 @test mul!(dy, L, v)≈num_hesvec(g, x, v) rtol=1e-2
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_hesvec(g,x,v) + b*_dy rtol=1e-2
-update_coefficients_for_test!(L, v, 3.0, 4.0)
+update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(g, v, 3.0, 4.0)
 @test mul!(dy, L, v)≈num_hesvec(g, v, v) rtol=1e-2
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b) ≈ a*num_hesvec(g,x,v) + b*_dy rtol=1e-2
+update_coefficients!(g, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ num_hesvec(g,x,v) rtol=1e-2
 
 L = HesVec(g, x, 1.0, 1.0)
 update_coefficients!(g, x, 1.0, 1.0)
@@ -125,9 +133,12 @@ num_hesvec(g, x, x)
 @test L * v ≈ numauto_hesvec(g, x, v)
 @test mul!(dy, L, v)≈numauto_hesvec(g, x, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
-update_coefficients_for_test!(L, v, 3.0, 4.0)
+update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(g, v, 3.0, 4.0)
 @test mul!(dy, L, v)≈numauto_hesvec(g, v, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(g, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ numauto_hesvec(g,x,v) rtol=1e-2
 
 out = similar(v)
 gmres!(out, L, v)
@@ -141,9 +152,12 @@ update_coefficients!(g, x, 1.0, 1.0)
 @test L * v ≈ autoback_hesvec(g, x, v)
 @test mul!(dy, L, v)≈autoback_hesvec(g, x, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*autoback_hesvec(g,x,v)+b*_dy rtol=1e-8
-update_coefficients_for_test!(L, v, 3.0, 4.0)
+update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(g, v, 3.0, 4.0)
 @test mul!(dy, L, v)≈autoback_hesvec(g, v, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*autoback_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(g, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ autoback_hesvec(g,x,v) rtol=1e-2
 
 out = similar(v)
 gmres!(out, L, v)
@@ -159,20 +173,26 @@ update_coefficients!(g, x, 1.0, 1.0)
 @test L * v ≈ num_hesvec(g, x, v) rtol=1e-2
 @test mul!(dy, L, v)≈num_hesvec(g, x, v) rtol=1e-2
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*num_hesvec(g,x,v)+b*_dy rtol=1e-2
-update_coefficients_for_test!(L, v, 3.0, 4.0)
-update_coefficients!(g, x, 3.0, 4.0)
+for op in (L, g, h) update_coefficients!(op, v, 3.0, 4.0) end
 @test mul!(dy, L, v)≈num_hesvec(g, v, v) rtol=1e-2
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*num_hesvec(g,x,v)+b*_dy rtol=1e-2
+update_coefficients!(g, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ num_hesvec(g,x,v) rtol=1e-2
 
 L = HesVecGrad(h, x, 1.0, 1.0)
-update_coefficients!(h, x, 1.0, 1.0)
 update_coefficients!(g, x, 1.0, 1.0)
+update_coefficients!(h, x, 1.0, 1.0)
 @test L * x ≈ autonum_hesvec(g, x, x)
 @test L * v ≈ numauto_hesvec(g, x, v)
 @test mul!(dy, L, v)≈numauto_hesvec(g, x, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
-update_coefficients_for_test!(L, v, 3.0, 4.0)
-update_coefficients!(g, x, 3.0, 4.0)
+for op in (L, g, h) update_coefficients!(op, v, 3.0, 4.0) end
 @test mul!(dy, L, v)≈numauto_hesvec(g, v, v) rtol=1e-8
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy rtol=1e-8
+update_coefficients!(g, v, 5.0, 6.0)
+update_coefficients!(h, v, 5.0, 6.0)
+@test L(dy, v, 5.0, 6.0) ≈ num_hesvec(g,x,v) rtol=1e-2
+
+out = similar(v)
+gmres!(out, L, v)
 #

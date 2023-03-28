@@ -1,4 +1,6 @@
-# Utilities for testing update coefficient behaviour with state-dependent (i.e. dependent on u/p/t) functions
+import SciMLOperators: update_coefficients, update_coefficients!
+
+# Wrapper function for testing update coefficient behaviour with state-dependent (i.e. dependent on u/p/t) functions
 
 mutable struct WrapFunc{F,P,T}
     func::F
@@ -16,11 +18,4 @@ update_coefficients(w::WrapFunc, u, p, t) = WrapFunc(w.func, p, t)
 function update_coefficients!(w::WrapFunc, u, p, t)
     w.p = p
     w.t = t
-end
-
-# Helper function for testing correct update coefficients behaviour of operators
-function update_coefficients_for_test!(L, u, p, t)
-    update_coefficients!(L, u, p, t)
-    # Force function hiding inside L to update. Should be a null-op if previous line works correctly
-    update_coefficients!(L.op.f, u, p, t) 
 end

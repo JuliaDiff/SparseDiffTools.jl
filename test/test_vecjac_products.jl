@@ -20,9 +20,17 @@ f = WrapFunc(_f, 1.0, 1.0)
 
 L = VecJac(f, x, 1.0, 1.0)
 update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(f, v, 3.0, 4.0)
 actual_vjp = Zygote.jacobian(f, x)[1]' * v
 @test L * v ≈ actual_vjp
+update_coefficients!(f, v, 5.0, 6.0)
+actual_vjp2 = Zygote.jacobian(f, x)[1]' * v
+@test L(copy(v), v, 5.0, 6.0) ≈ actual_vjp2
+
 L = VecJac(f, x, 1.0, 1.0; autodiff = AutoFiniteDiff())
 update_coefficients!(L, v, 3.0, 4.0)
+update_coefficients!(f, v, 3.0, 4.0)
 @test L * v ≈ actual_vjp
+update_coefficients!(f, v, 5.0, 6.0)
+@test L(copy(v), v, 5.0, 6.0) ≈ actual_vjp2
 #

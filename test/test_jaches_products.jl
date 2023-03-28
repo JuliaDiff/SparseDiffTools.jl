@@ -6,14 +6,14 @@ Random.seed!(123)
 N = 300
 const A = rand(N, N)
 
-_f(y, x) = mul!(y, A, x)
-_f(x) = A * x
+_f(y, x) = mul!(y, A, x.^2)
+_f(x) = A * (x.^2)
 
 x = rand(N)
 v = rand(N)
 a, b = rand(2)
 dy = similar(x)
-_g(x) = sum(abs2, x)
+_g(x) = sum(abs2, x.^2)
 function _h(x)
     FiniteDiff.finite_difference_gradient(_g, x)
 end

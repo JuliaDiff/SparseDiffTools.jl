@@ -7,10 +7,10 @@ mutable struct WrapFunc{F,U,P,T}
     t::T
 end
 
-(w::WrapFunc)(u) = sum(w.u) * w.p * w.t * w.func(u) 
+(w::WrapFunc)(u) = w.p * w.t * w.func(u) 
 function (w::WrapFunc)(v, u) 
     w.func(v, u)
-    lmul!(sum(w.u) * w.p * w.t, v)
+    lmul!(w.p * w.t, v)
 end
 
 update_coefficients(w::WrapFunc, u, p, t) = WrapFunc(w.func, u, p, t)

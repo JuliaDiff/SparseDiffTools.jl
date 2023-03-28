@@ -1,8 +1,7 @@
 # Utilities for testing update coefficient behaviour with state-dependent (i.e. dependent on u/p/t) functions
 
-mutable struct WrapFunc{F,U,P,T}
+mutable struct WrapFunc{F,P,T}
     func::F
-    u::U
     p::P
     t::T
 end
@@ -13,9 +12,8 @@ function (w::WrapFunc)(v, u)
     lmul!(w.p * w.t, v)
 end
 
-update_coefficients(w::WrapFunc, u, p, t) = WrapFunc(w.func, u, p, t)
+update_coefficients(w::WrapFunc, u, p, t) = WrapFunc(w.func, p, t)
 function update_coefficients!(w::WrapFunc, u, p, t)
-    w.u = u
     w.p = p
     w.t = t
 end

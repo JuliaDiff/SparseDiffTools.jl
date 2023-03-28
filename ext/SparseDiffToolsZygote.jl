@@ -52,8 +52,8 @@ function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
-    cache1 .= Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
-                   }.(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
+    # Reset each dual number in cache1 to primal = dual = 1.
+    cache1 .= eltype(cache1).(x, ForwardDiff.Partials.(Tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)
 end

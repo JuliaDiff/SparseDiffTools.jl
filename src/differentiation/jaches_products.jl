@@ -78,6 +78,7 @@ function num_hesvec!(dy,
     g(cache2, x)
     @. x -= 2ϵ * v
     g(cache3, x)
+    @. x += ϵ * v
     @. dy = (cache2 - cache3) / (2ϵ)
 end
 
@@ -110,6 +111,7 @@ function numauto_hesvec!(dy,
     g(cache1, x)
     @. x -= 2ϵ * v
     g(cache2, x)
+    @. x += ϵ * v
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 
@@ -158,6 +160,7 @@ function num_hesvecgrad!(dy, g, x, v, cache2 = similar(v), cache3 = similar(v))
     g(cache2, x)
     @. x -= 2ϵ * v
     g(cache3, x)
+    @. x += ϵ * v
     @. dy = (cache2 - cache3) / (2ϵ)
 end
 

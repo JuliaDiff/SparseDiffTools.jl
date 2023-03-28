@@ -25,6 +25,7 @@ function SparseDiffTools.numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache
     g(cache1, x)
     @. x -= 2ϵ * v
     g(cache2, x)
+    @. x += ϵ * v
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 
@@ -37,6 +38,7 @@ function SparseDiffTools.numback_hesvec(f, x, v)
     gxp = g(x)
     x -= 2ϵ * v
     gxm = g(x)
+    @. x += ϵ * v
     (gxp - gxm) / (2ϵ)
 end
 

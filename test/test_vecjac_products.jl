@@ -14,7 +14,7 @@ _f(u) = A * u
 
 # Define state-dependent functions for operator tests 
 include("update_coeffs_testutils.jl")
-f = WrapFunc(_f, ones(N), 1.0, 1.0)
+f = WrapFunc(_f, 1.0, 1.0)
 
 @info "VecJac"
 

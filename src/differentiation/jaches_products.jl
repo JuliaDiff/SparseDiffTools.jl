@@ -208,7 +208,7 @@ end
 
 function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
     f = update_coefficients(L.f, u, p, t)
-    FwdModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
+    FwdModeAutoDiffVecProd(f, u, L.cache, L.vecprod, L.vecprod!)
 end
 
 function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)

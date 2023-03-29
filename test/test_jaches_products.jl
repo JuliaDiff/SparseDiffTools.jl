@@ -64,9 +64,9 @@ cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), e
 @test autonum_hesvec!(dy, g, x, v, cache1, cache2)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 @test autonum_hesvec(g, x, v)≈ForwardDiff.hessian(g, x) * v
 
-@test numback_hesvec!(dy, g, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-6
-@test numback_hesvec!(dy, g, x, v, similar(v), similar(v))≈ForwardDiff.hessian(g, x) * v rtol=1e-6
-@test numback_hesvec(g, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-6
+@test numback_hesvec!(dy, g, x, v)≈ForwardDiff.hessian(g, x) * v
+@test numback_hesvec!(dy, g, x, v, similar(v), similar(v))≈ForwardDiff.hessian(g, x) * v
+@test numback_hesvec(g, x, v)≈ForwardDiff.hessian(g, x) * v
 
 cache3 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(Nothing, eltype(x))), eltype(x), 1
                           }.(x, ForwardDiff.Partials.(tuple.(v)))
@@ -181,7 +181,7 @@ update_coefficients!(g, x, 1.0, 1.0)
 update_coefficients!(h, x, 1.0, 1.0)
 @test L * x ≈ autonum_hesvec(g, x, x)
 @test L * v ≈ numauto_hesvec(g, x, v)
-@test mul!(dy, L, v)≈numauto_hesvec(g, x, v) rtol=1e-8
+@test mul!(dy, L, v)≈numauto_hesvec(g, x, v)
 dy=rand(N);_dy=copy(dy);@test mul!(dy,L,v,a,b)≈a*numauto_hesvec(g,x,v)+b*_dy
 for op in (L, g, h) update_coefficients!(op, v, 3.0, 4.0) end
 @test mul!(dy, L, x)≈numauto_hesvec(g, v, x)

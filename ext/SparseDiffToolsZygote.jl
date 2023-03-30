@@ -38,7 +38,6 @@ function SparseDiffTools.numback_hesvec(f, x, v)
     gxp = g(x)
     x -= 2ϵ * v
     gxm = g(x)
-    @. x += ϵ * v
     (gxp - gxm) / (2ϵ)
 end
 

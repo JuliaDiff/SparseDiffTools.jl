@@ -88,7 +88,7 @@ function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
 end
 
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
-                ishermitian = false, opnrom = true)
+                kwargs...)
 
     vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         num_vecjac, num_vecjac!
@@ -113,7 +113,7 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFi
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     ishermitian = ishermitian, opnorm = opnorm,
+                     kwargs...
                     )
 end
 #

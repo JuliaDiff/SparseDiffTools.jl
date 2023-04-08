@@ -14,7 +14,8 @@ end
 
 ### Jac, Hes products
 
-function SparseDiffTools.numback_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v))
+function SparseDiffTools.numback_hesvec!(dy, f, x, v, cache1 = similar(v),
+                                         cache2 = similar(v))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
@@ -42,14 +43,20 @@ function SparseDiffTools.numback_hesvec(f, x, v)
 end
 
 function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
-                          cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                        eltype(x), 1
-                                        }.(x,
-                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
-                          cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-                                        eltype(x), 1
-                                        }.(x,
-                                           ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
+                                          cache1 = Dual{
+                                                        typeof(ForwardDiff.Tag(DeivVecTag(),
+                                                                               eltype(x))),
+                                                        eltype(x), 1
+                                                        }.(x,
+                                                           ForwardDiff.Partials.(tuple.(reshape(v,
+                                                                                                size(x))))),
+                                          cache2 = Dual{
+                                                        typeof(ForwardDiff.Tag(DeivVecTag(),
+                                                                               eltype(x))),
+                                                        eltype(x), 1
+                                                        }.(x,
+                                                           ForwardDiff.Partials.(tuple.(reshape(v,
+                                                                                                size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end

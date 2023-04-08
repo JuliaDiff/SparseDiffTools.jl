@@ -201,7 +201,7 @@ end
 
 ### Operator Forms
 
-struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
+struct FwdModeAutoDiffVecProd{F, U, C, V, V!} <: AbstractAutoDiffVecProd
     f::F
     u::U
     cache::C
@@ -230,7 +230,6 @@ end
 
 function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
                 kwargs...)
-
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -238,8 +237,8 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
         (cache1, cache2), num_jacvec, num_jacvec!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
-                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                      }.(u, ForwardDiff.Partials.(tuple.(u)))
 
         cache2 = copy(cache1)
 
@@ -249,7 +248,7 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace  = static_hasmethod(f, typeof((u, u,)))
+    isinplace = static_hasmethod(f, typeof((u, u)))
 
     if !(isinplace) & !(outofplace)
         error("$f must have signature f(u), or f(du, u).")
@@ -260,13 +259,11 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     kwargs...,
-                    )
+                     kwargs...)
 end
 
 function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
                 kwargs...)
-
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -283,8 +280,8 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
         @assert static_hasmethod(autoback_hesvec, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
 
         cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(),eltype(u))), eltype(u), 1
-                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                      }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 
         (cache1, cache2), autoback_hesvec, autoback_hesvec!
@@ -293,7 +290,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace  = static_hasmethod(f, typeof((u,)))
+    isinplace = static_hasmethod(f, typeof((u,)))
 
     if !(isinplace) & !(outofplace)
         error("$f must have signature f(u).")
@@ -304,13 +301,12 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     kwargs...,
-                    )
+                     kwargs...)
 end
 
-function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
+function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing;
+                    autodiff = AutoForwardDiff(),
                     kwargs...)
-
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -319,7 +315,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = Au
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
-                     }.(u, ForwardDiff.Partials.(tuple.(u)))
+                      }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 
         (cache1, cache2), auto_hesvecgrad, auto_hesvecgrad!
@@ -328,7 +324,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = Au
     end
 
     outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace  = static_hasmethod(f, typeof((u, u,)))
+    isinplace = static_hasmethod(f, typeof((u, u)))
 
     if !(isinplace) & !(outofplace)
         error("$f must have signature f(u), or f(du, u).")
@@ -339,7 +335,6 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing; autodiff = Au
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     kwargs...,
-                    )
+                     kwargs...)
 end
 #

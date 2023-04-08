@@ -52,7 +52,7 @@ function ForwardColorJacCache(f::F, x, _chunksize = nothing;
         _dx = similar(x)
     else
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p, 1),
-                                                  1) .* false
+                                              1) .* false
         _pi = adapt(parameterless_type(dx), [tup for i in 1:length(dx)])
         fx = reshape(Dual{T, eltype(dx), length(tup)}.(vec(dx), ForwardDiff.Partials.(_pi)),
                      size(dx)...)

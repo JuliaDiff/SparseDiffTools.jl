@@ -37,7 +37,7 @@ end
 
 ### Operator Forms
 
-struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
+struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffVecProd
     f::F
     u::U
     cache::C
@@ -57,10 +57,8 @@ struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
             typeof(u),
             typeof(cache),
             typeof(vecprod),
-            typeof(vecprod!),
-           }(
-             f, u, cache, vecprod, vecprod!,
-            )
+            typeof(vecprod!)
+            }(f, u, cache, vecprod, vecprod!)
     end
 end
 
@@ -81,17 +79,16 @@ function (L::RevModeAutoDiffVecProd)(v, p, t)
 end
 
 # prefer non in-place method
-function (L::RevModeAutoDiffVecProd{ad,iip,true})(dv, v, p, t) where{ad,iip}
+function (L::RevModeAutoDiffVecProd{ad, iip, true})(dv, v, p, t) where {ad, iip}
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
-function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
+function (L::RevModeAutoDiffVecProd{ad, true, false})(dv, v, p, t) where {ad}
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
                 kwargs...)
-
     vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         num_vecjac, num_vecjac!
     elseif autodiff isa AutoZygote
@@ -100,10 +97,10 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFi
         auto_vecjac, auto_vecjac!
     end
 
-    cache = (similar(u), similar(u),)
+    cache = (similar(u), similar(u))
 
     outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace  = static_hasmethod(f, typeof((u, u,)))
+    isinplace = static_hasmethod(f, typeof((u, u)))
 
     if !(isinplace) & !(outofplace)
         error("$f must have signature f(u), or f(du, u)")
@@ -115,7 +112,6 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFi
     FunctionOperator(L, u, u;
                      isinplace = isinplace, outofplace = outofplace,
                      p = p, t = t, islinear = true,
-                     kwargs...
-                    )
+                     kwargs...)
 end
 #

@@ -17,7 +17,7 @@ a, b = rand(2)
 dy = similar(x)
 
 A = rand(Float32, N, N)
-_f(du,u) = mul!(du, A, u)
+_f(du, u) = mul!(du, A, u)
 _f(u) = A * u
 
 # Define state-dependent functions for operator tests 
@@ -31,14 +31,15 @@ f = WrapFunc(_f, 1.0f0, 1.0f0)
 L = VecJac(f, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
 update_coefficients!(f, x, 1.0, 1.0)
 actual_jac = Zygote.jacobian(f, x)[1]
-@test L * x ≈ actual_jac' * x 
-@test L * v ≈ actual_jac' * v 
-@test mul!(dy, L, v) ≈ actual_jac' * v 
+@test L * x ≈ actual_jac' * x
+@test L * v ≈ actual_jac' * v
+@test mul!(dy, L, v) ≈ actual_jac' * v
 update_coefficients!(L, v, 3.0, 4.0)
 update_coefficients!(f, v, 3.0, 4.0)
 actual_jac = Zygote.jacobian(f, v)[1]
 @test mul!(dy, L, x) ≈ actual_jac' * x
-_dy=copy(dy); @test mul!(dy,L,x,a,b) ≈ a*actual_jac'*x + b*_dy
+_dy = copy(dy);
+@test mul!(dy, L, x, a, b) ≈ a * actual_jac' * x + b * _dy;
 update_coefficients!(f, v, 5.0, 6.0)
 actual_jac = Zygote.jacobian(f, v)[1]
 @test L(dy, v, 5.0, 6.0) ≈ actual_jac' * v
@@ -46,14 +47,15 @@ actual_jac = Zygote.jacobian(f, v)[1]
 L = VecJac(f, copy(x), 1.0f0, 1.0f0; autodiff = AutoFiniteDiff())
 update_coefficients!(f, x, 1.0, 1.0)
 actual_jac = Zygote.jacobian(f, x)[1]
-@test L * x ≈ actual_jac' * x 
-@test L * v ≈ actual_jac' * v 
-@test mul!(dy, L, v) ≈ actual_jac' * v 
+@test L * x ≈ actual_jac' * x
+@test L * v ≈ actual_jac' * v
+@test mul!(dy, L, v) ≈ actual_jac' * v
 update_coefficients!(L, v, 3.0, 4.0)
 update_coefficients!(f, v, 3.0, 4.0)
 actual_jac = Zygote.jacobian(f, v)[1]
 @test mul!(dy, L, x) ≈ actual_jac' * x
-_dy=copy(dy); @test mul!(dy,L,x,a,b) ≈ a*actual_jac'*x + b*_dy
+_dy = copy(dy);
+@test mul!(dy, L, x, a, b) ≈ a * actual_jac' * x + b * _dy;
 update_coefficients!(f, v, 5.0, 6.0)
 actual_jac = Zygote.jacobian(f, v)[1]
 @test L(dy, v, 5.0, 6.0) ≈ actual_jac' * v

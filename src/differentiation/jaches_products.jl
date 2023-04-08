@@ -78,6 +78,7 @@ function num_hesvec!(dy,
     g(cache2, x)
     @. x -= 2ϵ * v
     g(cache3, x)
+    @. x += ϵ * v
     @. dy = (cache2 - cache3) / (2ϵ)
 end
 
@@ -110,6 +111,7 @@ function numauto_hesvec!(dy,
     g(cache1, x)
     @. x -= 2ϵ * v
     g(cache2, x)
+    @. x += ϵ * v
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 
@@ -158,6 +160,7 @@ function num_hesvecgrad!(dy, g, x, v, cache2 = similar(v), cache3 = similar(v))
     g(cache2, x)
     @. x -= 2ϵ * v
     g(cache3, x)
+    @. x += ϵ * v
     @. dy = (cache2 - cache3) / (2ϵ)
 end
 
@@ -207,10 +210,12 @@ struct FwdModeAutoDiffVecProd{F,U,C,V,V!} <: AbstractAutoDiffVecProd
 end
 
 function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
-    FwdModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+    f = update_coefficients(L.f, u, p, t)
+    FwdModeAutoDiffVecProd(f, u, L.cache, L.vecprod, L.vecprod!)
 end
 
 function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
+    update_coefficients!(L.f, u, p, t)
     copy!(L.u, u)
     L
 end

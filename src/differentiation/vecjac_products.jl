@@ -65,26 +65,28 @@ struct RevModeAutoDiffVecProd{ad,iip,oop,F,U,C,V,V!} <: AbstractAutoDiffVecProd
 end
 
 function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
-    RevModeAutoDiffVecProd(L.f, u, L.vecprod, L.vecprod!, L.cache)
+    f = update_coefficients(L.f, u, p, t)
+    RevModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
 end
 
 function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
+    update_coefficients!(L.f, u, p, t)
     copy!(L.u, u)
     L
 end
 
 # Interpret the call as df/du' * u
 function (L::RevModeAutoDiffVecProd)(v, p, t)
-    L.vecprod(_u -> L.f(_u, p, t), L.u, v)
+    L.vecprod(L.f, L.u, v)
 end
 
 # prefer non in-place method
 function (L::RevModeAutoDiffVecProd{ad,iip,true})(dv, v, p, t) where{ad,iip}
-    L.vecprod!(dv, _u -> L.f(_u, p, t), L.u, v, L.cache...)
+    L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
 function (L::RevModeAutoDiffVecProd{ad,true,false})(dv, v, p, t) where{ad}
-    L.vecprod!(dv, (_du, _u) -> L.f(_du, _u, p, t), L.u, v, L.cache...)
+    L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
@@ -100,11 +102,11 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFi
 
     cache = (similar(u), similar(u),)
 
-    outofplace = static_hasmethod(f, typeof((u, p, t)))
-    isinplace  = static_hasmethod(f, typeof((u, u, p, t)))
+    outofplace = static_hasmethod(f, typeof((u,)))
+    isinplace  = static_hasmethod(f, typeof((u, u,)))
 
     if !(isinplace) & !(outofplace)
-        error("$f must have signature f(u, p, t), or f(du, u, p, t)")
+        error("$f must have signature f(u), or f(du, u)")
     end
 
     L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = autodiff,

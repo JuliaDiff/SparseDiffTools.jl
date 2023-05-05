@@ -25,6 +25,11 @@ if GROUP == "All"
     @time @safetestset "AD using colorvec vector" begin include("test_ad.jl") end
 end
 
+if GROUP == "InterfaceI" || GROUP == "All"
+    @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
+    @time @safetestset "Vec Jac Products" begin include("test_vecjac_products.jl") end
+end
+
 if GROUP == "GPU"
     activate_gpu_env()
     @time @safetestset "GPU AD" begin include("test_gpu_ad.jl") end

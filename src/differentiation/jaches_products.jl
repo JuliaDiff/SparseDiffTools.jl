@@ -262,8 +262,8 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
                      kwargs...)
 end
 
-function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
-                kwargs...)
+function HesVec(f, u::AbstractArray, p = nothing, t = nothing;
+                autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -280,7 +280,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
         @assert static_hasmethod(autoback_hesvec, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
 
         cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                      typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
                       }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 

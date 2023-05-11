@@ -228,8 +228,8 @@ function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
-function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoForwardDiff(),
-                kwargs...)
+function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
+                autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -237,7 +237,7 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
         (cache1, cache2), num_jacvec, num_jacvec!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                      typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
                       }.(u, ForwardDiff.Partials.(tuple.(u)))
 
         cache2 = copy(cache1)
@@ -305,8 +305,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFo
 end
 
 function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing;
-                    autodiff = AutoForwardDiff(),
-                    kwargs...)
+                    autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
         cache2 = similar(u)
@@ -314,7 +313,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing;
         (cache1, cache2), num_hesvecgrad, num_hesvecgrad!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
-                      typeof(ForwardDiff.Tag(DeivVecTag(), eltype(u))), eltype(u), 1
+                      typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
                       }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 

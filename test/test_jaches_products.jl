@@ -32,6 +32,9 @@ function _h(dy, x)
     FiniteDiff.finite_difference_gradient!(dy, _g, x)
 end
 
+f2(x) = 2x
+f2(y, x) = (copy!(y, x); lmul!(2, y); y)
+
 # Make functions state-dependent for operator tests 
 
 include("update_coeffs_testutils.jl")
@@ -137,6 +140,17 @@ L = JacVec(f, copy(x), 1.0, 1.0)
 @test get_tag(L.op.cache[1]) === ForwardDiff.Tag{DeivVecTag, eltype(x)}
 L = JacVec(f, copy(x), 1.0, 1.0; tag = MyTag())
 @test get_tag(L.op.cache[1]) === ForwardDiff.Tag{MyTag, eltype(x)}
+
+# Resize test
+for M in (100, 400)
+    L = JacVec(f2, copy(x), 1.0, 1.0)
+    resize!(L, M)
+    _x = resize!(copy(x), M)
+    _u = rand(M)
+
+    @test L * _u ≈ auto_jacvec(f2, _x, _u)
+    _v = zeros(M); @test mul!(_v, L, _u) ≈ auto_jacvec(f2, _x, _u)
+end
 
 @info "HesVec"
 

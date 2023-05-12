@@ -63,4 +63,21 @@ actual_jac = Zygote.jacobian(f, v)[1]
 # Test that x and v were not mutated
 @test x ≈ x0
 @test v ≈ v0
+
+# Resize test
+f2(x) = 2x
+f2(y, x) = (copy!(y, x); lmul!(2, y); y)
+
+for M in (100, 400)
+    L = VecJac(f2, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
+    resize!(L, M)
+    _x = resize!(copy(x), M)
+    _u = rand(M)
+
+    J2 = Zygote.jacobian(f2, _x)[1]
+
+    @test L * _u ≈ J2' * _u rtol=1e-6
+    _v = zeros(M); @test mul!(_v, L, _u) ≈ J2' * _u rtol=1e-6
+end
+
 #

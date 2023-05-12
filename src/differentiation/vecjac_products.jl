@@ -88,6 +88,10 @@ function (L::RevModeAutoDiffVecProd{ad, true, false})(dv, v, p, t) where {ad}
 end
 
 function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
+
+    static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
+    resize!(L.u, n)
+
     for v in L.cache
         resize!(v, n)
     end

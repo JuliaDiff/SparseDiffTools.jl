@@ -229,6 +229,10 @@ function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
 end
 
 function Base.resize!(L::FwdModeAutoDiffVecProd, n::Integer)
+
+    static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
+    resize!(L.u, n)
+
     for v in L.cache
         resize!(v, n)
     end

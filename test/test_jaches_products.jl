@@ -1,10 +1,13 @@
 using SparseDiffTools, ForwardDiff, FiniteDiff, Zygote, IterativeSolvers
 using LinearAlgebra, Test
+using SparseDiffTools: get_tag, DeivVecTag
 
 using Random
 Random.seed!(123)
-N = 300
 
+struct MyTag end
+
+N = 300
 x = rand(N)
 v = rand(N)
 
@@ -104,6 +107,10 @@ _dy = copy(dy);
 update_coefficients!(f, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0) ≈ auto_jacvec(f, v, v)
 
+# GMRES test
+out = similar(v)
+@test_nowarn gmres!(out, L, v)
+
 L = JacVec(f, copy(x), 1.0, 1.0; autodiff = AutoFiniteDiff())
 update_coefficients!(f, x, 1.0, 1.0)
 @test L * x ≈ num_jacvec(f, x, x)
@@ -121,8 +128,15 @@ _dy = copy(dy);
 update_coefficients!(f, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0)≈num_jacvec(f, v, v) rtol=1e-6
 
+# GMRES test
 out = similar(v)
 @test_nowarn gmres!(out, L, v)
+
+# Tag test
+L = JacVec(f, copy(x), 1.0, 1.0)
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{DeivVecTag, eltype(x)}
+L = JacVec(f, copy(x), 1.0, 1.0; tag = MyTag())
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{MyTag, eltype(x)}
 
 @info "HesVec"
 
@@ -159,6 +173,7 @@ _dy = copy(dy);
 update_coefficients!(g, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0) ≈ numauto_hesvec(g, v, v)
 
+# GMRES test
 out = similar(v)
 gmres!(out, L, v)
 
@@ -179,8 +194,15 @@ _dy = copy(dy);
 update_coefficients!(g, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0) ≈ autoback_hesvec(g, v, v)
 
+# GMRES test
 out = similar(v)
 gmres!(out, L, v)
+
+# Tag test
+L = HesVec(g, copy(x), 1.0, 1.0; autodiff = AutoZygote())
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{DeivVecTag, eltype(x)}
+L = HesVec(g, copy(x), 1.0, 1.0; autodiff = AutoZygote(), tag = MyTag())
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{MyTag, eltype(x)}
 
 @info "HesVecGrad"
 
@@ -203,6 +225,10 @@ _dy = copy(dy);
 update_coefficients!(g, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0)≈num_hesvec(g, v, v) rtol=1e-2
 
+# GMRES test
+out = similar(v)
+gmres!(out, L, v)
+
 L = HesVecGrad(h, copy(x), 1.0, 1.0)
 update_coefficients!(g, x, 1.0, 1.0)
 update_coefficients!(h, x, 1.0, 1.0)
@@ -223,6 +249,7 @@ update_coefficients!(g, v, 5.0, 6.0)
 update_coefficients!(h, v, 5.0, 6.0)
 @test L(dy, v, 5.0, 6.0) ≈ numauto_hesvec(g, v, v)
 
+# GMRES test
 out = similar(v)
 gmres!(out, L, v)
 
@@ -230,5 +257,11 @@ gmres!(out, L, v)
 # x's rtol can't be too large since it is mutated and then restored in some algorithms
 @test x ≈ x0
 @test v ≈ v0
+
+# Tag test
+L = HesVecGrad(g, copy(x), 1.0, 1.0)
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{DeivVecTag, eltype(x)}
+L = HesVecGrad(g, copy(x), 1.0, 1.0; tag = MyTag())
+@test get_tag(L.op.cache[1]) === ForwardDiff.Tag{MyTag, eltype(x)}
 
 #

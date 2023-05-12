@@ -68,7 +68,7 @@ end
 
 function SparseDiffTools.autoback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
-    y = Dual{typeof(ForwardDiff.Tag(DeivVecTag, eltype(x))), eltype(x), 1
+    y = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
              }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     ForwardDiff.partials.(g(y), 1)
 end

@@ -87,6 +87,12 @@ function (L::RevModeAutoDiffVecProd{ad, true, false})(dv, v, p, t) where {ad}
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
+function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
+    for v in L.cache
+        resize!(v, n)
+    end
+end
+
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
                 kwargs...)
     vecprod, vecprod! = if autodiff isa AutoFiniteDiff

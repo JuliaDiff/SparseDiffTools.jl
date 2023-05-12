@@ -228,6 +228,12 @@ function (L::FwdModeAutoDiffVecProd)(dv, v, p, t)
     L.vecprod!(dv, L.f, L.u, v, L.cache...)
 end
 
+function Base.resize!(L::FwdModeAutoDiffVecProd, n::Integer)
+    for v in L.cache
+        resize!(v, n)
+    end
+end
+
 function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
                 autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff

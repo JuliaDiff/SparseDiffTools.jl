@@ -11,7 +11,7 @@ function activate_gpu_env()
     Pkg.instantiate()
 end
 
-if GROUP == "All"
+if GROUP == "Core" || GROUP == "All"
     @time @safetestset "Exact coloring via contraction" begin include("test_contraction.jl") end
     @time @safetestset "Greedy distance-1 coloring" begin include("test_greedy_d1.jl") end
     @time @safetestset "Greedy star coloring" begin include("test_greedy_star.jl") end
@@ -23,6 +23,11 @@ if GROUP == "All"
     @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
     @time @safetestset "Vec Jac Products" begin include("test_vecjac_products.jl") end
     @time @safetestset "AD using colorvec vector" begin include("test_ad.jl") end
+end
+
+if GROUP == "InterfaceI" || GROUP == "All"
+    @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
+    @time @safetestset "Vec Jac Products" begin include("test_vecjac_products.jl") end
 end
 
 if GROUP == "GPU"

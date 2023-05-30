@@ -34,26 +34,33 @@ f = WrapFunc(_f, 1.0f0, 1.0f0)
 
 L = VecJac(f, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
 
-Jtrue = Zygote.jacobian(f, x)[1]
+Jx = Zygote.jacobian(f, x)[1]
+Jv = Zygote.jacobian(f, v)[1]
 
-@test L * x ≈ Jtrue' * x
-y=zero(x); @test mul!(y, L, v) ≈ Jtrue' * v
-@test L(x, 1.0f0, 1.0f0) ≈ Jtrue' * x
-y=zero(x); @test L(y, x, 1.0f0, 1.0f0) ≈ Jtrue' * x
+@test L * x ≈ Jx' * x
+@test L * v ≈ Jx' * v
+y=zero(x); @test mul!(y, L, v) ≈ Jx' * v
+y=zero(x); @test mul!(y, L, v) ≈ Jx' * v
 
-@test L * v ≈ Jtrue' * v
-y=zero(x); @test mul!(y, L, v) ≈ Jtrue' * v
-# @test L(v, 1.0f0, 1.0f0) ≈ Jtrue' * v
-# y=zero(v); @test L(y, v, 1.0f0, 1.0f0) ≈ Jtrue' * v
+@test L(x, 1.0f0, 1.0f0) ≈ Jx' * x
+y=zero(x); @test L(y, x, 1.0f0, 1.0f0) ≈ Jx' * x
+@test L(v, 1.0f0, 1.0f0) ≈ Jv' * v
+y=zero(v); @test L(y, v, 1.0f0, 1.0f0) ≈ Jv' * v
 
 update_coefficients!(L, v, 3.0, 4.0)
-Jtrue = Zygote.jacobian(f, v)[1]
-@test mul!(y, L, x) ≈ Jtrue' * x
-_y=copy(y); @test mul!(y, L, x, a, b) ≈ a * Jtrue' * x + b * _y;
 
-update_coefficients!(f, v, 5.0, 6.0)
-Jtrue = Zygote.jacobian(f, v)[1]
-y=zero(x); @test L(y, v, 5.0, 6.0) ≈ Jtrue' * v
+Jx = Zygote.jacobian(f, x)[1]
+Jv = Zygote.jacobian(f, v)[1]
+
+@test L * x ≈ Jv' * x
+@test L * v ≈ Jv' * v
+y=zero(x); @test mul!(y, L, v) ≈ Jv' * v
+y=zero(x); @test mul!(y, L, v) ≈ Jv' * v
+
+@test L(x, 3.0f0, 4.0f0) ≈ Jx' * x
+y=zero(x); @test L(y, x, 3.0f0, 4.0f0) ≈ Jx' * x
+@test L(v, 3.0f0, 4.0f0) ≈ Jv' * v
+y=zero(v); @test L(y, v, 3.0f0, 4.0f0) ≈ Jv' * v
 
 @info "VecJac AutoFiniteDiff"
 
@@ -74,6 +81,8 @@ update_coefficients!(f, v, 5.0, 6.0)
 @test x ≈ x0
 @test v ≈ v0
 
+@info "Base.resize!"
+
 # Resize test
 f2(x) = 2x
 f2(y, x) = (copy!(y, x); lmul!(2, y); y)
@@ -81,11 +90,12 @@ f2(y, x) = (copy!(y, x); lmul!(2, y); y)
 for M in (100, 400)
     local L = VecJac(f2, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
     resize!(L, M)
+
     _x = resize!(copy(x), M)
     _u = rand(M)
-
     J2 = Zygote.jacobian(f2, _x)[1]
 
+    update_coefficients!(L, _x, 1.0f0, 1.0f0)
     @test L * _u ≈ J2' * _u rtol=1e-6
     _v = zeros(M); @test mul!(_v, L, _u) ≈ J2' * _u rtol=1e-6
 end

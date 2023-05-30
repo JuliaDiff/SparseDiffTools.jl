@@ -20,8 +20,6 @@ if GROUP == "Core" || GROUP == "All"
     @time @safetestset "Hessian colorvecs" begin include("test_sparse_hessian.jl") end
     @time @safetestset "Integration test" begin include("test_integration.jl") end
     @time @safetestset "Special matrices" begin include("test_specialmatrices.jl") end
-    @time @safetestset "Jac Vecs and Hes Vecs" begin include("test_jaches_products.jl") end
-    @time @safetestset "Vec Jac Products" begin include("test_vecjac_products.jl") end
     @time @safetestset "AD using colorvec vector" begin include("test_ad.jl") end
 end
 

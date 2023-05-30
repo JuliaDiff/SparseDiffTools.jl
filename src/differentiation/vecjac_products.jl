@@ -43,11 +43,17 @@ struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffV
     cache::C
     vecprod::V
     vecprod!::V!
+    autodiff::ad
 
-    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!;
-                                    autodiff = AutoFiniteDiff(),
-                                    isinplace = false, outofplace = true)
-        @assert isinplace || outofplace
+    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!, autodiff)
+
+        outofplace = static_hasmethod(f, typeof((u,)))
+        isinplace = static_hasmethod(f, typeof((u, u)))
+
+        if !(isinplace) & !(outofplace)
+            msg = "$f must have signature f(u), or f(du, u)"
+            throw(ArgumentError(msg))
+        end
 
         new{
             typeof(autodiff),
@@ -58,13 +64,19 @@ struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffV
             typeof(cache),
             typeof(vecprod),
             typeof(vecprod!)
-            }(f, u, cache, vecprod, vecprod!)
+           }(
+             f, u, cache, vecprod, vecprod!, autodiff,
+            )
     end
 end
 
+function get_iip_oop(::RevModeAutoDiffVecProd{ad, iip, oop}) where{ad, iip, oop}
+    iip, oop
+end
+
 function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
-    f = update_coefficients(L.f, u, p, t)
-    RevModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
+    @set! L.f = update_coefficients(L.f, u, p, t)
+    @set! L.u = u
 end
 
 function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
@@ -97,31 +109,36 @@ function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
     end
 end
 
-function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
-                kwargs...)
-    vecprod, vecprod! = if autodiff isa AutoFiniteDiff
-        num_vecjac, num_vecjac!
+"""
+    VecJac(f, u, [p, t]; autodiff = AutoFiniteDiff())
+
+Returns FunctionOperator that computes
+"""
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
+                autodiff = AutoFiniteDiff(), kwargs...)
+
+    vecprod, vecprod!, cache = if autodiff isa AutoFiniteDiff
+        num_vecjac, num_vecjac!, (similar(u), similar(u))
     elseif autodiff isa AutoZygote
         @assert static_hasmethod(auto_vecjac, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
 
-        auto_vecjac, auto_vecjac!
+        auto_vecjac, auto_vecjac!, ()
     end
 
-    cache = (similar(u), similar(u))
+    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!, autodiff)
 
-    outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace = static_hasmethod(f, typeof((u, u)))
+    iip, oop = get_iip_oop(L)
 
-    if !(isinplace) & !(outofplace)
-        error("$f must have signature f(u), or f(du, u)")
-    end
+    FunctionOperator(L, u, u; isinplace = iip, outofplace = oop,
+                     p = p, t = t, islinear = true, kwargs...)
+end
 
-    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = autodiff,
-                               isinplace = isinplace, outofplace = outofplace)
 
-    FunctionOperator(L, u, u;
-                     isinplace = isinplace, outofplace = outofplace,
-                     p = p, t = t, islinear = true,
-                     kwargs...)
+function FixedVecJac(f, u::AbstractArray, p = nothing, t = nothing;
+                     autodiff = AutoFiniteDiff(), kwargs...)
+    _fixedvecjac(f, u, p, t, autodiff, kwargs)
+end
+
+function _fixedvecjac(f, u, p, t, ad::AutoFiniteDiff, kwargs)
 end
 #

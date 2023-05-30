@@ -7,6 +7,7 @@ using Graphs
 using Graphs: SimpleGraph
 using VertexSafeGraphs
 using Adapt
+
 using Reexport
 @reexport using ADTypes
 
@@ -23,6 +24,7 @@ using ArrayInterface: matrix_colors
 using SciMLOperators
 import SciMLOperators: update_coefficients, update_coefficients!
 using Tricks: Tricks, static_hasmethod
+using Setfield: @set!
 
 abstract type AbstractAutoDiffVecProd end
 

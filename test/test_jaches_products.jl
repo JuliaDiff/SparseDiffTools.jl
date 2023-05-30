@@ -143,7 +143,7 @@ L = JacVec(f, copy(x), 1.0, 1.0; tag = MyTag())
 
 # Resize test
 for M in (100, 400)
-    L = JacVec(f2, copy(x), 1.0, 1.0)
+    local L = JacVec(f2, copy(x), 1.0, 1.0)
     resize!(L, M)
     _x = resize!(copy(x), M)
     _u = rand(M)

@@ -75,8 +75,8 @@ end
 
 ## VecJac products
 
-function SparseDiffTools.auto_vecjac!(du, f, x, v, cache1 = nothing, cache2 = nothing)
-    !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = false")
+function SparseDiffTools.auto_vecjac!(du, f, x, v)
+    !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
 

@@ -1,4 +1,4 @@
-using SparseDiffTools, ForwardDiff, FiniteDiff, Zygote, IterativeSolvers
+using SparseDiffTools, Zygote
 using LinearAlgebra, Test
 
 using Random
@@ -13,52 +13,62 @@ v = rand(Float32, N)
 x0 = copy(x)
 v0 = copy(v)
 
-a, b = rand(2)
-dy = similar(x)
+a, b = rand(Float32, 2)
 
 A = rand(Float32, N, N)
-_f(du, u) = mul!(du, A, u)
-_f(u) = A * u
+_f(y, x) = mul!(y, A, x .^ 2)
+_f(x) = A * (x .^ 2)
 
 # Define state-dependent functions for operator tests 
 include("update_coeffs_testutils.jl")
 f = WrapFunc(_f, 1.0f0, 1.0f0)
 
+@test auto_vecjac(f, x, v) ≈ Zygote.jacobian(f, x)[1]' * v
+@test auto_vecjac!(zero(x), f, x, v) ≈ auto_vecjac(f, x, v)
+@test num_vecjac!(zero(x), f, copy(x), v) ≈ num_vecjac(f, copy(x), v)
+@test auto_vecjac(f, x, v) ≈ num_vecjac(f, copy(x), copy(v)) rtol = 1e-2
+
 # Compute Jacobian via Zygote
 
-@info "VecJac"
+@info "VecJac AutoZygote"
 
 L = VecJac(f, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
-update_coefficients!(f, x, 1.0, 1.0)
-actual_jac = Zygote.jacobian(f, x)[1]
-@test L * x ≈ actual_jac' * x
-@test L * v ≈ actual_jac' * v
-@test mul!(dy, L, v) ≈ actual_jac' * v
+
+Jtrue = Zygote.jacobian(f, x)[1]
+
+@test L * x ≈ Jtrue' * x
+y=zero(x); @test mul!(y, L, v) ≈ Jtrue' * v
+@test L(x, 1.0f0, 1.0f0) ≈ Jtrue' * x
+y=zero(x); @test L(y, x, 1.0f0, 1.0f0) ≈ Jtrue' * x
+
+@test L * v ≈ Jtrue' * v
+y=zero(x); @test mul!(y, L, v) ≈ Jtrue' * v
+# @test L(v, 1.0f0, 1.0f0) ≈ Jtrue' * v
+# y=zero(v); @test L(y, v, 1.0f0, 1.0f0) ≈ Jtrue' * v
+
 update_coefficients!(L, v, 3.0, 4.0)
-update_coefficients!(f, v, 3.0, 4.0)
-actual_jac = Zygote.jacobian(f, v)[1]
-@test mul!(dy, L, x) ≈ actual_jac' * x
-_dy = copy(dy);
-@test mul!(dy, L, x, a, b) ≈ a * actual_jac' * x + b * _dy;
+Jtrue = Zygote.jacobian(f, v)[1]
+@test mul!(y, L, x) ≈ Jtrue' * x
+_y=copy(y); @test mul!(y, L, x, a, b) ≈ a * Jtrue' * x + b * _y;
+
 update_coefficients!(f, v, 5.0, 6.0)
-actual_jac = Zygote.jacobian(f, v)[1]
-@test L(dy, v, 5.0, 6.0) ≈ actual_jac' * v
+Jtrue = Zygote.jacobian(f, v)[1]
+y=zero(x); @test L(y, v, 5.0, 6.0) ≈ Jtrue' * v
+
+@info "VecJac AutoFiniteDiff"
 
 L = VecJac(f, copy(x), 1.0f0, 1.0f0; autodiff = AutoFiniteDiff())
-update_coefficients!(f, x, 1.0, 1.0)
-actual_jac = Zygote.jacobian(f, x)[1]
-@test L * x ≈ actual_jac' * x
-@test L * v ≈ actual_jac' * v
-@test mul!(dy, L, v) ≈ actual_jac' * v
+
+@test L * x ≈ num_vecjac(f, copy(x), x)
+@test L * v ≈ num_vecjac(f, copy(x), v)
+y=zero(x); @test mul!(y, L, v) ≈ num_vecjac(f, copy(x), v)
+
 update_coefficients!(L, v, 3.0, 4.0)
-update_coefficients!(f, v, 3.0, 4.0)
-actual_jac = Zygote.jacobian(f, v)[1]
-@test mul!(dy, L, x) ≈ actual_jac' * x
-_dy = copy(dy);
-@test mul!(dy, L, x, a, b) ≈ a * actual_jac' * x + b * _dy;
+@test mul!(y, L, x) ≈ num_vecjac(f, copy(v), x)
+_y = copy(y); @test mul!(y, L, x, a, b) ≈ a * num_vecjac(f,copy(v),x) + b * _y
+
 update_coefficients!(f, v, 5.0, 6.0)
-actual_jac = Zygote.jacobian(f, v)[1]
-@test L(dy, v, 5.0, 6.0) ≈ actual_jac' * v
+@test L(y, v, 5.0, 6.0) ≈ num_vecjac(f, copy(v), v)
 
 # Test that x and v were not mutated
 @test x ≈ x0
@@ -69,7 +79,7 @@ f2(x) = 2x
 f2(y, x) = (copy!(y, x); lmul!(2, y); y)
 
 for M in (100, 400)
-    L = VecJac(f2, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
+    local L = VecJac(f2, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
     resize!(L, M)
     _x = resize!(copy(x), M)
     _u = rand(M)

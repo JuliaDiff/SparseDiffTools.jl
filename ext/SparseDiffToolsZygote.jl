@@ -1,16 +1,12 @@
 module SparseDiffToolsZygote
 
-if isdefined(Base, :get_extension)
-    import Zygote
-    using LinearAlgebra
-    using SparseDiffTools: SparseDiffTools, DeivVecTag
-    using ForwardDiff: ForwardDiff, Dual, partials
-else
-    import ..Zygote
-    using ..LinearAlgebra
-    using ..SparseDiffTools: SparseDiffTools, DeivVecTag
-    using ..ForwardDiff: ForwardDiff, Dual, partials
-end
+import Zygote
+using ADTypes
+using LinearAlgebra
+using SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP
+using ForwardDiff: ForwardDiff, Dual, partials
+import SciMLOperators: update_coefficients, update_coefficients!
+import Setfield: @set!
 
 ### Jac, Hes products
 
@@ -75,14 +71,56 @@ end
 
 ## VecJac products
 
+# VJP methods
 function SparseDiffTools.auto_vecjac!(du, f, x, v)
     !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
 
 function SparseDiffTools.auto_vecjac(f, x, v)
-    vv, back = Zygote.pullback(f, x)
-    return vec(back(reshape(v, size(vv)))[1])
+    y, back = Zygote.pullback(f, x)
+    return vec(back(reshape(v, size(y)))[1])
+end
+
+# overload operator interface
+function SparseDiffTools._vecjac(f, u, autodiff::AutoZygote)
+
+    cache = ()
+    pullback = Zygote.pullback(f, u)
+
+    AutoDiffVJP(f, u, cache, autodiff, pullback)
+end
+
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoZygote}
+    @set! L.f = update_coefficients(L.f, u, p, t)
+    @set! L.u = u
+    @set! L.pullback = Zygote.pullback(L.f, u)
+end
+
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoZygote}
+    update_coefficients!(L.f, u, p, t)
+    copy!(L.u, u)
+    L.pullback = Zygote.pullback(L.f, u)
+    L
+end
+
+# Interpret the call as df/du' * v
+function (L::AutoDiffVJP{AD})(v, p, t) where{AD <: AutoZygote}
+
+    y, back = L.pullback
+    V = reshape(v, size(y))
+
+    back(V)[1] |> vec
+end
+
+# prefer non in-place method
+function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t) where {AD <: AutoZygote, IIP}
+    _dv = L(v, p, t)
+    copy!(dv, _dv)
+end
+
+function (L::AutoDiffVJP{AD, true, false})(dv, v, p, t) where {AD <: AutoZygote}
+    SparseDiffTools.auto_vecjac!(dv, L.f, L.u, v, L.cache...)
 end
 
 end # module

@@ -37,15 +37,35 @@ end
 
 ### Operator Forms
 
-struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffVecProd
+"""
+    VecJac(f, u, [p, t]; autodiff = AutoFiniteDiff())
+"""
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
+                autodiff = AutoFiniteDiff(), kwargs...)
+
+    L = _vecjac(f, u, autodiff)
+    IIP, OOP = get_iip_oop(L)
+
+    FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
+                     p = p, t = t, islinear = true, kwargs...)
+end
+
+function _vecjac(f, u, autodiff::AutoFiniteDiff)
+
+    cache = (similar(u), similar(u))
+    pullback = nothing
+
+    AutoDiffVJP(f, u, cache, autodiff, pullback)
+end
+
+mutable struct AutoDiffVJP{AD, IIP, OOP, F, U, C, PB} <: AbstractAutoDiffVecProd
     f::F
     u::U
     cache::C
-    vecprod::V
-    vecprod!::V!
-    autodiff::ad
+    autodiff::AD
+    pullback::PB
 
-    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!, autodiff)
+    function AutoDiffVJP(f, u, cache, autodiff, pullback)
 
         outofplace = static_hasmethod(f, typeof((u,)))
         isinplace = static_hasmethod(f, typeof((u, u)))
@@ -62,44 +82,38 @@ struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffV
             typeof(f),
             typeof(u),
             typeof(cache),
-            typeof(vecprod),
-            typeof(vecprod!)
+            typeof(pullback),
            }(
-             f, u, cache, vecprod, vecprod!, autodiff,
+             f, u, cache, autodiff, pullback,
             )
     end
 end
 
-function get_iip_oop(::RevModeAutoDiffVecProd{ad, iip, oop}) where{ad, iip, oop}
-    iip, oop
+function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where{AD, IIP, OOP}
+    IIP, OOP
 end
 
-function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoFiniteDiff}
     @set! L.f = update_coefficients(L.f, u, p, t)
     @set! L.u = u
 end
 
-function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoFiniteDiff}
     update_coefficients!(L.f, u, p, t)
     copy!(L.u, u)
     L
 end
 
-# Interpret the call as df/du' * u
-function (L::RevModeAutoDiffVecProd)(v, p, t)
-    L.vecprod(L.f, L.u, v)
+# Interpret the call as df/du' * v
+function (L::AutoDiffVJP{AD})(v, p, t) where{AD <: AutoFiniteDiff}
+    num_vecjac(L.f, L.u, v)
 end
 
-# prefer non in-place method
-function (L::RevModeAutoDiffVecProd{ad, iip, true})(dv, v, p, t) where {ad, iip}
-    L.vecprod!(dv, L.f, L.u, v, L.cache...)
+function (L::AutoDiffVJP{AD})(dv, v, p, t) where{AD <: AutoFiniteDiff}
+    num_vecjac!(dv, L.f, L.u, v, L.cache...)
 end
 
-function (L::RevModeAutoDiffVecProd{ad, true, false})(dv, v, p, t) where {ad}
-    L.vecprod!(dv, L.f, L.u, v, L.cache...)
-end
-
-function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
+function Base.resize!(L::AutoDiffVJP, n::Integer)
 
     static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
     resize!(L.u, n)
@@ -107,38 +121,6 @@ function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
     for v in L.cache
         resize!(v, n)
     end
-end
 
-"""
-    VecJac(f, u, [p, t]; autodiff = AutoFiniteDiff())
-
-Returns FunctionOperator that computes
-"""
-function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
-                autodiff = AutoFiniteDiff(), kwargs...)
-
-    vecprod, vecprod!, cache = if autodiff isa AutoFiniteDiff
-        num_vecjac, num_vecjac!, (similar(u), similar(u))
-    elseif autodiff isa AutoZygote
-        @assert static_hasmethod(auto_vecjac, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
-
-        auto_vecjac, auto_vecjac!, ()
-    end
-
-    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!, autodiff)
-
-    iip, oop = get_iip_oop(L)
-
-    FunctionOperator(L, u, u; isinplace = iip, outofplace = oop,
-                     p = p, t = t, islinear = true, kwargs...)
-end
-
-
-function FixedVecJac(f, u::AbstractArray, p = nothing, t = nothing;
-                     autodiff = AutoFiniteDiff(), kwargs...)
-    _fixedvecjac(f, u, p, t, autodiff, kwargs)
-end
-
-function _fixedvecjac(f, u, p, t, ad::AutoFiniteDiff, kwargs)
 end
 #

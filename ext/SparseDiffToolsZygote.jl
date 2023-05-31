@@ -129,7 +129,7 @@ end
 function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote, IIP}
     # ignore VJP_input as pullback was computed in update_coefficients!(...)
 
-    _dv = L(v, p, t)
+    _dv = L(v, p, t; VJP_input = VJP_input)
     copy!(dv, _dv)
 end
 

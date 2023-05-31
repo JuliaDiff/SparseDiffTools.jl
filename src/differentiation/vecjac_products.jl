@@ -39,6 +39,19 @@ end
 
 """
     VecJac(f, u, [p, t]; autodiff = AutoFiniteDiff())
+
+Returns SciMLOperators.FunctionOperator which computes vector-jacobian
+product `df/du * v`.
+
+```
+L = VecJac(f, u)
+
+L * v         # = df/du * v
+mul!(w, L, v) # = df/du * v
+
+L(v, p, t; VJP_input = w)    # = df/dw * v
+L(x, v, p, t; VJP_input = w) # = df/dw * v
+```
 """
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
                 autodiff = AutoFiniteDiff(), kwargs...)
@@ -46,8 +59,14 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
     L = _vecjac(f, u, autodiff)
     IIP, OOP = get_iip_oop(L)
 
+    if isa(autodiff, AutoZygote) & !OOP
+        msg = "Zygote requires an out of place method with signature f(u)."
+        throw(ArgumentError(msg))
+    end
+
     FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
-                     p = p, t = t, islinear = true, kwargs...)
+                     p = p, t = t, islinear = true,
+                     accepted_kwargs = (:VJP_input,), kwargs...)
 end
 
 function _vecjac(f, u, autodiff::AutoFiniteDiff)
@@ -59,10 +78,15 @@ function _vecjac(f, u, autodiff::AutoFiniteDiff)
 end
 
 mutable struct AutoDiffVJP{AD, IIP, OOP, F, U, C, PB} <: AbstractAutoDiffVecProd
+    """ Compute VJP of `f` at `u`, applied to vector `v`: `df/du' * u` """
     f::F
+    """ input to `f` """
     u::U
+    """ Cache for num_vecjac! when autodiff isa AutoFintieDiff """
     cache::C
+    """ Type of automatic differentiation algorithm """
     autodiff::AD
+    """ stores the result of Zygote.pullback for AutoZygote """
     pullback::PB
 
     function AutoDiffVJP(f, u, cache, autodiff, pullback)
@@ -93,23 +117,36 @@ function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where{AD, IIP, OOP}
     IIP, OOP
 end
 
-function update_coefficients(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoFiniteDiff}
-    @set! L.f = update_coefficients(L.f, u, p, t)
-    @set! L.u = u
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                            ) where{AD <: AutoFiniteDiff}
+
+    if !isnothing(VJP_input)
+        @set! L.u = VJP_input
+    end
+
+    @set! L.f = update_coefficients(L.f, L.u, p, t)
 end
 
-function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoFiniteDiff}
-    update_coefficients!(L.f, u, p, t)
-    copy!(L.u, u)
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                             ) where{AD <: AutoFiniteDiff}
+
+    if !isnothing(VJP_input)
+        copy!(L.u, VJP_input)
+    end
+
+    update_coefficients!(L.f, L.u, p, t)
+
     L
 end
 
 # Interpret the call as df/du' * v
-function (L::AutoDiffVJP{AD})(v, p, t) where{AD <: AutoFiniteDiff}
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+    # ignore VJP_input as L.u was set in update_coefficients(...)
     num_vecjac(L.f, L.u, v)
 end
 
-function (L::AutoDiffVJP{AD})(dv, v, p, t) where{AD <: AutoFiniteDiff}
+function (L::AutoDiffVJP{AD})(dv, v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+    # ignore VJP_input as L.u was set in update_coefficients!(...)
     num_vecjac!(dv, L.f, L.u, v, L.cache...)
 end
 

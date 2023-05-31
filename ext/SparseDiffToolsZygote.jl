@@ -91,21 +91,33 @@ function SparseDiffTools._vecjac(f, u, autodiff::AutoZygote)
     AutoDiffVJP(f, u, cache, autodiff, pullback)
 end
 
-function update_coefficients(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoZygote}
-    @set! L.f = update_coefficients(L.f, u, p, t)
-    @set! L.u = u
-    @set! L.pullback = Zygote.pullback(L.f, u)
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                            ) where{AD <: AutoZygote}
+
+    if !isnothing(VJP_input)
+        @set! L.u = VJP_input
+    end
+
+    @set! L.f = update_coefficients(L.f, L.u, p, t)
+    @set! L.pullback = Zygote.pullback(L.f, L.u)
 end
 
-function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t) where{AD <: AutoZygote}
-    update_coefficients!(L.f, u, p, t)
-    copy!(L.u, u)
-    L.pullback = Zygote.pullback(L.f, u)
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                             ) where{AD <: AutoZygote}
+
+    if !isnothing(VJP_input)
+        copy!(L.u, VJP_input)
+    end
+
+    update_coefficients!(L.f, L.u, p, t)
+    L.pullback = Zygote.pullback(L.f, L.u)
+
     L
 end
 
 # Interpret the call as df/du' * v
-function (L::AutoDiffVJP{AD})(v, p, t) where{AD <: AutoZygote}
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where{AD <: AutoZygote}
+    # ignore VJP_input as pullback was computed in update_coefficients(...)
 
     y, back = L.pullback
     V = reshape(v, size(y))
@@ -114,13 +126,15 @@ function (L::AutoDiffVJP{AD})(v, p, t) where{AD <: AutoZygote}
 end
 
 # prefer non in-place method
-function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t) where {AD <: AutoZygote, IIP}
+function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote, IIP}
+    # ignore VJP_input as pullback was computed in update_coefficients!(...)
+
     _dv = L(v, p, t)
     copy!(dv, _dv)
 end
 
-function (L::AutoDiffVJP{AD, true, false})(dv, v, p, t) where {AD <: AutoZygote}
-    SparseDiffTools.auto_vecjac!(dv, L.f, L.u, v, L.cache...)
+function (L::AutoDiffVJP{AD, true, false})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote}
+    @error("Zygote requires an out of place method with signature f(u).")
 end
 
 end # module

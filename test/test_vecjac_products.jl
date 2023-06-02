@@ -76,8 +76,9 @@ for M in (100, 400)
 
     J2 = Zygote.jacobian(f2, _x)[1]
 
-    @test L * _u ≈ J2' * _u rtol=1e-6
-    _v = zeros(M); @test mul!(_v, L, _u) ≈ J2' * _u rtol=1e-6
+    @test L * _u≈J2' * _u rtol=1e-6
+    _v = zeros(M)
+    @test mul!(_v, L, _u)≈J2' * _u rtol=1e-6
 end
 
 #

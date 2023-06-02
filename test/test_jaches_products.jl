@@ -149,7 +149,8 @@ for M in (100, 400)
     _u = rand(M)
 
     @test L * _u ≈ auto_jacvec(f2, _x, _u)
-    _v = zeros(M); @test mul!(_v, L, _u) ≈ auto_jacvec(f2, _x, _u)
+    _v = zeros(M)
+    @test mul!(_v, L, _u) ≈ auto_jacvec(f2, _x, _u)
 end
 
 @info "HesVec"

@@ -1,16 +1,12 @@
 module SparseDiffToolsZygote
 
-if isdefined(Base, :get_extension)
-    import Zygote
-    using LinearAlgebra
-    using SparseDiffTools: SparseDiffTools, DeivVecTag
-    using ForwardDiff: ForwardDiff, Dual, partials
-else
-    import ..Zygote
-    using ..LinearAlgebra
-    using ..SparseDiffTools: SparseDiffTools, DeivVecTag
-    using ..ForwardDiff: ForwardDiff, Dual, partials
-end
+import Zygote
+using ADTypes
+using LinearAlgebra
+using SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP
+using ForwardDiff: ForwardDiff, Dual, partials
+import SciMLOperators: update_coefficients, update_coefficients!
+import Setfield: @set!
 
 ### Jac, Hes products
 
@@ -75,14 +71,70 @@ end
 
 ## VecJac products
 
-function SparseDiffTools.auto_vecjac!(du, f, x, v, cache1 = nothing, cache2 = nothing)
-    !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = false")
+# VJP methods
+function SparseDiffTools.auto_vecjac!(du, f, x, v)
+    !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
 
 function SparseDiffTools.auto_vecjac(f, x, v)
-    vv, back = Zygote.pullback(f, x)
-    return vec(back(reshape(v, size(vv)))[1])
+    y, back = Zygote.pullback(f, x)
+    return vec(back(reshape(v, size(y)))[1])
+end
+
+# overload operator interface
+function SparseDiffTools._vecjac(f, u, autodiff::AutoZygote)
+
+    cache = ()
+    pullback = Zygote.pullback(f, u)
+
+    AutoDiffVJP(f, u, cache, autodiff, pullback)
+end
+
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                            ) where{AD <: AutoZygote}
+
+    if !isnothing(VJP_input)
+        @set! L.u = VJP_input
+    end
+
+    @set! L.f = update_coefficients(L.f, L.u, p, t)
+    @set! L.pullback = Zygote.pullback(L.f, L.u)
+end
+
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                             ) where{AD <: AutoZygote}
+
+    if !isnothing(VJP_input)
+        copy!(L.u, VJP_input)
+    end
+
+    update_coefficients!(L.f, L.u, p, t)
+    L.pullback = Zygote.pullback(L.f, L.u)
+
+    L
+end
+
+# Interpret the call as df/du' * v
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where{AD <: AutoZygote}
+    # ignore VJP_input as pullback was computed in update_coefficients(...)
+
+    y, back = L.pullback
+    V = reshape(v, size(y))
+
+    back(V)[1] |> vec
+end
+
+# prefer non in-place method
+function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote, IIP}
+    # ignore VJP_input as pullback was computed in update_coefficients!(...)
+
+    _dv = L(v, p, t; VJP_input = VJP_input)
+    copy!(dv, _dv)
+end
+
+function (L::AutoDiffVJP{AD, true, false})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote}
+    @error("Zygote requires an out of place method with signature f(u).")
 end
 
 end # module

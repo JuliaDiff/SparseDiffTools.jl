@@ -37,17 +37,67 @@ end
 
 ### Operator Forms
 
-struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffVecProd
-    f::F
-    u::U
-    cache::C
-    vecprod::V
-    vecprod!::V!
+"""
+    VecJac(f, u, [p, t]; autodiff = AutoFiniteDiff())
 
-    function RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!;
-                                    autodiff = AutoFiniteDiff(),
-                                    isinplace = false, outofplace = true)
-        @assert isinplace || outofplace
+Returns SciMLOperators.FunctionOperator which computes vector-jacobian
+product `df/du * v`.
+
+```
+L = VecJac(f, u)
+
+L * v         # = df/du * v
+mul!(w, L, v) # = df/du * v
+
+L(v, p, t; VJP_input = w)    # = df/dw * v
+L(x, v, p, t; VJP_input = w) # = df/dw * v
+```
+"""
+function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
+                autodiff = AutoFiniteDiff(), kwargs...)
+
+    L = _vecjac(f, u, autodiff)
+    IIP, OOP = get_iip_oop(L)
+
+    if isa(autodiff, AutoZygote) & !OOP
+        msg = "Zygote requires an out of place method with signature f(u)."
+        throw(ArgumentError(msg))
+    end
+
+    FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
+                     p = p, t = t, islinear = true,
+                     accepted_kwargs = (:VJP_input,), kwargs...)
+end
+
+function _vecjac(f, u, autodiff::AutoFiniteDiff)
+
+    cache = (similar(u), similar(u))
+    pullback = nothing
+
+    AutoDiffVJP(f, u, cache, autodiff, pullback)
+end
+
+mutable struct AutoDiffVJP{AD, IIP, OOP, F, U, C, PB} <: AbstractAutoDiffVecProd
+    """ Compute VJP of `f` at `u`, applied to vector `v`: `df/du' * u` """
+    f::F
+    """ input to `f` """
+    u::U
+    """ Cache for num_vecjac! when autodiff isa AutoFintieDiff """
+    cache::C
+    """ Type of automatic differentiation algorithm """
+    autodiff::AD
+    """ stores the result of Zygote.pullback for AutoZygote """
+    pullback::PB
+
+    function AutoDiffVJP(f, u, cache, autodiff, pullback)
+
+        outofplace = static_hasmethod(f, typeof((u,)))
+        isinplace = static_hasmethod(f, typeof((u, u)))
+
+        if !(isinplace) & !(outofplace)
+            msg = "$f must have signature f(u), or f(du, u)"
+            throw(ArgumentError(msg))
+        end
 
         new{
             typeof(autodiff),
@@ -56,38 +106,51 @@ struct RevModeAutoDiffVecProd{ad, iip, oop, F, U, C, V, V!} <: AbstractAutoDiffV
             typeof(f),
             typeof(u),
             typeof(cache),
-            typeof(vecprod),
-            typeof(vecprod!)
-            }(f, u, cache, vecprod, vecprod!)
+            typeof(pullback),
+           }(
+             f, u, cache, autodiff, pullback,
+            )
     end
 end
 
-function update_coefficients(L::RevModeAutoDiffVecProd, u, p, t)
-    f = update_coefficients(L.f, u, p, t)
-    RevModeAutoDiffVecProd(f, u, L.vecprod, L.vecprod!, L.cache)
+function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where{AD, IIP, OOP}
+    IIP, OOP
 end
 
-function update_coefficients!(L::RevModeAutoDiffVecProd, u, p, t)
-    update_coefficients!(L.f, u, p, t)
-    copy!(L.u, u)
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                            ) where{AD <: AutoFiniteDiff}
+
+    if !isnothing(VJP_input)
+        @set! L.u = VJP_input
+    end
+
+    @set! L.f = update_coefficients(L.f, L.u, p, t)
+end
+
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
+                             ) where{AD <: AutoFiniteDiff}
+
+    if !isnothing(VJP_input)
+        copy!(L.u, VJP_input)
+    end
+
+    update_coefficients!(L.f, L.u, p, t)
+
     L
 end
 
-# Interpret the call as df/du' * u
-function (L::RevModeAutoDiffVecProd)(v, p, t)
-    L.vecprod(L.f, L.u, v)
+# Interpret the call as df/du' * v
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+    # ignore VJP_input as L.u was set in update_coefficients(...)
+    num_vecjac(L.f, L.u, v)
 end
 
-# prefer non in-place method
-function (L::RevModeAutoDiffVecProd{ad, iip, true})(dv, v, p, t) where {ad, iip}
-    L.vecprod!(dv, L.f, L.u, v, L.cache...)
+function (L::AutoDiffVJP{AD})(dv, v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+    # ignore VJP_input as L.u was set in update_coefficients!(...)
+    num_vecjac!(dv, L.f, L.u, v, L.cache...)
 end
 
-function (L::RevModeAutoDiffVecProd{ad, true, false})(dv, v, p, t) where {ad}
-    L.vecprod!(dv, L.f, L.u, v, L.cache...)
-end
-
-function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
+function Base.resize!(L::AutoDiffVJP, n::Integer)
 
     static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
     resize!(L.u, n)
@@ -95,33 +158,6 @@ function Base.resize!(L::RevModeAutoDiffVecProd, n::Integer)
     for v in L.cache
         resize!(v, n)
     end
-end
 
-function VecJac(f, u::AbstractArray, p = nothing, t = nothing; autodiff = AutoFiniteDiff(),
-                kwargs...)
-    vecprod, vecprod! = if autodiff isa AutoFiniteDiff
-        num_vecjac, num_vecjac!
-    elseif autodiff isa AutoZygote
-        @assert static_hasmethod(auto_vecjac, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
-
-        auto_vecjac, auto_vecjac!
-    end
-
-    cache = (similar(u), similar(u))
-
-    outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace = static_hasmethod(f, typeof((u, u)))
-
-    if !(isinplace) & !(outofplace)
-        error("$f must have signature f(u), or f(du, u)")
-    end
-
-    L = RevModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!; autodiff = autodiff,
-                               isinplace = isinplace, outofplace = outofplace)
-
-    FunctionOperator(L, u, u;
-                     isinplace = isinplace, outofplace = outofplace,
-                     p = p, t = t, islinear = true,
-                     kwargs...)
 end
 #

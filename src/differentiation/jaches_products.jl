@@ -210,8 +210,8 @@ struct FwdModeAutoDiffVecProd{F, U, C, V, V!} <: AbstractAutoDiffVecProd
 end
 
 function update_coefficients(L::FwdModeAutoDiffVecProd, u, p, t)
-    f = update_coefficients(L.f, u, p, t)
-    FwdModeAutoDiffVecProd(f, u, L.cache, L.vecprod, L.vecprod!)
+    @set! L.f = update_coefficients(L.f, u, p, t)
+    @set! L.u = u
 end
 
 function update_coefficients!(L::FwdModeAutoDiffVecProd, u, p, t)
@@ -248,7 +248,7 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
                       typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
-                      }.(u, ForwardDiff.Partials.(tuple.(u)))
+                     }.(u, ForwardDiff.Partials.(tuple.(u)))
 
         cache2 = copy(cache1)
 

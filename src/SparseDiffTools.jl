@@ -84,8 +84,8 @@ function auto_vecjac! end
 @static if !isdefined(Base, :get_extension)
     function __init__()
         Requires.@require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
-            include("../ext/SparseDiffToolsZygote.jl")
-            @reexport using .SparseDiffToolsZygote
+            include("../ext/SparseDiffToolsZygoteExt.jl")
+            @reexport using .SparseDiffToolsZygoteExt
         end
     end
 end

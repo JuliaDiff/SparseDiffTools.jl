@@ -1,6 +1,6 @@
-module SparseDiffToolsZygote
+module SparseDiffToolsZygoteExt
 
-import Zygote
+isdefined(Base, :get_extension) ? (import Zygote) : (using ..Zygote)
 using ADTypes
 using LinearAlgebra
 using SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP

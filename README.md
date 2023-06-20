@@ -194,7 +194,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 and thus allows for specifying a non-square Jacobian.
 
 If one is using an out-of-place function `f(x)`, then the alternative form
-ca be used:
+can be used:
 
 ```julia
 jacout = forwarddiff_color_jacobian(g, x,

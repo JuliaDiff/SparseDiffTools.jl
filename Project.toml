@@ -1,6 +1,9 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
+authors = [
+    "Pankaj Mishra <pankajmishra1511@gmail.com>",
+    "Chris Rackauckas <contact@chrisrackauckas.com>",
+]
 version = "2.5.0"
 
 [deps]
@@ -21,12 +24,15 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrayInterface = "0d7ed370-da01-4f52-bd93-41d350b8b718"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [weakdeps]
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
+SparseDiffToolsSymbolicsExt = "Symbolics"
 SparseDiffToolsZygoteExt = "Zygote"
 
 [compat]
@@ -43,7 +49,9 @@ SciMLOperators = "0.2.11, 0.3"
 Setfield = "1"
 StaticArrayInterface = "1.3"
 StaticArrays = "1"
+Symbolics = "5.5"
 Tricks = "0.1.6"
+UnPack = "1"
 VertexSafeGraphs = "0.2"
 Zygote = "0.6"
 julia = "1.6"
@@ -52,6 +60,7 @@ julia = "1.6"
 ArrayInterfaceBandedMatrices = "2e50d22c-5be1-4042-81b1-c572ed69783d"
 ArrayInterfaceBlockBandedMatrices = "5331f1e9-51c7-46b0-a9b0-df4434785e0a"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -63,4 +72,18 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "ArrayInterfaceBandedMatrices", "ArrayInterfaceBlockBandedMatrices", "BandedMatrices", "BlockBandedMatrices", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]
+test = [
+    "Test",
+    "ArrayInterfaceBandedMatrices",
+    "ArrayInterfaceBlockBandedMatrices",
+    "BandedMatrices",
+    "BlockBandedMatrices",
+    "IterativeSolvers",
+    "Pkg",
+    "Random",
+    "SafeTestsets",
+    "Symbolics",
+    "Zygote",
+    "StaticArrays",
+    "BenchmarkTools",
+]

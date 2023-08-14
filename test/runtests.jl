@@ -48,6 +48,9 @@ if GROUP == "InterfaceI" || GROUP == "All"
     @time @safetestset "Vec Jac Products" begin
         include("test_vecjac_products.jl")
     end
+    @time @safetestset "High Level Interface for Sparse Jacobians" begin
+        include("test_sparse_jacobian.jl")
+    end
 end
 
 if GROUP == "GPU"

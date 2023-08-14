@@ -47,6 +47,67 @@ function g(x) # out-of-place
 end
 ```
 
+## High Level API
+
+We need to perform the following steps to utilize SparseDiffTools:
+
+1. Specify a Sparsity Detection Algorithm. There are 3 possible choices currently:
+    1. `NoSparsityDetection`: This will ignore any AD choice and compute the dense Jacobian
+    2. `JacPrototypeSparsityDetection`: If you already know the sparsity pattern, you can
+       specify it as `JacPrototypeSparsityDetection(; jac_prototype=<sparsity pattern>)`.
+    3. `SymbolicsSparsityDetection`: This will use `Symbolics.jl` to automatically detect
+       the sparsity pattern. (Note that `Symbolics.jl` must be explicitly loaded before
+       using this functionality.)
+2. Now choose an AD backend from `ADTypes.jl`:
+    1. If using a Non `*Sparse*` type, then we will not use sparsity detection.
+    2. All other sparse AD types will internally compute the proper sparsity pattern, and
+       try to exploit that.
+3. Now there are 2 options:
+    1. Precompute the cache using `sparse_jacobian_cache` and use the `sparse_jacobian` or
+       `sparse_jacobian!` functions to compute the Jacobian. This option is recommended if
+       you are repeatedly computing the Jacobian for the same function.
+    2. Directly use `sparse_jacobian` or `sparse_jacobian!` to compute the Jacobian. This
+       option should be used if you are only computing the Jacobian once.
+
+```julia
+using Symbolics
+
+sd = SymbolicsSparsityDetection()
+adtype = AutoSparseFiniteDiff()
+x = rand(30)
+y = similar(x)
+
+# Option 1
+## OOP Function
+cache = sparse_jacobian_cache(adtype, sd, g, x; fx=y) # Passing `fx` is needed if size(y) != size(x)
+J = sparse_jacobian(adtype, cache, g, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, cache, g, x)
+
+## IIP Function
+cache = sparse_jacobian_cache(adtype, sd, f, y, x)
+J = sparse_jacobian(adtype, cache, f, y, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, cache, f, y, x)
+
+# Option 2
+## OOP Function
+J = sparse_jacobian(adtype, sd, g, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, sd, g, x)
+
+## IIP Function
+J = sparse_jacobian(adtype, sd, f, y, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, sd, f, y, x)
+```
+
+## Lower Level API
+
 For this function, we know that the sparsity pattern of the Jacobian is a
 `Tridiagonal` matrix. However, if we didn't know the sparsity pattern for
 the Jacobian, we could use the `Symbolics.jacobian_sparsity` function to automatically

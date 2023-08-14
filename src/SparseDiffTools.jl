@@ -2,12 +2,15 @@ module SparseDiffTools
 
 # QoL/Helper Packages
 using Adapt, Compat, Reexport
+import UnPack: @unpack
 # Graph Coloring
 using Graphs, VertexSafeGraphs
 import Graphs: SimpleGraph
 # Differentiation
 using FiniteDiff, ForwardDiff
 @reexport using ADTypes
+import ADTypes: AbstractADType, AutoSparseZygote, AbstractSparseForwardMode,
+    AbstractSparseReverseMode, AbstractSparseFiniteDifferences, AbstractReverseMode
 import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 # Array Packages
 using ArrayInterface, SparseArrays
@@ -41,6 +44,13 @@ include("differentiation/compute_hessian_ad.jl")
 include("differentiation/jaches_products.jl")
 include("differentiation/vecjac_products.jl")
 
+# High Level Interface
+include("highlevel/common.jl")
+include("highlevel/coloring.jl")
+include("highlevel/forward_mode.jl")
+include("highlevel/reverse_mode.jl")
+include("highlevel/finite_diff.jl")
+
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
 parameterless_type(x) = parameterless_type(typeof(x))
 parameterless_type(x::Type) = __parameterless_type(x)
@@ -67,11 +77,18 @@ export auto_jacvec, auto_jacvec!, num_jacvec, num_jacvec!
 export num_vecjac, num_vecjac!, auto_vecjac, auto_vecjac!
 # HesVec Products
 export numauto_hesvec,
-    numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec, numback_hesvec!
+    numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec, numback_hesvec!,
+    num_hesvec, num_hesvec!, autoback_hesvec, autoback_hesvec!
 # HesVecGrad Products
 export num_hesvecgrad, num_hesvecgrad!, auto_hesvecgrad, auto_hesvecgrad!
 # Operators
 export JacVec, HesVec, HesVecGrad, VecJac
 export update_coefficients, update_coefficients!, value!
+
+# High Level Interface: sparse_jacobian
+export AutoSparseZygote  # FIXME: Remove once https://github.com/SciML/ADTypes.jl/pull/16 is merged
+export NoSparsityDetection,
+    SymbolicsSparsityDetection, JacPrototypeSparsityDetection, AutoSparsityDetection
+export sparse_jacobian, sparse_jacobian_cache, sparse_jacobian!
 
 end # module

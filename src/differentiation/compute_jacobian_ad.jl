@@ -312,16 +312,10 @@ function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
     return J
 end
 
-function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
-    f,
-    x::AbstractArray{<:Number};
-    dx = similar(x, size(J, 1)),
-    colorvec = 1:length(x),
-    sparsity = ArrayInterface.has_sparsestruct(J) ? J :
-               nothing)
-    forwarddiff_color_jacobian!(J, f, x,
-        ForwardColorJacCache(f, x, dx = dx, colorvec = colorvec,
-            sparsity = sparsity))
+function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number}, f,
+    x::AbstractArray{<:Number}; dx = similar(x, size(J, 1)), colorvec = 1:length(x),
+    sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
+    forwarddiff_color_jacobian!(J, f, x, ForwardColorJacCache(f, x; dx, colorvec, sparsity))
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},

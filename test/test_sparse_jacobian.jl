@@ -29,12 +29,14 @@ J_sparsity = Symbolics.jacobian_sparsity(fdiff, similar(x), x);
 SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_sparsity),
     SymbolicsSparsityDetection(), NoSparsityDetection()]
 
-@testset "Sparsity Detection: $(nameof(typeof(sd)))" for sd in SPARSITY_DETECTION_ALGS
-    @info "Sparsity Detection: $(nameof(typeof(sd)))"
-    @info "Out of Place Function"
-    @testset "sparse_jacobian: Out of Place" begin
-        for difftype in (AutoSparseZygote(), AutoZygote(), AutoSparseForwardDiff(),
-            AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff())
+@testset "High-Level API" begin
+    @testset "Sparsity Detection: $(nameof(typeof(sd)))" for sd in SPARSITY_DETECTION_ALGS
+        @info "Sparsity Detection: $(nameof(typeof(sd)))"
+        @info "Out of Place Function"
+
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in (AutoSparseZygote(),
+            AutoZygote(), AutoSparseForwardDiff(), AutoForwardDiff(),
+            AutoSparseFiniteDiff(), AutoFiniteDiff())
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = SparseDiffTools.__init_𝒥(cache)
@@ -50,7 +52,10 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 J = sparse_jacobian(difftype, cache, fdiff, x)
 
                 @test J ≈ J_true
-                # @inferred sparse_jacobian(difftype, cache, fdiff, x)
+
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                    @inferred sparse_jacobian(difftype, cache, fdiff, x)
+                end
 
                 t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with matrix allocation) time: $(t₂)s"
@@ -60,7 +65,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 J = sparse_jacobian(difftype, sd, fdiff, x)
 
                 @test J ≈ J_true
-                # @inferred sparse_jacobian(difftype, sd, fdiff, x)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                    @inferred sparse_jacobian(difftype, sd, fdiff, x)
+                end
 
                 t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
@@ -77,14 +84,14 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
             end
         end
-    end
 
-    @info "Inplace Place Function"
-    @testset "sparse_jacobian: In place" begin
-        for difftype in (AutoSparseForwardDiff(), AutoForwardDiff(), AutoSparseFiniteDiff(),
-            AutoFiniteDiff())
+        @info "Inplace Place Function"
+
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseForwardDiff(),
+            AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
+
             @testset "Cache & Reuse" begin
                 J = SparseDiffTools.__init_𝒥(cache)
                 sparse_jacobian!(J, difftype, cache, fdiff, y, x)
@@ -98,7 +105,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 J = sparse_jacobian(difftype, cache, fdiff, y, x)
 
                 @test J ≈ J_true
-                # @inferred sparse_jacobian(difftype, cache, fdiff, y, x)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                    @inferred sparse_jacobian(difftype, cache, fdiff, y, x)
+                end
 
                 t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with jacobian allocation) time: $(t₂)s"
@@ -108,7 +117,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 J = sparse_jacobian(difftype, sd, fdiff, y, x)
 
                 @test J ≈ J_true
-                # @inferred sparse_jacobian(difftype, sd, fdiff, y, x)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                    @inferred sparse_jacobian(difftype, sd, fdiff, y, x)
+                end
 
                 t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
@@ -125,7 +136,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
             end
         end
 
-        for difftype in (AutoSparseZygote(), AutoZygote())
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseZygote(),
+            AutoZygote())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
             J = SparseDiffTools.__init_𝒥(cache)

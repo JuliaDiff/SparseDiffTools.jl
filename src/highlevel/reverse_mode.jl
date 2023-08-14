@@ -34,7 +34,7 @@ function sparse_jacobian!(J::AbstractMatrix, ad, cache::ReverseModeJacobianCache
 end
 
 function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
-    cache::MatrixColoringResult, f, x, fx=nothing)
+    cache::MatrixColoringResult, f, x, fx = nothing)
     # If `fx` is `nothing` then assume `f` is not in-place
     @unpack colorvec, nz_rows, nz_cols = cache
     for c in 1:maximum(colorvec)

@@ -35,7 +35,6 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
     @testset "sparse_jacobian: Out of Place" begin
         for difftype in (AutoSparseZygote(), AutoZygote(), AutoSparseForwardDiff(),
             AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff())
-
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = SparseDiffTools.__init_𝒥(cache)

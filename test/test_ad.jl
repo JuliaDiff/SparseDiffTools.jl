@@ -106,7 +106,7 @@ forwarddiff_color_jacobian!(_J1, f, x, colorvec = repeat(1:3, 10))
 
 fcalls = 0
 _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3, 10), sparsity = _J,
-                                 jac_prototype = _J)
+    jac_prototype = _J)
 @test _J1 ≈ J
 @test typeof(_J1) == typeof(_J)
 @test fcalls == 1
@@ -122,14 +122,14 @@ _J1 = forwarddiff_color_jacobian(oopf, x, colorvec = repeat(1:3, 10), sparsity =
 fcalls = 0
 _oop_jacout = sparse(1.01 .* J) # want to be nonzero to check that the pre-allocated matrix is overwritten properly
 forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3, 10), sparsity = _J,
-                           jac_prototype = _J)
+    jac_prototype = _J)
 @test _oop_jacout ≈ J
 @test typeof(_oop_jacout) == typeof(_J)
 @test fcalls == 1
 
 # BandedMatrix
 _oop_jacout = BandedMatrix(-1 => diag(J, -1) .* 1.01, 0 => diag(J, 0) .* 1.01,
-                           1 => diag(J, 1) .* 1.01) # check w/BandedMatrix instead of sparse
+    1 => diag(J, 1) .* 1.01) # check w/BandedMatrix instead of sparse
 fcalls = 0
 forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3, 10), sparsity = _J)
 @test _oop_jacout ≈ J
@@ -140,14 +140,14 @@ forwarddiff_color_jacobian(_oop_jacout, oopf, x; colorvec = repeat(1:3, 10), spa
 
 fcalls = 0
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x), colorvec = repeat(1:3, 10),
-                                 sparsity = _J, jac_prototype = SMatrix{30, 30}(_J))
+    sparsity = _J, jac_prototype = SMatrix{30, 30}(_J))
 @test _J1 ≈ J
 @test fcalls == 1
 
 @info "5"
 
 _J1 = forwarddiff_color_jacobian(staticf, SVector{30}(x),
-                                 jac_prototype = SMatrix{30, 30}(_J))
+    jac_prototype = SMatrix{30, 30}(_J))
 @test _J1 ≈ J
 _J1 = forwarddiff_color_jacobian(oopf, x, jac_prototype = similar(_J))
 @test _J1 ≈ J
@@ -165,17 +165,17 @@ _nsqJ = forwarddiff_color_jacobian(nsqf, x, colorvec = repeat(1:3, 10), sparsity
 _nsqJ = forwarddiff_color_jacobian(nsqf, x, jac_prototype = similar(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(nsqf, x, colorvec = repeat(1:3, 10), sparsity = spnsqJ,
-                                   jac_prototype = similar(nsqJ))
+    jac_prototype = similar(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(nsqf, x, jac_prototype = SMatrix{15, 30}(nsqJ))
 @test _nsqJ ≈ nsqJ
 @test typeof(_nsqJ) == typeof(SMatrix{15, 30}(nsqJ))
 _nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x),
-                                   jac_prototype = SMatrix{15, 30}(nsqJ))
+    jac_prototype = SMatrix{15, 30}(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(staticnsqf, SVector{30}(x),
-                                   jac_prototype = SMatrix{15, 30}(nsqJ),
-                                   colorvec = repeat(1:3, 10), sparsity = spnsqJ)
+    jac_prototype = SMatrix{15, 30}(nsqJ),
+    colorvec = repeat(1:3, 10), sparsity = spnsqJ)
 @test _nsqJ ≈ nsqJ
 _nsqJ = similar(nsqJ)
 forwarddiff_color_jacobian!(_nsqJ, nsqf!, x)
@@ -194,7 +194,7 @@ _nsqJ = forwarddiff_color_jacobian(nsqf2, x, colorvec = repeat(1:3, 10), sparsit
 _nsqJ = forwarddiff_color_jacobian(nsqf2, x, jac_prototype = similar(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(nsqf2, x, colorvec = repeat(1:3, 10), sparsity = spnsqJ,
-                                   jac_prototype = similar(nsqJ))
+    jac_prototype = similar(nsqJ))
 @test _nsqJ ≈ nsqJ
 _nsqJ = forwarddiff_color_jacobian(nsqf2, x, jac_prototype = SMatrix{60, 30}(nsqJ))
 @test _nsqJ ≈ nsqJ
@@ -257,7 +257,7 @@ function f(out, x)
 end
 x = rand(10000)
 J = BandedBlockBandedMatrix(Ones(10000, 10000), fill(100, 100), fill(100, 100), (1, 1),
-                            (1, 1))
+    (1, 1))
 Jsparse = sparse(J)
 colors = matrix_colors(J)
 forwarddiff_color_jacobian!(J, f, x, colorvec = colors)

@@ -11,7 +11,7 @@ import Setfield: @set!
 ### Jac, Hes products
 
 function SparseDiffTools.numback_hesvec!(dy, f, x, v, cache1 = similar(v),
-                                         cache2 = similar(v))
+    cache2 = similar(v))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
@@ -39,20 +39,20 @@ function SparseDiffTools.numback_hesvec(f, x, v)
 end
 
 function SparseDiffTools.autoback_hesvec!(dy, f, x, v,
-                                          cache1 = Dual{
-                                                        typeof(ForwardDiff.Tag(DeivVecTag(),
-                                                                               eltype(x))),
-                                                        eltype(x), 1
-                                                        }.(x,
-                                                           ForwardDiff.Partials.(tuple.(reshape(v,
-                                                                                                size(x))))),
-                                          cache2 = Dual{
-                                                        typeof(ForwardDiff.Tag(DeivVecTag(),
-                                                                               eltype(x))),
-                                                        eltype(x), 1
-                                                        }.(x,
-                                                           ForwardDiff.Partials.(tuple.(reshape(v,
-                                                                                                size(x))))))
+    cache1 = Dual{
+        typeof(ForwardDiff.Tag(DeivVecTag(),
+            eltype(x))),
+        eltype(x), 1,
+    }.(x,
+        ForwardDiff.Partials.(tuple.(reshape(v,
+            size(x))))),
+    cache2 = Dual{
+        typeof(ForwardDiff.Tag(DeivVecTag(),
+            eltype(x))),
+        eltype(x), 1,
+    }.(x,
+        ForwardDiff.Partials.(tuple.(reshape(v,
+            size(x))))))
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
@@ -64,8 +64,11 @@ end
 
 function SparseDiffTools.autoback_hesvec(f, x, v)
     g = x -> first(Zygote.gradient(f, x))
-    y = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))), eltype(x), 1
-             }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
+    y = Dual{
+        typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
+        eltype(x),
+        1,
+    }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     ForwardDiff.partials.(g(y), 1)
 end
 
@@ -73,7 +76,8 @@ end
 
 # VJP methods
 function SparseDiffTools.auto_vecjac!(du, f, x, v)
-    !hasmethod(f, (typeof(x),)) && error("For inplace function use autodiff = AutoFiniteDiff()")
+    !hasmethod(f, (typeof(x),)) &&
+        error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
 
@@ -84,16 +88,17 @@ end
 
 # overload operator interface
 function SparseDiffTools._vecjac(f, u, autodiff::AutoZygote)
-
     cache = ()
     pullback = Zygote.pullback(f, u)
 
     AutoDiffVJP(f, u, cache, autodiff, pullback)
 end
 
-function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
-                            ) where{AD <: AutoZygote}
-
+function update_coefficients(L::AutoDiffVJP{AD},
+    u,
+    p,
+    t;
+    VJP_input = nothing) where {AD <: AutoZygote}
     if !isnothing(VJP_input)
         @set! L.u = VJP_input
     end
@@ -102,9 +107,11 @@ function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
     @set! L.pullback = Zygote.pullback(L.f, L.u)
 end
 
-function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
-                             ) where{AD <: AutoZygote}
-
+function update_coefficients!(L::AutoDiffVJP{AD},
+    u,
+    p,
+    t;
+    VJP_input = nothing) where {AD <: AutoZygote}
     if !isnothing(VJP_input)
         copy!(L.u, VJP_input)
     end
@@ -116,7 +123,7 @@ function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
 end
 
 # Interpret the call as df/du' * v
-function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where{AD <: AutoZygote}
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where {AD <: AutoZygote}
     # ignore VJP_input as pullback was computed in update_coefficients(...)
 
     y, back = L.pullback
@@ -126,14 +133,22 @@ function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where{AD <: AutoZygo
 end
 
 # prefer non in-place method
-function (L::AutoDiffVJP{AD, IIP, true})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote, IIP}
+function (L::AutoDiffVJP{AD, IIP, true})(dv,
+    v,
+    p,
+    t;
+    VJP_input = nothing) where {AD <: AutoZygote, IIP}
     # ignore VJP_input as pullback was computed in update_coefficients!(...)
 
     _dv = L(v, p, t; VJP_input = VJP_input)
     copy!(dv, _dv)
 end
 
-function (L::AutoDiffVJP{AD, true, false})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoZygote}
+function (L::AutoDiffVJP{AD, true, false})(dv,
+    v,
+    p,
+    t;
+    VJP_input = nothing) where {AD <: AutoZygote}
     @error("Zygote requires an out of place method with signature f(u).")
 end
 

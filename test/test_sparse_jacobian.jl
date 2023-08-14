@@ -21,7 +21,7 @@ x = randn(Float32, 100);
 
 J_true = ForwardDiff.jacobian(fdiff, x);
 
-@info "`ForwardDiff.jacobian` time: $(@belapsed(ForwardDiff.jacobian($fdiff, $x)))s"
+@info "`ForwardDiff.jacobian` time: $(@elapsed(ForwardDiff.jacobian(diff, x)))s"
 
 # SparseDiffTools High-Level API
 J_sparsity = Symbolics.jacobian_sparsity(fdiff, similar(x), x);
@@ -44,7 +44,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 @inferred sparse_jacobian!(J, difftype, cache, fdiff, x)
 
-                t₁ = @belapsed sparse_jacobian!($J, $difftype, $cache, $fdiff, $x)
+                t₁ = @elapsed sparse_jacobian!(J, difftype, cache, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
 
                 J = sparse_jacobian(difftype, cache, fdiff, x)
@@ -52,7 +52,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 # @inferred sparse_jacobian(difftype, cache, fdiff, x)
 
-                t₂ = @belapsed sparse_jacobian($difftype, $cache, $fdiff, $x)
+                t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with matrix allocation) time: $(t₂)s"
             end
 
@@ -62,7 +62,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 # @inferred sparse_jacobian(difftype, sd, fdiff, x)
 
-                t₁ = @belapsed sparse_jacobian($difftype, $sd, $fdiff, $x)
+                t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
 
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
@@ -73,7 +73,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 @inferred sparse_jacobian!(J, difftype, sd, fdiff, x)
 
-                t₂ = @belapsed sparse_jacobian!($J, $difftype, $sd, $fdiff, $x)
+                t₂ = @elapsed sparse_jacobian!(J, difftype, sd, fdiff, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
             end
         end
@@ -92,7 +92,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 @inferred sparse_jacobian!(J, difftype, cache, fdiff, y, x)
 
-                t₁ = @belapsed sparse_jacobian!($J, $difftype, $cache, $fdiff, $y, $x)
+                t₁ = @elapsed sparse_jacobian!(J, difftype, cache, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
 
                 J = sparse_jacobian(difftype, cache, fdiff, y, x)
@@ -100,7 +100,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 # @inferred sparse_jacobian(difftype, cache, fdiff, y, x)
 
-                t₂ = @belapsed sparse_jacobian($difftype, $cache, $fdiff, $y, $x)
+                t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with jacobian allocation) time: $(t₂)s"
             end
 
@@ -110,7 +110,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 # @inferred sparse_jacobian(difftype, sd, fdiff, y, x)
 
-                t₁ = @belapsed sparse_jacobian($difftype, $sd, $fdiff, $y, $x)
+                t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
 
                 J = SparseDiffTools.__init_𝒥(cache)
@@ -120,7 +120,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @test J ≈ J_true
                 @inferred sparse_jacobian!(J, difftype, sd, fdiff, y, x)
 
-                t₂ = @belapsed sparse_jacobian!($J, $difftype, $sd, $fdiff, $y, $x)
+                t₂ = @elapsed sparse_jacobian!(J, difftype, sd, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
             end
         end

@@ -95,7 +95,7 @@ end
 
 # VJP methods
 function auto_vecjac!(du, f, x, v)
-    !static_hasmethod(f, (typeof(x),)) &&
+    !static_hasmethod(f, typeof((x,))) &&
         error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end

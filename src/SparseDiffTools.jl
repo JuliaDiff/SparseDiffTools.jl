@@ -14,7 +14,7 @@ using ArrayInterface, SparseArrays
 import ArrayInterface: matrix_colors
 import StaticArrays
 # Others
-using SciMLOperators
+using SciMLOperators, LinearAlgebra
 import DataStructures: DisjointSets, find_root!, union!
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!
@@ -67,8 +67,7 @@ export auto_jacvec, auto_jacvec!, num_jacvec, num_jacvec!
 export num_vecjac, num_vecjac!, auto_vecjac, auto_vecjac!
 # HesVec Products
 export numauto_hesvec,
-    numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec,
-    numback_hesvec!
+    numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec, numback_hesvec!
 # HesVecGrad Products
 export num_hesvecgrad, num_hesvecgrad!, auto_hesvecgrad, auto_hesvecgrad!
 # Operators

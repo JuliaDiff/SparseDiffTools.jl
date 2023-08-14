@@ -1,5 +1,5 @@
 """
-        _cols_by_rows(rows_index,cols_index)
+    _cols_by_rows(rows_index,cols_index)
 
 Returns a vector of rows where each row contains
 a vector of its column indices.
@@ -14,7 +14,7 @@ function _cols_by_rows(rows_index, cols_index)
 end
 
 """
-        _rows_by_cols(rows_index,cols_index)
+    _rows_by_cols(rows_index,cols_index)
 
 Returns a vector of columns where each column contains
 a vector of its row indices.
@@ -24,7 +24,7 @@ function _rows_by_cols(rows_index, cols_index)
 end
 
 """
-        matrix2graph(sparse_matrix, [partition_by_rows::Bool=true])
+    matrix2graph(sparse_matrix, [partition_by_rows::Bool=true])
 
 A utility function to generate a graph from input
 sparse matrix, columns are represented with vertices

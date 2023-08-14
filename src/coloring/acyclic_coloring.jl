@@ -1,5 +1,5 @@
 """
-        color_graph(g::Graphs.AbstractGraphs, ::AcyclicColoring)
+    color_graph(g::Graphs.AbstractGraphs, ::AcyclicColoring)
 
 Returns a coloring vector following the acyclic coloring rules (1) the coloring
 corresponds to a distance-1 coloring, and (2) vertices in every cycle of the
@@ -62,14 +62,10 @@ function color_graph(g::Graphs.AbstractGraph, ::AcyclicColoring)
 end
 
 """
-        prevent_cycle!(first_visit_to_tree::AbstractVector{<:Tuple{Integer,Integer}},
-                        forbidden_colors::AbstractVector{<:Integer},
-                        v::Integer,
-                        w::Integer,
-                        x::Integer,
-                        g::Graphs.AbstractGraph,
-                        two_colored_forest::DisjointSets{<:Integer},
-                        color::AbstractVector{<:Integer})
+    prevent_cycle!(first_visit_to_tree::AbstractVector{<:Tuple{Integer, Integer}},
+        forbidden_colors::AbstractVector{<:Integer}, v::Integer, w::Integer, x::Integer,
+        g::Graphs.AbstractGraph, two_colored_forest::DisjointSets{<:Integer},
+        color::AbstractVector{<:Integer})
 
 Subroutine to avoid generation of 2-colored cycle due to coloring of vertex v,
 which is adjacent to vertices w and x in graph g. Disjoint set is used to store
@@ -91,12 +87,9 @@ function prevent_cycle!(first_visit_to_tree::AbstractVector{<:Tuple{Integer, Int
 end
 
 """
-        grow_star!(two_colored_forest::DisjointSets{<:Integer},
-                    first_neighbor::AbstractVector{<: Tuple{Integer,Integer}},
-                    v::Integer,
-                    w::Integer,
-                    g::Graphs.AbstractGraph,
-                    color::AbstractVector{<:Integer})
+    grow_star!(two_colored_forest::DisjointSets{<:Integer},
+        first_neighbor::AbstractVector{<:Tuple{Integer, Integer}}, v::Integer, w::Integer,
+        g::Graphs.AbstractGraph, color::AbstractVector{<:Integer})
 
 Grow a 2-colored star after assigning a new color to the
 previously uncolored vertex v, by comparing it with the adjacent vertex w.
@@ -119,11 +112,8 @@ function grow_star!(two_colored_forest::DisjointSets{<:Integer},
 end
 
 """
-        merge_trees!(two_colored_forest::DisjointSets{<:Integer},
-                      v::Integer,
-                      w::Integer,
-                      x::Integer,
-                      g::Graphs.AbstractGraph)
+    merge_trees!(two_colored_forest::DisjointSets{<:Integer}, v::Integer, w::Integer,
+        x::Integer, g::Graphs.AbstractGraph)
 
 Subroutine to merge trees present in the disjoint set which have a
 common edge.
@@ -138,10 +128,8 @@ function merge_trees!(two_colored_forest::DisjointSets{<:Integer}, v::Integer, w
 end
 
 """
-        insert_new_tree!(two_colored_forest::DisjointSets{<:Integer},
-                          v::Integer,
-                          w::Integer,
-                          g::Graphs.AbstractGraph)
+    insert_new_tree!(two_colored_forest::DisjointSets{<:Integer}, v::Integer,
+        w::Integer, g::Graphs.AbstractGraph
 
 creates a new singleton set in the disjoint set 'two_colored_forest' consisting
 of the edge connecting v and w in the graph g
@@ -153,7 +141,7 @@ function insert_new_tree!(two_colored_forest::DisjointSets{<:Integer}, v::Intege
 end
 
 """
-        min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
+    min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
 
 Returns min{i > 0 such that forbidden_colors[i] != v}
 """
@@ -162,10 +150,8 @@ function min_index(forbidden_colors::AbstractVector{<:Integer}, v::Integer)
 end
 
 """
-        find(w::Integer,
-             x::Integer,
-             g::Graphs.AbstractGraph,
-             two_colored_forest::DisjointSets{<:Integer})
+    find(w::Integer, x::Integer, g::Graphs.AbstractGraph,
+        two_colored_forest::DisjointSets{<:Integer})
 
 Returns the root of the disjoint set to which the edge connecting vertices w and x
 in the graph g belongs to
@@ -177,7 +163,7 @@ function find(w::Integer, x::Integer, g::Graphs.AbstractGraph,
 end
 
 """
-        find_edge(g::Graphs.AbstractGraph, v::Integer, w::Integer)
+    find_edge(g::Graphs.AbstractGraph, v::Integer, w::Integer)
 
 Returns an integer equivalent to the index of the edge connecting the vertices
 v and w in the graph g

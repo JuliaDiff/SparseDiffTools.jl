@@ -18,7 +18,7 @@ function (alg::JacPrototypeSparsityDetection)(ad::AbstractSparseADType, args...;
     J = alg.jac_prototype
     reverse_mode = ad isa AbstractSparseReverseMode
     colorvec = matrix_colors(J, alg.alg; partition_by_rows = reverse_mode)
-    (nz_rows, nz_cols) = collect.(ArrayInterface.findstructralnz(J))
+    (nz_rows, nz_cols) = ArrayInterface.findstructralnz(J)
     return MatrixColoringResult(colorvec, J, nz_rows, nz_cols)
 end
 

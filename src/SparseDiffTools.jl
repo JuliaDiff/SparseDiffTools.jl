@@ -87,6 +87,8 @@ export update_coefficients, update_coefficients!, value!
 
 # High Level Interface: sparse_jacobian
 export AutoSparseZygote  # FIXME: Remove once https://github.com/SciML/ADTypes.jl/pull/16 is merged
+export AutoSparseEnzyme
+
 export NoSparsityDetection,
     SymbolicsSparsityDetection, JacPrototypeSparsityDetection, AutoSparsityDetection
 export sparse_jacobian, sparse_jacobian_cache, sparse_jacobian!

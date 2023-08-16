@@ -1,19 +1,20 @@
 ## Sparse Jacobian tests
-using SparseDiffTools, Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote
+using SparseDiffTools, Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme
 using Test
 
 @views function fdiff(y, x) # in-place
-    y[(begin + 1):(end - 1)] .= x[begin:(end - 2)] .- 2 .* x[(begin + 1):(end - 1)] .+
-                                x[(begin + 2):end]
-    y[begin] = -2 * x[begin] + x[begin + 1]
-    y[end] = x[end - 1] - 2 * x[end]
+    L = length(x)
+    y[2:(L - 1)] .= x[1:(L - 2)] .- 2 .* x[2:(L - 1)] .+ x[3:L]
+    y[1] = -2 * x[1] + x[2]
+    y[L] = x[L - 1] - 2 * x[L]
     return nothing
 end
 
 @views function fdiff(x) # out-of-place
-    y₂ = x[begin:(end - 2)] .- 2 .* x[(begin + 1):(end - 1)] .+ x[(begin + 2):end]
+    L = length(x)
+    y₂ = x[1:(L - 2)] .- 2 .* x[2:(L - 1)] .+ x[3:L]
     y₁ = -2x[1] + x[2]
-    y₃ = x[end - 1] - 2x[end]
+    y₃ = x[L - 1] - 2x[L]
     return vcat(y₁, y₂, y₃)
 end
 
@@ -36,7 +37,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in (AutoSparseZygote(),
             AutoZygote(), AutoSparseForwardDiff(), AutoForwardDiff(),
-            AutoSparseFiniteDiff(), AutoFiniteDiff())
+            AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = SparseDiffTools.__init_𝒥(cache)
@@ -88,7 +89,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
         @info "Inplace Place Function"
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseForwardDiff(),
-            AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff())
+            AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(),
+            AutoSparseEnzyme())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
 

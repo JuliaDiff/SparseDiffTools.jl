@@ -1,6 +1,8 @@
 const AbstractSparseADType = Union{AbstractSparseForwardMode, AbstractSparseReverseMode,
     AbstractSparseFiniteDifferences}
 
+struct AutoSparseEnzyme <: AbstractSparseReverseMode end
+
 # Sparsity Detection
 abstract type AbstractMaybeSparsityDetection end
 abstract type AbstractSparsityDetection <: AbstractMaybeSparsityDetection end

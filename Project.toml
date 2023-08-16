@@ -1,9 +1,6 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-authors = [
-    "Pankaj Mishra <pankajmishra1511@gmail.com>",
-    "Chris Rackauckas <contact@chrisrackauckas.com>",
-]
+authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
 version = "2.5.0"
 
 [deps]
@@ -28,10 +25,12 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [weakdeps]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
+SparseDiffToolsEnzymeExt = "Enzyme"
 SparseDiffToolsSymbolicsExt = "Symbolics"
 SparseDiffToolsZygoteExt = "Zygote"
 
@@ -41,6 +40,7 @@ Adapt = "3.0"
 ArrayInterface = "7.4.2"
 Compat = "4"
 DataStructures = "0.18"
+Enzyme = "0.11"
 FiniteDiff = "2.8.1"
 ForwardDiff = "0.10"
 Graphs = "1"
@@ -61,6 +61,7 @@ ArrayInterfaceBandedMatrices = "2e50d22c-5be1-4042-81b1-c572ed69783d"
 ArrayInterfaceBlockBandedMatrices = "5331f1e9-51c7-46b0-a9b0-df4434785e0a"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -71,17 +72,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = [
-    "Test",
-    "ArrayInterfaceBandedMatrices",
-    "ArrayInterfaceBlockBandedMatrices",
-    "BandedMatrices",
-    "BlockBandedMatrices",
-    "IterativeSolvers",
-    "Pkg",
-    "Random",
-    "SafeTestsets",
-    "Symbolics",
-    "Zygote",
-    "StaticArrays",
-]
+test = ["Test", "ArrayInterfaceBandedMatrices", "ArrayInterfaceBlockBandedMatrices", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]

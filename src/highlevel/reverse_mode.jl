@@ -34,15 +34,22 @@ function sparse_jacobian!(J::AbstractMatrix, ad, cache::ReverseModeJacobianCache
 end
 
 function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
-    cache::MatrixColoringResult, f, x, fx = nothing)
+    cache::MatrixColoringResult, f, x)
+    return __sparse_jacobian_reverse_impl!(J, ad, idx_vec, cache, f, nothing, x)
+end
+
+function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
+    cache::MatrixColoringResult, f, fx, x)
     # If `fx` is `nothing` then assume `f` is not in-place
+    x_ = __maybe_copy_x(ad, x)
+    fx_ = __maybe_copy_x(ad, fx)
     @unpack colorvec, nz_rows, nz_cols = cache
     for c in 1:maximum(colorvec)
         @. idx_vec = colorvec == c
         if fx === nothing
-            gs = __gradient(ad, f, x, idx_vec)
+            gs = __gradient(ad, f, x_, idx_vec)
         else
-            gs = __gradient!(ad, f, fx, x, idx_vec)
+            gs = __gradient!(ad, f, fx_, x_, idx_vec)
         end
         pick_idxs = filter(i -> colorvec[nz_rows[i]] == c, 1:length(nz_rows))
         row_idxs = nz_rows[pick_idxs]

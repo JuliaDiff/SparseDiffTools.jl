@@ -1,7 +1,8 @@
 module SparseDiffToolsEnzymeExt
 
 import ArrayInterface: fast_scalar_indexing
-import SparseDiffTools: __f̂, __jacobian!, __gradient, __gradient!, AutoSparseEnzyme
+import SparseDiffTools: __f̂,
+    __maybe_copy_x, __jacobian!, __gradient, __gradient!, AutoSparseEnzyme
 # FIXME: For Enzyme we currently assume reverse mode
 import ADTypes: AutoEnzyme
 using Enzyme
@@ -54,5 +55,7 @@ end
 
     return J
 end
+
+__maybe_copy_x(::Union{AutoSparseEnzyme, AutoEnzyme}, x::SubArray) = copy(x)
 
 end

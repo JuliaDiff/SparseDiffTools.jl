@@ -129,3 +129,6 @@ function __init_𝒥(c::AbstractMaybeSparseJacobianCache)
 end
 __init_𝒥(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
 __init_𝒥(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
+
+__maybe_copy_x(_, x) = x
+__maybe_copy_x(_, ::Nothing) = nothing

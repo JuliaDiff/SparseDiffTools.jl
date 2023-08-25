@@ -29,7 +29,7 @@ f = WrapFunc(_f, 1.0f0, 1.0f0)
 @test auto_vecjac(f, x1, v) ≈ Zygote.jacobian(f, x1)[1]' * v
 @test auto_vecjac!(zero(x1), f, x1, v) ≈ auto_vecjac(f, x1, v)
 @test num_vecjac!(zero(x1), f, copy(x1), v) ≈ num_vecjac(f, copy(x1), v)
-@test auto_vecjac(f, x1, v) ≈ num_vecjac(f, copy(x1), copy(v)) rtol = 1e-2
+@test auto_vecjac(f, x1, v)≈num_vecjac(f, copy(x1), copy(v)) rtol=1e-2
 
 # Compute Jacobian via Zygote
 
@@ -46,12 +46,15 @@ J2 = Zygote.jacobian(f, x2)[1]
 # test operator application
 @test L * v ≈ J1' * v
 @test L(v, p, t) ≈ J1' * v
-y=zeros(N); @test mul!(y, L, v) ≈ J1' * v
-y=zeros(N); @test L(y, v, p, t) ≈ J1' * v
+y = zeros(N);
+@test mul!(y, L, v) ≈ J1' * v;
+y = zeros(N);
+@test L(y, v, p, t) ≈ J1' * v;
 
 # use kwarg VJP_input = x2
 @test L(v, p, t; VJP_input = x2) ≈ J2' * v
-y=zeros(N); @test L(y, v, p, t; VJP_input = x2) ≈ J2' * v
+y = zeros(N);
+@test L(y, v, p, t; VJP_input = x2) ≈ J2' * v;
 
 # update_coefficients
 p, t = rand(Float32, 2)
@@ -67,12 +70,15 @@ J2 = Zygote.jacobian(f, x2)[1]
 
 @test L * v ≈ J2' * v
 @test L(v, p, t) ≈ J2' * v
-y=zeros(N); @test mul!(y, L, v) ≈ J2' * v
-y=zeros(N); @test L(y, v, p, t) ≈ J2' * v
+y = zeros(N);
+@test mul!(y, L, v) ≈ J2' * v;
+y = zeros(N);
+@test L(y, v, p, t) ≈ J2' * v;
 
 # use kwarg VJP_input = x1
 @test L(v, p, t; VJP_input = x1) ≈ J1' * v
-y=zeros(N); @test L(y, v, p, t; VJP_input = x1) ≈ J1' * v
+y = zeros(N);
+@test L(y, v, p, t; VJP_input = x1) ≈ J1' * v;
 
 @info "VecJac AutoFiniteDiff"
 
@@ -83,12 +89,15 @@ update_coefficients!(f, v, p, t)
 
 @test L * v ≈ num_vecjac(f, copy(x1), v)
 @test L(v, p, t) ≈ num_vecjac(f, copy(x1), v)
-y=zeros(N); @test mul!(y, L, v) ≈ num_vecjac(f, copy(x1), v)
-y=zeros(N); @test L(y, v, p, t) ≈ num_vecjac(f, copy(x1), v)
+y = zeros(N);
+@test mul!(y, L, v) ≈ num_vecjac(f, copy(x1), v);
+y = zeros(N);
+@test L(y, v, p, t) ≈ num_vecjac(f, copy(x1), v);
 
 # use kwarg VJP_input = x2
 @test L(v, p, t; VJP_input = x2) ≈ num_vecjac(f, copy(x2), v)
-y=zeros(N); @test L(y, v, p, t; VJP_input = x2) ≈ num_vecjac(f, copy(x2), v)
+y = zeros(N);
+@test L(y, v, p, t; VJP_input = x2) ≈ num_vecjac(f, copy(x2), v);
 
 # update_coefficients
 p, t = rand(Float32, 2)
@@ -97,12 +106,15 @@ update_coefficients!(f, v, p, t)
 
 @test L * v ≈ num_vecjac(f, copy(x2), v)
 @test L(v, p, t) ≈ num_vecjac(f, copy(x2), v)
-y=zeros(N); @test mul!(y, L, v) ≈ num_vecjac(f, copy(x2), v)
-y=zeros(N); @test L(y, v, p, t) ≈ num_vecjac(f, copy(x2), v)
+y = zeros(N);
+@test mul!(y, L, v) ≈ num_vecjac(f, copy(x2), v);
+y = zeros(N);
+@test L(y, v, p, t) ≈ num_vecjac(f, copy(x2), v);
 
 # use kwarg VJP_input = x2
 @test L(v, p, t; VJP_input = x1) ≈ num_vecjac(f, copy(x1), v)
-y=zeros(N); @test L(y, v, p, t; VJP_input = x1) ≈ num_vecjac(f, copy(x1), v)
+y = zeros(N);
+@test L(y, v, p, t; VJP_input = x1) ≈ num_vecjac(f, copy(x1), v);
 
 # Test that x and v were not mutated
 @test x1 ≈ _x1
@@ -125,7 +137,8 @@ for M in (100, 400)
     local J2 = Zygote.jacobian(f2, _x)[1]
 
     update_coefficients!(L, _u, 1.0f0, 1.0f0; VJP_input = _x)
-    @test L * _u ≈ J2' * _u rtol=1e-6
-    local _v = zeros(M); @test mul!(_v, L, _u) ≈ J2' * _u rtol=1e-6
+    @test L * _u≈J2' * _u rtol=1e-6
+    local _v = zeros(M)
+    @test mul!(_v, L, _u)≈J2' * _u rtol=1e-6
 end
 #

@@ -37,17 +37,17 @@ hescache2 = ForwardColorHesCache(fscalar, x, colors, sparsity, g!)
 hescache3 = ForwardColorHesCache(fscalar, x, colors, sparsity)
 # custom gradient function
 hescache4 = ForwardColorHesCache(fscalar, x, colors, sparsity,
-                                 (G, x) -> ForwardDiff.gradient!(G, fscalar, x))
+    (G, x) -> ForwardDiff.gradient!(G, fscalar, x))
 hescache5 = ForwardColorHesCache(fscalar, x)
 # custom gradient has to have 2 or 3 arguments...
 @test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity, (a) -> 1.0)
 @test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity,
-                                                (a, b, c, d) -> 1.0)
+    (a, b, c, d) -> 1.0)
 # ...and needs to accept (Vector, Vector, ForwardDiff.GradientConfig)
 @test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity,
-                                                (a::Int, b::Int) -> 1.0)
+    (a::Int, b::Int) -> 1.0)
 @test_throws ArgumentError ForwardColorHesCache(fscalar, x, colors, sparsity,
-                                                (a::Int, b::Int, c::Int) -> 1.0)
+    (a::Int, b::Int, c::Int) -> 1.0)
 
 for name in [:sparsity, :colors, :ncolors, :D]
     @eval @test hescache1.$name == hescache2.$name
@@ -116,7 +116,7 @@ for (i, hescache) in enumerate([hescache1, hescache2])
     H1 = similar(H)
 
     SparseDiffTools.autoauto_color_hessian!(H1, fscalar, x, collect(hescache.colorvec),
-                                            hescache.sparsity)
+        hescache.sparsity)
     @test all(isapprox.(H1, H))
 
     SparseDiffTools.autoauto_color_hessian!(H2, fscalar, x)

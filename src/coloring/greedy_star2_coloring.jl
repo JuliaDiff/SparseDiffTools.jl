@@ -1,5 +1,5 @@
 """
-        greedy_star2_coloring
+    color_graph(g::Graphs.AbstractGraph, ::GreedyStar2Color)
 
 Find a coloring of a given input graph such that
 no two vertices connected by an edge have the same

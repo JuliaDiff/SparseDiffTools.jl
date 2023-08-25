@@ -45,12 +45,12 @@ h = WrapFunc(_h, 1.0, 1.0)
 ###
 
 cache1 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), eltype(x))),
-                          eltype(x), 1}.(x, ForwardDiff.Partials.(tuple.(v)))
+    eltype(x), 1}.(x, ForwardDiff.Partials.(tuple.(v)))
 cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), eltype(x))),
-                          eltype(x), 1}.(x, ForwardDiff.Partials.(tuple.(v)))
+    eltype(x), 1}.(x, ForwardDiff.Partials.(tuple.(v)))
 @test num_jacvec!(dy, f, x, v)≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
 @test num_jacvec!(dy, f, x, v, similar(v),
-                  similar(v))≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
+    similar(v))≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
 @test num_jacvec(f, x, v)≈ForwardDiff.jacobian(f, similar(x), x) * v rtol=1e-6
 
 @test auto_jacvec!(dy, f, x, v) ≈ ForwardDiff.jacobian(f, similar(x), x) * v
@@ -59,12 +59,12 @@ cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), e
 
 @test num_hesvec!(dy, g, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 @test num_hesvec!(dy, g, x, v, similar(v), similar(v),
-                  similar(v))≈ForwardDiff.hessian(g, x) * v rtol=1e-2
+    similar(v))≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 @test num_hesvec(g, x, v)≈ForwardDiff.hessian(g, x) * v rtol=1e-2
 
 @test numauto_hesvec!(dy, g, x, v) ≈ ForwardDiff.hessian(g, x) * v
 @test numauto_hesvec!(dy, g, x, v, ForwardDiff.GradientConfig(g, x), similar(v),
-                      similar(v)) ≈ ForwardDiff.hessian(g, x) * v
+    similar(v)) ≈ ForwardDiff.hessian(g, x) * v
 @test numauto_hesvec(g, x, v) ≈ ForwardDiff.hessian(g, x) * v
 
 @test autonum_hesvec!(dy, g, x, v) ≈ ForwardDiff.hessian(g, x) * v
@@ -75,10 +75,16 @@ cache2 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(SparseDiffTools.DeivVecTag(), e
 @test numback_hesvec!(dy, g, x, v, similar(v), similar(v)) ≈ ForwardDiff.hessian(g, x) * v
 @test numback_hesvec(g, x, v) ≈ ForwardDiff.hessian(g, x) * v
 
-cache3 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(Nothing, eltype(x))), eltype(x), 1
-                          }.(x, ForwardDiff.Partials.(tuple.(v)))
-cache4 = ForwardDiff.Dual{typeof(ForwardDiff.Tag(Nothing, eltype(x))), eltype(x), 1
-                          }.(x, ForwardDiff.Partials.(tuple.(v)))
+cache3 = ForwardDiff.Dual{
+    typeof(ForwardDiff.Tag(Nothing, eltype(x))),
+    eltype(x),
+    1,
+}.(x, ForwardDiff.Partials.(tuple.(v)))
+cache4 = ForwardDiff.Dual{
+    typeof(ForwardDiff.Tag(Nothing, eltype(x))),
+    eltype(x),
+    1,
+}.(x, ForwardDiff.Partials.(tuple.(v)))
 @test autoback_hesvec!(dy, g, x, v) ≈ ForwardDiff.hessian(g, x) * v
 @test autoback_hesvec!(dy, g, x, v, cache3, cache4) ≈ ForwardDiff.hessian(g, x) * v
 @test autoback_hesvec(g, x, v) ≈ ForwardDiff.hessian(g, x) * v
@@ -149,7 +155,8 @@ for M in (100, 400)
     _u = rand(M)
 
     @test L * _u ≈ auto_jacvec(f2, _x, _u)
-    _v = zeros(M); @test mul!(_v, L, _u) ≈ auto_jacvec(f2, _x, _u)
+    _v = zeros(M)
+    @test mul!(_v, L, _u) ≈ auto_jacvec(f2, _x, _u)
 end
 
 @info "HesVec"

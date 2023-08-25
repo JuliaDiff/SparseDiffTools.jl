@@ -1,10 +1,5 @@
-function num_vecjac!(du,
-                     f,
-                     x,
-                     v,
-                     cache1 = similar(v),
-                     cache2 = similar(v);
-                     compute_f0 = true)
+function num_vecjac!(du, f, x, v, cache1 = similar(v), cache2 = similar(v);
+    compute_f0 = true)
     compute_f0 && (f(cache1, x))
     T = eltype(x)
     # Should it be min? max? mean?
@@ -54,8 +49,7 @@ L(x, v, p, t; VJP_input = w) # = df/dw * v
 ```
 """
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
-                autodiff = AutoFiniteDiff(), kwargs...)
-
+    autodiff = AutoFiniteDiff(), kwargs...)
     L = _vecjac(f, u, autodiff)
     IIP, OOP = get_iip_oop(L)
 
@@ -64,13 +58,11 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
         throw(ArgumentError(msg))
     end
 
-    FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
-                     p = p, t = t, islinear = true,
-                     accepted_kwargs = (:VJP_input,), kwargs...)
+    return FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
+        p, t, islinear = true, accepted_kwargs = (:VJP_input,), kwargs...)
 end
 
 function _vecjac(f, u, autodiff::AutoFiniteDiff)
-
     cache = (similar(u), similar(u))
     pullback = nothing
 
@@ -90,7 +82,6 @@ mutable struct AutoDiffVJP{AD, IIP, OOP, F, U, C, PB} <: AbstractAutoDiffVecProd
     pullback::PB
 
     function AutoDiffVJP(f, u, cache, autodiff, pullback)
-
         outofplace = static_hasmethod(f, typeof((u,)))
         isinplace = static_hasmethod(f, typeof((u, u)))
 
@@ -107,19 +98,20 @@ mutable struct AutoDiffVJP{AD, IIP, OOP, F, U, C, PB} <: AbstractAutoDiffVecProd
             typeof(u),
             typeof(cache),
             typeof(pullback),
-           }(
-             f, u, cache, autodiff, pullback,
-            )
+        }(f,
+            u,
+            cache,
+            autodiff,
+            pullback)
     end
 end
 
-function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where{AD, IIP, OOP}
+function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where {AD, IIP, OOP}
     IIP, OOP
 end
 
-function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
-                            ) where{AD <: AutoFiniteDiff}
-
+function update_coefficients(L::AutoDiffVJP{AD}, u, p, t;
+    VJP_input = nothing) where {AD <: AutoFiniteDiff}
     if !isnothing(VJP_input)
         @set! L.u = VJP_input
     end
@@ -127,9 +119,8 @@ function update_coefficients(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
     @set! L.f = update_coefficients(L.f, L.u, p, t)
 end
 
-function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
-                             ) where{AD <: AutoFiniteDiff}
-
+function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t;
+    VJP_input = nothing) where {AD <: AutoFiniteDiff}
     if !isnothing(VJP_input)
         copy!(L.u, VJP_input)
     end
@@ -140,24 +131,21 @@ function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t; VJP_input = nothing,
 end
 
 # Interpret the call as df/du' * v
-function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+function (L::AutoDiffVJP{AD})(v, p, t; VJP_input = nothing) where {AD <: AutoFiniteDiff}
     # ignore VJP_input as L.u was set in update_coefficients(...)
     num_vecjac(L.f, L.u, v)
 end
 
-function (L::AutoDiffVJP{AD})(dv, v, p, t; VJP_input = nothing,) where{AD <: AutoFiniteDiff}
+function (L::AutoDiffVJP{AD})(dv, v, p, t; VJP_input = nothing) where {AD <: AutoFiniteDiff}
     # ignore VJP_input as L.u was set in update_coefficients!(...)
     num_vecjac!(dv, L.f, L.u, v, L.cache...)
 end
 
 function Base.resize!(L::AutoDiffVJP, n::Integer)
-
     static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
     resize!(L.u, n)
 
     for v in L.cache
         resize!(v, n)
     end
-
 end
-#

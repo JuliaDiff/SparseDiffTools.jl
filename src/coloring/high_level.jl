@@ -7,7 +7,8 @@ struct GreedyStar2Color <: SparseDiffToolsColoringAlgorithm end
 struct AcyclicColoring <: SparseDiffToolsColoringAlgorithm end
 
 """
-    matrix_colors(A, alg::ColoringAlgorithm = GreedyD1Color())
+    matrix_colors(A, alg::ColoringAlgorithm = GreedyD1Color();
+        partition_by_rows::Bool = false)
 
 Return the colorvec vector for the matrix A using the chosen coloring
 algorithm. If a known analytical solution exists, that is used instead.
@@ -15,10 +16,22 @@ The coloring defaults to a greedy distance-1 coloring.
 
 Note that if A isa SparseMatrixCSC, the sparsity pattern is defined by structural nonzeroes,
 ie includes explicitly stored zeros.
+
+If `ArrayInterface.fast_matrix_colors(A)` is true, then uses
+`ArrayInterface.matrix_colors(A)` to compute the matrix colors.
 """
 function ArrayInterface.matrix_colors(A::AbstractMatrix,
-                                      alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color();
-                                      partition_by_rows::Bool = false)
+    alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color();
+    partition_by_rows::Bool = false)
+
+    # If fast algorithm for matrix coloring exists use that
+    if !partition_by_rows
+        ArrayInterface.fast_matrix_colors(A) && return ArrayInterface.matrix_colors(A)
+    else
+        A_ = A'
+        ArrayInterface.fast_matrix_colors(A_) && return ArrayInterface.matrix_colors(A_)
+    end
+
     _A = A isa SparseMatrixCSC ? A : sparse(A) # Avoid the copy
     A_graph = matrix2graph(_A, partition_by_rows)
     return color_graph(A_graph, alg)

@@ -58,7 +58,9 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
         throw(ArgumentError(msg))
     end
 
-    return FunctionOperator(L, u, u; isinplace = IIP, outofplace = OOP,
+    # NOTE: The operator returned has both in-place and out-of-place definitions and
+    #       doesn't follow the convention of `f`
+    return FunctionOperator(L, u, u; isinplace = true, outofplace = OOP,
         p, t, islinear = true, accepted_kwargs = (:VJP_input,), kwargs...)
 end
 

@@ -210,6 +210,10 @@ Initialize the Jacobian based on the cache. Uses sparse jacobians if possible.
 """
 function init_jacobian end
 
+# Never thought this was a useful function externally, but I ended up using it in quite a
+# few places. Keeping this till I remove uses of those.
+const __init_𝒥 = init_jacobian
+
 # Misc Functions
 __chunksize(::AutoSparseForwardDiff{C}) where {C} = C
 

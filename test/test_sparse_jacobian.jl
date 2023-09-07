@@ -26,9 +26,12 @@ J_true = ForwardDiff.jacobian(fdiff, x);
 
 # SparseDiffTools High-Level API
 J_sparsity = Symbolics.jacobian_sparsity(fdiff, similar(x), x);
+row_colorvec = SparseDiffTools.matrix_colors(J_sparsity; partition_by_rows = true)
+col_colorvec = SparseDiffTools.matrix_colors(J_sparsity; partition_by_rows = false)
 
-SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_sparsity),
-    SymbolicsSparsityDetection(), NoSparsityDetection()]
+SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_sparsity),
+    SymbolicsSparsityDetection(), NoSparsityDetection(),
+    PrecomputedJacobianColorvec(; jac_prototype = J_sparsity, row_colorvec, col_colorvec)]
 
 @testset "High-Level API" begin
     @testset "Sparsity Detection: $(nameof(typeof(sd)))" for sd in SPARSITY_DETECTION_ALGS
@@ -40,7 +43,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
             AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
-                J = SparseDiffTools.__init_𝒥(cache)
+                J = init_jacobian(cache)
 
                 sparse_jacobian!(J, difftype, cache, fdiff, x)
 
@@ -74,7 +77,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
 
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
-                J = SparseDiffTools.__init_𝒥(cache)
+                J = init_jacobian(cache)
 
                 sparse_jacobian!(J, difftype, sd, fdiff, x)
 
@@ -95,7 +98,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
 
             @testset "Cache & Reuse" begin
-                J = SparseDiffTools.__init_𝒥(cache)
+                J = init_jacobian(cache)
                 sparse_jacobian!(J, difftype, cache, fdiff, y, x)
 
                 @test J ≈ J_true
@@ -126,7 +129,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
                 t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, y, x)
                 @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
 
-                J = SparseDiffTools.__init_𝒥(cache)
+                J = init_jacobian(cache)
 
                 sparse_jacobian!(J, difftype, sd, fdiff, y, x)
 
@@ -142,7 +145,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(jac_prototype = J_spars
             AutoZygote())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
-            J = SparseDiffTools.__init_𝒥(cache)
+            J = init_jacobian(cache)
 
             @testset "Cache & Reuse" begin
                 @test_throws Exception sparse_jacobian!(J, difftype, cache, fdiff, y, x)

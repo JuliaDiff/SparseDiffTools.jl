@@ -88,8 +88,9 @@ export update_coefficients, update_coefficients!, value!
 # High Level Interface: sparse_jacobian
 export AutoSparseEnzyme
 
-export NoSparsityDetection,
-    SymbolicsSparsityDetection, JacPrototypeSparsityDetection, AutoSparsityDetection
+export NoSparsityDetection, SymbolicsSparsityDetection, JacPrototypeSparsityDetection,
+    PrecomputedJacobianColorvec, AutoSparsityDetection
 export sparse_jacobian, sparse_jacobian_cache, sparse_jacobian!
+export init_jacobian
 
 end # module

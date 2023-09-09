@@ -9,18 +9,110 @@ abstract type AbstractSparsityDetection <: AbstractMaybeSparsityDetection end
 
 struct NoSparsityDetection <: AbstractMaybeSparsityDetection end
 
+"""
+    SymbolicsSparsityDetection(; alg = GreedyD1Color())
+
+Use Symbolics to compute the sparsity pattern of the Jacobian. This requires `Symbolics.jl`
+to be explicitly loaded.
+
+## Keyword Arguments
+
+    - `alg`: The algorithm used for computing the matrix colors
+
+See Also: [JacPrototypeSparsityDetection](@ref), [PrecomputedJacobianColorvec](@ref)
+"""
 Base.@kwdef struct SymbolicsSparsityDetection{A <: ArrayInterface.ColoringAlgorithm} <:
                    AbstractSparsityDetection
     alg::A = GreedyD1Color()
 end
 
+"""
+    JacPrototypeSparsityDetection(; jac_prototype, alg = GreedyD1Color())
+
+Use a pre-specified `jac_prototype` to compute the matrix colors of the Jacobian.
+
+## Keyword Arguments
+
+    - `jac_prototype`: The prototype Jacobian used for computing the matrix colors
+    - `alg`: The algorithm used for computing the matrix colors
+
+See Also: [SymbolicsSparsityDetection](@ref), [PrecomputedJacobianColorvec](@ref)
+"""
 Base.@kwdef struct JacPrototypeSparsityDetection{
-    J, A <: ArrayInterface.ColoringAlgorithm,
-} <: AbstractSparsityDetection
+    J, A <: ArrayInterface.ColoringAlgorithm} <: AbstractSparsityDetection
     jac_prototype::J
     alg::A = GreedyD1Color()
 end
 
+"""
+    PrecomputedJacobianColorvec(jac_prototype, row_colorvec, col_colorvec)
+
+Use a pre-specified `colorvec` which can be directly used for sparse differentiation. Based
+on whether a reverse mode or forward mode or finite differences is used, the corresponding
+`row_colorvec` or `col_colorvec` is used. Atmost one of them can be set to `nothing`.
+
+## Arguments
+
+    - `jac_prototype`: The prototype Jacobian used for computing structural nonzeros
+    - `row_colorvec`: The row colorvec of the Jacobian
+    - `col_colorvec`: The column colorvec of the Jacobian
+
+See Also: [SymbolicsSparsityDetection](@ref), [JacPrototypeSparsityDetection](@ref)
+"""
+struct PrecomputedJacobianColorvec{J, RC, CC} <: AbstractSparsityDetection
+    jac_prototype::J
+    row_colorvec::RC
+    col_colorvec::CC
+end
+
+"""
+    PrecomputedJacobianColorvec(; jac_prototype, partition_by_rows::Bool = false,
+        colorvec = missing, row_colorvec = missing, col_colorvec = missing)
+
+Use a pre-specified `colorvec` which can be directly used for sparse differentiation. Based
+on whether a reverse mode or forward mode or finite differences is used, the corresponding
+`row_colorvec` or `col_colorvec` is used. Atmost one of them can be set to `nothing`.
+
+## Keyword Arguments
+
+    - `jac_prototype`: The prototype Jacobian used for computing structural nonzeros
+    - `partition_by_rows`: Whether to partition the Jacobian by rows or columns (row
+      partitioning is used for reverse mode AD)
+    - `colorvec`: The colorvec of the Jacobian. If `partition_by_rows` is `true` then this
+      is the row colorvec, otherwise it is the column colorvec
+    - `row_colorvec`: The row colorvec of the Jacobian
+    - `col_colorvec`: The column colorvec of the Jacobian
+
+See Also: [SymbolicsSparsityDetection](@ref), [JacPrototypeSparsityDetection](@ref)
+"""
+function PrecomputedJacobianColorvec(; jac_prototype, partition_by_rows::Bool = false,
+    colorvec = missing, row_colorvec = missing, col_colorvec = missing)
+    if colorvec === missing
+        @assert row_colorvec !== missing||col_colorvec !== missing "Either `colorvec` or `row_colorvec` and `col_colorvec` must be specified!"
+        row_colorvec = row_colorvec === missing ? nothing : row_colorvec
+        col_colorvec = col_colorvec === missing ? nothing : col_colorvec
+        return PrecomputedJacobianColorvec(jac_prototype, row_colorvec, col_colorvec)
+    else
+        @assert row_colorvec === missing&&col_colorvec === missing "Specifying `colorvec` is incompatible with specifying `row_colorvec` or `col_colorvec`!"
+        row_colorvec = partition_by_rows ? colorvec : nothing
+        col_colorvec = partition_by_rows ? nothing : colorvec
+        return PrecomputedJacobianColorvec(jac_prototype, row_colorvec, col_colorvec)
+    end
+end
+
+function _get_colorvec(alg::PrecomputedJacobianColorvec, ad)
+    cvec = alg.col_colorvec
+    @assert cvec!==nothing "`col_colorvec` is nothing, but Forward Mode AD or Finite Differences is being used!"
+    return cvec
+end
+
+function _get_colorvec(alg::PrecomputedJacobianColorvec, ::AbstractReverseMode)
+    cvec = alg.row_colorvec
+    @assert cvec!==nothing "`row_colorvec` is nothing, but Reverse Mode AD is being used!"
+    return cvec
+end
+
+# No one should be using this currently
 Base.@kwdef struct AutoSparsityDetection{A <: ArrayInterface.ColoringAlgorithm} <:
                    AbstractSparsityDetection
     alg::A = GreedyD1Color()
@@ -41,7 +133,8 @@ Inplace update the matrix `J` with the Jacobian of `f` at `x` using the AD backe
 function sparse_jacobian! end
 
 """
-    sparse_jacobian_cache(ad::AbstractADType, sd::AbstractSparsityDetection, f, x; fx=nothing)
+    sparse_jacobian_cache(ad::AbstractADType, sd::AbstractSparsityDetection, f, x;
+        fx=nothing)
     sparse_jacobian_cache(ad::AbstractADType, sd::AbstractSparsityDetection, f!, fx, x)
 
 Takes the underlying AD backend `ad`, sparsity detection algorithm `sd`, function `f`,
@@ -67,7 +160,7 @@ with the same cache to compute the jacobian.
 function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, args...;
     kwargs...)
     cache = sparse_jacobian_cache(ad, sd, args...; kwargs...)
-    J = __init_𝒥(cache)
+    J = init_jacobian(cache)
     return sparse_jacobian!(J, ad, cache, args...)
 end
 
@@ -80,7 +173,7 @@ Jacobian at every function call
 """
 function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache,
     args...)
-    J = __init_𝒥(cache)
+    J = init_jacobian(cache)
     return sparse_jacobian!(J, ad, cache, args...)
 end
 
@@ -106,7 +199,20 @@ function __gradient end
 function __gradient! end
 function __jacobian! end
 
-function __init_𝒥 end
+"""
+    init_jacobian(cache::AbstractMaybeSparseJacobianCache)
+
+Initialize the Jacobian based on the cache. Uses sparse jacobians if possible.
+
+!!! note
+    This function doesn't alias the provided jacobian prototype. It always initializes a
+    fresh jacobian that can be mutated without any side effects.
+"""
+function init_jacobian end
+
+# Never thought this was a useful function externally, but I ended up using it in quite a
+# few places. Keeping this till I remove uses of those.
+const __init_𝒥 = init_jacobian
 
 # Misc Functions
 __chunksize(::AutoSparseForwardDiff{C}) where {C} = C
@@ -123,12 +229,12 @@ end
     return :(nothing)
 end
 
-function __init_𝒥(c::AbstractMaybeSparseJacobianCache)
+function init_jacobian(c::AbstractMaybeSparseJacobianCache)
     T = promote_type(eltype(c.fx), eltype(c.x))
-    return __init_𝒥(__getfield(c, Val(:jac_prototype)), T, c.fx, c.x)
+    return init_jacobian(__getfield(c, Val(:jac_prototype)), T, c.fx, c.x)
 end
-__init_𝒥(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
-__init_𝒥(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
+init_jacobian(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
+init_jacobian(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing

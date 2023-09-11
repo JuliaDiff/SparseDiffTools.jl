@@ -17,7 +17,7 @@ using ArrayInterface, SparseArrays
 import ArrayInterface: matrix_colors
 import StaticArrays
 # Others
-using SciMLOperators, LinearAlgebra
+using SciMLOperators, LinearAlgebra, Random
 import DataStructures: DisjointSets, find_root!, union!
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!
@@ -89,7 +89,7 @@ export update_coefficients, update_coefficients!, value!
 export AutoSparseEnzyme
 
 export NoSparsityDetection, SymbolicsSparsityDetection, JacPrototypeSparsityDetection,
-    PrecomputedJacobianColorvec, AutoSparsityDetection
+    PrecomputedJacobianColorvec, ApproximateJacobianSparsity, AutoSparsityDetection
 export sparse_jacobian, sparse_jacobian_cache, sparse_jacobian!
 export init_jacobian
 

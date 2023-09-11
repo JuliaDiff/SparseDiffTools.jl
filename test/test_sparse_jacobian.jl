@@ -30,7 +30,7 @@ row_colorvec = SparseDiffTools.matrix_colors(J_sparsity; partition_by_rows = tru
 col_colorvec = SparseDiffTools.matrix_colors(J_sparsity; partition_by_rows = false)
 
 SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_sparsity),
-    SymbolicsSparsityDetection(), NoSparsityDetection(),
+    SymbolicsSparsityDetection(), NoSparsityDetection(), ApproximateJacobianSparsity(),
     PrecomputedJacobianColorvec(; jac_prototype = J_sparsity, row_colorvec, col_colorvec)]
 
 @testset "High-Level API" begin

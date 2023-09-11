@@ -112,6 +112,31 @@ function _get_colorvec(alg::PrecomputedJacobianColorvec, ::AbstractReverseMode)
     return cvec
 end
 
+"""
+    ApproximateJacobianSparsity(; ntrials = 5, rng = Random.default_rng(),
+        alg = GreedyD1Color())
+
+Use `ntrials` random vectors to compute the sparsity pattern of the Jacobian. This is an
+approximate method and the sparsity pattern may not be exact.
+
+## Keyword Arguments
+
+    - `ntrials`: The number of random vectors to use for computing the sparsity pattern
+    - `rng`: The random number generator used for generating the random vectors
+    - `alg`: The algorithm used for computing the matrix colors
+"""
+struct ApproximateJacobianSparsity{R <: AbstractRNG,
+    A <: ArrayInterface.ColoringAlgorithm} <: AbstractSparsityDetection
+    ntrials::Int
+    rng::R
+    alg::A
+end
+
+function ApproximateJacobianSparsity(; ntrials::Int = 3,
+    rng::AbstractRNG = Random.default_rng(), alg = GreedyD1Color())
+    return ApproximateJacobianSparsity(ntrials, rng, alg)
+end
+
 # No one should be using this currently
 Base.@kwdef struct AutoSparsityDetection{A <: ArrayInterface.ColoringAlgorithm} <:
                    AbstractSparsityDetection

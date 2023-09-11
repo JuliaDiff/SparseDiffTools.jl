@@ -32,25 +32,29 @@ end
 
 # Approximate Jacobian Sparsity Detection
 ## Right now we hardcode it to use `ForwardDiff`
-function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f, x; kwargs...)
+function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f, x; fx = nothing,
+    kwargs...)
     @unpack ntrials, rng = alg
+    fx = fx === nothing ? f(x) : fx
+    J = fill!(similar(fx, length(fx), length(x)), 0)
     cfg = ForwardDiff.JacobianConfig(f, x)
-    J = sum(1:ntrials) do _
-        local x_ = similar(x)
-        rand!(rng, x_)
-        abs.(ForwardDiff.jacobian(f, x_, cfg))
+    for _ in 1:ntrials
+        x_ = similar(x)
+        randn!(rng, x_)
+        J .+= abs.(ForwardDiff.jacobian(f, x_, cfg))
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
-        kwargs...)
+        fx, kwargs...)
 end
 
 function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f!, fx, x; kwargs...)
     @unpack ntrials, rng = alg
     cfg = ForwardDiff.JacobianConfig(f!, fx, x)
-    J = sum(1:ntrials) do _
-        local x_ = similar(x)
-        rand!(rng, x_)
-        abs.(ForwardDiff.jacobian(f!, fx, x_, cfg))
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    for _ in 1:ntrials
+        x_ = similar(x)
+        randn!(rng, x_)
+        J .+= abs.(ForwardDiff.jacobian(f!, fx, x_, cfg))
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f!, fx,
         x; kwargs...)

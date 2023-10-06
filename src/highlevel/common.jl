@@ -260,6 +260,7 @@ function init_jacobian(c::AbstractMaybeSparseJacobianCache)
 end
 init_jacobian(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
 init_jacobian(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
+init_jacobian(J::SparseMatrixCSC, ::Type{T}, _, _) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing

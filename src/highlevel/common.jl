@@ -259,6 +259,11 @@ function init_jacobian(c::AbstractMaybeSparseJacobianCache)
     return init_jacobian(__getfield(c, Val(:jac_prototype)), T, c.fx, c.x)
 end
 init_jacobian(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
+function init_jacobian(::Nothing, ::Type{T}, fx::StaticArray, x::StaticArray) where {T}
+    # We want to construct a MArray to preserve types
+    J = StaticArrays.MArray{Tuple{length(fx), length(x)}, T}(undef)
+    return J
+end
 init_jacobian(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
 init_jacobian(J::SparseMatrixCSC, ::Type{T}, _, _) where {T} = T.(J)
 

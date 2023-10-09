@@ -16,6 +16,7 @@ import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 using ArrayInterface, SparseArrays
 import ArrayInterface: matrix_colors
 import StaticArrays
+import StaticArrays: StaticArray
 # Others
 using SciMLOperators, LinearAlgebra, Random
 import DataStructures: DisjointSets, find_root!, union!

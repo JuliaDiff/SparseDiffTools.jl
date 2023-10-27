@@ -6,17 +6,19 @@ struct ForwardDiffJacobianCache{CO, CA, J, FX, X} <: AbstractMaybeSparseJacobian
     x::X
 end
 
+struct SparseDiffToolsTag end
+
 function sparse_jacobian_cache(ad::Union{AutoSparseForwardDiff, AutoForwardDiff},
     sd::AbstractMaybeSparsityDetection, f, x; fx = nothing)
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
     if coloring_result isa NoMatrixColoring
-        cache = ForwardDiff.JacobianConfig(f, x)
+        cache = ForwardDiff.JacobianConfig(f, x, __chunksize(ad, x),
+            ifelse(ad.tag === nothing, SparseDiffToolsTag(), ad.tag))
         jac_prototype = nothing
     else
         cache = ForwardColorJacCache(f, x, __chunksize(ad); coloring_result.colorvec,
-            dx = fx,
-            sparsity = coloring_result.jacobian_sparsity)
+            dx = fx, sparsity = coloring_result.jacobian_sparsity, ad.tag)
         jac_prototype = coloring_result.jacobian_sparsity
     end
     return ForwardDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)
@@ -26,11 +28,12 @@ function sparse_jacobian_cache(ad::Union{AutoSparseForwardDiff, AutoForwardDiff}
     sd::AbstractMaybeSparsityDetection, f!, fx, x)
     coloring_result = sd(ad, f!, fx, x)
     if coloring_result isa NoMatrixColoring
-        cache = ForwardDiff.JacobianConfig(f!, fx, x)
+        cache = ForwardDiff.JacobianConfig(f!, fx, x, __chunksize(ad, x),
+            ifelse(ad.tag === nothing, SparseDiffToolsTag(), ad.tag))
         jac_prototype = nothing
     else
         cache = ForwardColorJacCache(f!, x, __chunksize(ad); coloring_result.colorvec,
-            dx = fx, sparsity = coloring_result.jacobian_sparsity)
+            dx = fx, sparsity = coloring_result.jacobian_sparsity, ad.tag)
         jac_prototype = coloring_result.jacobian_sparsity
     end
     return ForwardDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)

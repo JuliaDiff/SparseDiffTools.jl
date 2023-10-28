@@ -240,12 +240,19 @@ function init_jacobian end
 const __init_𝒥 = init_jacobian
 
 # Misc Functions
-function __chunksize(::AutoSparseForwardDiff{C}, x) where {C}
-    return C === nothing ? ForwardDiff.Chunk(x) : (C isa Number ? ForwardDiff.Chunk{C}() : C)
+function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}, x) where {C}
+    C isa ForwardDiff.Chunk && return C
+    return __chunksize(Val(C), x)
 end
-__chunksize(::AutoSparseForwardDiff{C}) where {C} = C
-__chunksize(::AutoForwardDiff{C}, x) where {C} = C === nothing ? ForwardDiff.Chunk(x) : (C isa Number ? ForwardDiff.Chunk{C}() : C)
-__chunksize(::AutoForwardDiff{C}) where {C} = C
+__chunksize(::Val{nothing}, x) = ForwardDiff.Chunk(x)
+function __chunksize(::Val{C}, x) where {C}
+    if C isa Integer && !(C isa Bool)
+        return C ≤ 0 ? ForwardDiff.Chunk(x) : ForwardDiff.Chunk{C}()
+    else
+        error("$(C)::$(typeof(C)) is not a valid chunksize!")
+    end
+end
+__chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}) where {C} = C
 
 __f̂(f, x, idxs) = dot(vec(f(x)), idxs)
 

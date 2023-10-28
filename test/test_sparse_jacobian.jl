@@ -40,6 +40,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in (AutoSparseZygote(),
             AutoZygote(), AutoSparseForwardDiff(), AutoForwardDiff(),
+            AutoSparseForwardDiff(; chunksize = 0), AutoForwardDiff(; chunksize = 0),
+            AutoSparseForwardDiff(; chunksize = 8), AutoForwardDiff(; chunksize = 8),
             AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
@@ -92,8 +94,10 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @info "Inplace Place Function"
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseForwardDiff(),
-            AutoForwardDiff(), AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(),
-            AutoSparseEnzyme())
+            AutoForwardDiff(), AutoSparseForwardDiff(; chunksize = 0),
+            AutoForwardDiff(; chunksize = 0), AutoSparseForwardDiff(; chunksize = 8),
+            AutoForwardDiff(; chunksize = 8), AutoSparseFiniteDiff(), AutoFiniteDiff(),
+            AutoEnzyme(), AutoSparseEnzyme())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
 

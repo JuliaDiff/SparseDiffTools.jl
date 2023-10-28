@@ -1,6 +1,6 @@
 struct DeivVecTag end
 
-get_tag(::Array{Dual{T, V, N}}) where {T, V, N} = T
+get_tag(::AbstractArray{Dual{T, V, N}}) where {T, V, N} = T
 get_tag(::Dual{T, V, N}) where {T, V, N} = T
 
 # J(f(x))*v

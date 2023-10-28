@@ -241,10 +241,10 @@ const __init_𝒥 = init_jacobian
 
 # Misc Functions
 function __chunksize(::AutoSparseForwardDiff{C}, x) where {C}
-    return C === nothing ? ForwardDiff.Chunk(x) : C
+    return C === nothing ? ForwardDiff.Chunk(x) : (C isa Number ? ForwardDiff.Chunk{C}() : C)
 end
 __chunksize(::AutoSparseForwardDiff{C}) where {C} = C
-__chunksize(::AutoForwardDiff{C}, x) where {C} = C === nothing ? ForwardDiff.Chunk(x) : C
+__chunksize(::AutoForwardDiff{C}, x) where {C} = C === nothing ? ForwardDiff.Chunk(x) : (C isa Number ? ForwardDiff.Chunk{C}() : C)
 __chunksize(::AutoForwardDiff{C}) where {C} = C
 
 __f̂(f, x, idxs) = dot(vec(f(x)), idxs)

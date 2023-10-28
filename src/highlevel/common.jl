@@ -252,7 +252,11 @@ function __chunksize(::Val{C}, x) where {C}
         error("$(C)::$(typeof(C)) is not a valid chunksize!")
     end
 end
-__chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}) where {C} = C
+function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}) where {C}
+    C === nothing && return nothing
+    C isa Integer && !(C isa Bool) && return C ≤ 0 ? nothing : Val(C)
+    return nothing
+end
 
 __f̂(f, x, idxs) = dot(vec(f(x)), idxs)
 

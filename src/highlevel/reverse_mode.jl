@@ -8,7 +8,7 @@ struct ReverseModeJacobianCache{CO, CA, J, FX, X, I} <: AbstractMaybeSparseJacob
 end
 
 function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
-    sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F <: Function}
+    sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     fx = fx === nothing ? similar(f(x)) : fx
     coloring_result = sd(ad, f, x)
     jac_prototype = __getfield(coloring_result, Val(:jacobian_sparsity))
@@ -17,7 +17,7 @@ function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
 end
 
 function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
-    sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F <: Function}
+    sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     jac_prototype = __getfield(coloring_result, Val(:jacobian_sparsity))
     return ReverseModeJacobianCache(coloring_result, nothing, jac_prototype, fx, x,
@@ -34,12 +34,12 @@ function sparse_jacobian!(J::AbstractMatrix, ad, cache::ReverseModeJacobianCache
 end
 
 function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
-    cache::MatrixColoringResult, f::F, x) where {F <: Function}
+    cache::MatrixColoringResult, f::F, x) where {F}
     return __sparse_jacobian_reverse_impl!(J, ad, idx_vec, cache, f, nothing, x)
 end
 
 function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
-    cache::MatrixColoringResult, f::F, fx, x) where {F <: Function}
+    cache::MatrixColoringResult, f::F, fx, x) where {F}
     # If `fx` is `nothing` then assume `f` is not in-place
     x_ = __maybe_copy_x(ad, x)
     fx_ = __maybe_copy_x(ad, fx)

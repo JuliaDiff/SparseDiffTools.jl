@@ -33,7 +33,7 @@ end
 # Approximate Jacobian Sparsity Detection
 ## Right now we hardcode it to use `ForwardDiff`
 function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, x; fx = nothing,
-    kwargs...) where {F <: Function}
+    kwargs...) where {F}
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
     J = fill!(similar(fx, length(fx), length(x)), 0)
@@ -48,7 +48,7 @@ function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, x; f
 end
 
 function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f!::F, fx, x;
-    kwargs...) where {F <: Function}
+    kwargs...) where {F}
     @unpack ntrials, rng = alg
     cfg = ForwardDiff.JacobianConfig(f!, fx, x)
     J = fill!(similar(fx, length(fx), length(x)), 0)

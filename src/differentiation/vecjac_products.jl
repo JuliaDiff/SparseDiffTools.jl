@@ -1,5 +1,5 @@
 function num_vecjac!(du, f, x, v, cache1 = similar(v), cache2 = similar(v);
-    compute_f0 = true)
+        compute_f0 = true)
     compute_f0 && (f(cache1, x))
     T = eltype(x)
     # Should it be min? max? mean?
@@ -49,7 +49,7 @@ L(x, v, p, t; VJP_input = w) # = df/dw * v
 ```
 """
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing;
-    autodiff = AutoFiniteDiff(), kwargs...)
+        autodiff = AutoFiniteDiff(), kwargs...)
     L = _vecjac(f, u, autodiff)
     IIP, OOP = get_iip_oop(L)
 
@@ -113,7 +113,7 @@ function get_iip_oop(::AutoDiffVJP{AD, IIP, OOP}) where {AD, IIP, OOP}
 end
 
 function update_coefficients(L::AutoDiffVJP{AD}, u, p, t;
-    VJP_input = nothing) where {AD <: AutoFiniteDiff}
+        VJP_input = nothing) where {AD <: AutoFiniteDiff}
     if !isnothing(VJP_input)
         @set! L.u = VJP_input
     end
@@ -122,7 +122,7 @@ function update_coefficients(L::AutoDiffVJP{AD}, u, p, t;
 end
 
 function update_coefficients!(L::AutoDiffVJP{AD}, u, p, t;
-    VJP_input = nothing) where {AD <: AutoFiniteDiff}
+        VJP_input = nothing) where {AD <: AutoFiniteDiff}
     if !isnothing(VJP_input)
         copy!(L.u, VJP_input)
     end

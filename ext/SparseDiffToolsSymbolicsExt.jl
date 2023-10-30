@@ -4,7 +4,7 @@ using SparseDiffTools, Symbolics
 import SparseDiffTools: AbstractSparseADType
 
 function (alg::SymbolicsSparsityDetection)(ad::AbstractSparseADType, f, x; fx = nothing,
-    kwargs...)
+        kwargs...)
     fx = fx === nothing ? similar(f(x)) : dx
     f!(y, x) = (y .= f(x))
     J = Symbolics.jacobian_sparsity(f!, fx, x)

@@ -33,7 +33,7 @@ Note that the sparsity pattern is defined by structural nonzeroes, ie includes e
 stored zeros.
 """
 function matrix2graph(sparse_matrix::AbstractSparseMatrix{<:Number},
-    partition_by_rows::Bool = true)
+        partition_by_rows::Bool = true)
     (rows_index, cols_index, _) = findnz(sparse_matrix)
 
     ncols = size(sparse_matrix, 2)

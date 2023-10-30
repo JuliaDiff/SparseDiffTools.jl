@@ -21,8 +21,8 @@ If `ArrayInterface.fast_matrix_colors(A)` is true, then uses
 `ArrayInterface.matrix_colors(A)` to compute the matrix colors.
 """
 function ArrayInterface.matrix_colors(A::AbstractMatrix,
-    alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color();
-    partition_by_rows::Bool = false)
+        alg::SparseDiffToolsColoringAlgorithm = GreedyD1Color();
+        partition_by_rows::Bool = false)
 
     # If fast algorithm for matrix coloring exists use that
     if !partition_by_rows

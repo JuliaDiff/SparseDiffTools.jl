@@ -20,9 +20,9 @@ function make_hessian_buffers(colorvec, x)
 end
 
 function ForwardColorHesCache(f, x::AbstractVector{<:Number},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing,
-    g! = (G, x, grad_config) -> ForwardDiff.gradient!(G, f, x, grad_config))
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing,
+        g! = (G, x, grad_config) -> ForwardDiff.gradient!(G, f, x, grad_config))
     ncolors, D, buffer, G, G2 = make_hessian_buffers(colorvec, x)
     grad_config = ForwardDiff.GradientConfig(f, x)
 
@@ -46,7 +46,7 @@ function ForwardColorHesCache(f, x::AbstractVector{<:Number},
 end
 
 function numauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
-    hes_cache::ForwardColorHesCache; safe = true)
+        hes_cache::ForwardColorHesCache; safe = true)
     ϵ = cbrt(eps(eltype(x)))
     for j in 1:(hes_cache.ncolors)
         x .+= ϵ .* @view hes_cache.D[:, j]
@@ -67,23 +67,23 @@ function numauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray
 end
 
 function numauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing)
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing)
     hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
     numauto_color_hessian!(H, f, x, hes_cache)
     return H
 end
 
 function numauto_color_hessian(f, x::AbstractArray{<:Number},
-    hes_cache::ForwardColorHesCache)
+        hes_cache::ForwardColorHesCache)
     H = convert.(eltype(x), hes_cache.sparsity)
     numauto_color_hessian!(H, f, x, hes_cache)
     return H
 end
 
 function numauto_color_hessian(f, x::AbstractArray{<:Number},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing)
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing)
     hes_cache = ForwardColorHesCache(f, x, colorvec, sparsity)
     H = convert.(eltype(x), hes_cache.sparsity)
     numauto_color_hessian!(H, f, x, hes_cache)
@@ -102,9 +102,9 @@ end
 struct AutoAutoTag end
 
 function ForwardAutoColorHesCache(f, x::AbstractVector{V},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing,
-    tag::ForwardDiff.Tag = ForwardDiff.Tag(AutoAutoTag(), V)) where {V}
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing,
+        tag::ForwardDiff.Tag = ForwardDiff.Tag(AutoAutoTag(), V)) where {V}
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
@@ -124,28 +124,28 @@ function ForwardAutoColorHesCache(f, x::AbstractVector{V},
 end
 
 function autoauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
-    hes_cache::ForwardAutoColorHesCache)
+        hes_cache::ForwardAutoColorHesCache)
     forwarddiff_color_jacobian!(H, hes_cache.grad!, x, hes_cache.jac_cache)
 end
 
 function autoauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing)
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing)
     hes_cache = ForwardAutoColorHesCache(f, x, colorvec, sparsity)
     autoauto_color_hessian!(H, f, x, hes_cache)
     return H
 end
 
 function autoauto_color_hessian(f, x::AbstractArray{<:Number},
-    hes_cache::ForwardAutoColorHesCache)
+        hes_cache::ForwardAutoColorHesCache)
     H = convert.(eltype(x), hes_cache.sparsity)
     autoauto_color_hessian!(H, f, x, hes_cache)
     return H
 end
 
 function autoauto_color_hessian(f, x::AbstractArray{<:Number},
-    colorvec::AbstractVector{<:Integer} = eachindex(x),
-    sparsity::Union{AbstractMatrix, Nothing} = nothing)
+        colorvec::AbstractVector{<:Integer} = eachindex(x),
+        sparsity::Union{AbstractMatrix, Nothing} = nothing)
     hes_cache = ForwardAutoColorHesCache(f, x, colorvec, sparsity)
     H = convert.(eltype(x), hes_cache.sparsity)
     autoauto_color_hessian!(H, f, x, hes_cache)

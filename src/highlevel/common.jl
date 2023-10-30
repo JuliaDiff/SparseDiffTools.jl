@@ -86,7 +86,7 @@ on whether a reverse mode or forward mode or finite differences is used, the cor
 See Also: [SymbolicsSparsityDetection](@ref), [JacPrototypeSparsityDetection](@ref)
 """
 function PrecomputedJacobianColorvec(; jac_prototype, partition_by_rows::Bool = false,
-    colorvec = missing, row_colorvec = missing, col_colorvec = missing)
+        colorvec = missing, row_colorvec = missing, col_colorvec = missing)
     if colorvec === missing
         @assert row_colorvec !== missing||col_colorvec !== missing "Either `colorvec` or `row_colorvec` and `col_colorvec` must be specified!"
         row_colorvec = row_colorvec === missing ? nothing : row_colorvec
@@ -133,7 +133,7 @@ struct ApproximateJacobianSparsity{R <: AbstractRNG,
 end
 
 function ApproximateJacobianSparsity(; ntrials::Int = 3,
-    rng::AbstractRNG = Random.default_rng(), alg = GreedyD1Color())
+        rng::AbstractRNG = Random.default_rng(), alg = GreedyD1Color())
     return ApproximateJacobianSparsity(ntrials, rng, alg)
 end
 
@@ -183,7 +183,7 @@ cases, use `sparse_jacobian_cache` once to generate the cache and use `sparse_ja
 with the same cache to compute the jacobian.
 """
 function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, args...;
-    kwargs...)
+        kwargs...)
     cache = sparse_jacobian_cache(ad, sd, args...; kwargs...)
     J = init_jacobian(cache)
     return sparse_jacobian!(J, ad, cache, args...)
@@ -197,7 +197,7 @@ Use the sparsity detection `cache` for computing the sparse Jacobian. This alloc
 Jacobian at every function call
 """
 function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache,
-    args...)
+        args...)
     J = init_jacobian(cache)
     return sparse_jacobian!(J, ad, cache, args...)
 end
@@ -214,7 +214,7 @@ cases, use `sparse_jacobian_cache` once to generate the cache and use `sparse_ja
 with the same cache to compute the jacobian.
 """
 function sparse_jacobian!(J::AbstractMatrix, ad::AbstractADType,
-    sd::AbstractMaybeSparsityDetection, args...; kwargs...)
+        sd::AbstractMaybeSparsityDetection, args...; kwargs...)
     cache = sparse_jacobian_cache(ad, sd, args...; kwargs...)
     return sparse_jacobian!(J, ad, cache, args...)
 end

@@ -73,9 +73,9 @@ the induced 2-colored subgraphs/trees where the id of set is an integer
 representing an edge of graph 'g'
 """
 function prevent_cycle!(first_visit_to_tree::AbstractVector{<:Tuple{Integer, Integer}},
-    forbidden_colors::AbstractVector{<:Integer}, v::Integer, w::Integer, x::Integer,
-    g::Graphs.AbstractGraph, two_colored_forest::DisjointSets{<:Integer},
-    color::AbstractVector{<:Integer})
+        forbidden_colors::AbstractVector{<:Integer}, v::Integer, w::Integer, x::Integer,
+        g::Graphs.AbstractGraph, two_colored_forest::DisjointSets{<:Integer},
+        color::AbstractVector{<:Integer})
     e = find(w, x, g, two_colored_forest)
     p, q = first_visit_to_tree[e]
 
@@ -97,8 +97,8 @@ Disjoint set is used to store stars in sets, which are identified through key
 edges present in g.
 """
 function grow_star!(two_colored_forest::DisjointSets{<:Integer},
-    first_neighbor::AbstractVector{<:Tuple{Integer, Integer}}, v::Integer, w::Integer,
-    g::Graphs.AbstractGraph, color::AbstractVector{<:Integer})
+        first_neighbor::AbstractVector{<:Tuple{Integer, Integer}}, v::Integer, w::Integer,
+        g::Graphs.AbstractGraph, color::AbstractVector{<:Integer})
     insert_new_tree!(two_colored_forest, v, w, g)
     p, q = first_neighbor[color[w]]
 
@@ -119,7 +119,7 @@ Subroutine to merge trees present in the disjoint set which have a
 common edge.
 """
 function merge_trees!(two_colored_forest::DisjointSets{<:Integer}, v::Integer, w::Integer,
-    x::Integer, g::Graphs.AbstractGraph)
+        x::Integer, g::Graphs.AbstractGraph)
     e1 = find(v, w, g, two_colored_forest)
     e2 = find(w, x, g, two_colored_forest)
     if e1 != e2
@@ -135,7 +135,7 @@ creates a new singleton set in the disjoint set 'two_colored_forest' consisting
 of the edge connecting v and w in the graph g
 """
 function insert_new_tree!(two_colored_forest::DisjointSets{<:Integer}, v::Integer,
-    w::Integer, g::Graphs.AbstractGraph)
+        w::Integer, g::Graphs.AbstractGraph)
     edge_index = find_edge_index(v, w, g)
     push!(two_colored_forest, edge_index)
 end
@@ -157,7 +157,7 @@ Returns the root of the disjoint set to which the edge connecting vertices w and
 in the graph g belongs to
 """
 function find(w::Integer, x::Integer, g::Graphs.AbstractGraph,
-    two_colored_forest::DisjointSets{<:Integer})
+        two_colored_forest::DisjointSets{<:Integer})
     edge_index = find_edge_index(w, x, g)
     return find_root!(two_colored_forest, edge_index)
 end

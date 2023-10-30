@@ -186,7 +186,8 @@ function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection,
         kwargs...)
     cache = sparse_jacobian_cache(ad, sd, args...; kwargs...)
     J = init_jacobian(cache)
-    return sparse_jacobian!(J, ad, cache, args...)
+    sparse_jacobian!(J, ad, cache, args...)
+    return J
 end
 
 """
@@ -199,7 +200,8 @@ Jacobian at every function call
 function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache,
         args...)
     J = init_jacobian(cache)
-    return sparse_jacobian!(J, ad, cache, args...)
+    sparse_jacobian!(J, ad, cache, args...)
+    return J
 end
 
 """
@@ -216,7 +218,8 @@ with the same cache to compute the jacobian.
 function sparse_jacobian!(J::AbstractMatrix, ad::AbstractADType,
         sd::AbstractMaybeSparsityDetection, args...; kwargs...)
     cache = sparse_jacobian_cache(ad, sd, args...; kwargs...)
-    return sparse_jacobian!(J, ad, cache, args...)
+    sparse_jacobian!(J, ad, cache, args...)
+    return J
 end
 
 ## Internal

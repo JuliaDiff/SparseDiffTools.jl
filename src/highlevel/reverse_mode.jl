@@ -7,6 +7,8 @@ struct ReverseModeJacobianCache{CO, CA, J, FX, X, I} <: AbstractMaybeSparseJacob
     idx_vec::I
 end
 
+__getfield(c::ReverseModeJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
+
 function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     fx = fx === nothing ? similar(f(x)) : fx

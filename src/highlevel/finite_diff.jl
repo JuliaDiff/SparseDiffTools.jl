@@ -6,6 +6,8 @@ struct FiniteDiffJacobianCache{CO, CA, J, FX, X} <: AbstractMaybeSparseJacobianC
     x::X
 end
 
+__getfield(c::FiniteDiffJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
+
 function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(fd, f, x)

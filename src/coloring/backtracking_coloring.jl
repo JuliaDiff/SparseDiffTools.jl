@@ -115,7 +115,7 @@ Returns an uncolored vertex from the partially
 colored graph which has the highest degree
 """
 function uncolored_vertex_of_maximal_degree(A::AbstractVector{<:Integer},
-    F::AbstractVector{<:Integer})
+        F::AbstractVector{<:Integer})
     for v in A
         if F[v] == 0
             return v
@@ -145,8 +145,8 @@ g: Graph to be colored
 opt: Current optimal number of colors to be used in the coloring of graph g
 """
 function free_colors(x::Integer, A::AbstractVector{<:Integer},
-    colors::AbstractVector{<:Integer}, F::Vector{Integer}, g::Graphs.AbstractGraph,
-    opt::Integer)
+        colors::AbstractVector{<:Integer}, F::Vector{Integer}, g::Graphs.AbstractGraph,
+        opt::Integer)
     index = -1
 
     freecolors = zeros(Int, 0)
@@ -187,7 +187,7 @@ Returns least index i such that color of vertex
 A[i] is equal to `opt` (optimal chromatic number)
 """
 function least_index(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
-    opt::Integer)
+        opt::Integer)
     for i in eachindex(A)
         if F[A[i]] == opt
             return i
@@ -202,7 +202,7 @@ Uncolors all vertices A[i] where i is
 greater than or equal to start
 """
 function uncolor_all!(F::AbstractVector{<:Integer}, A::AbstractVector{<:Integer},
-    start::Integer)
+        start::Integer)
     for i in start:length(A)
         F[A[i]] = 0
     end

@@ -6,8 +6,10 @@ struct FiniteDiffJacobianCache{CO, CA, J, FX, X} <: AbstractMaybeSparseJacobianC
     x::X
 end
 
+__getfield(c::FiniteDiffJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
+
 function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
-    sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
+        sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(fd, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
     if coloring_result isa NoMatrixColoring
@@ -22,7 +24,7 @@ function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
 end
 
 function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
-    sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
+        sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(fd, f!, fx, x)
     if coloring_result isa NoMatrixColoring
         cache = FiniteDiff.JacobianCache(x, fx)
@@ -36,13 +38,13 @@ function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
 end
 
 function sparse_jacobian!(J::AbstractMatrix, fd, cache::FiniteDiffJacobianCache, f::F,
-    x) where {F}
+        x) where {F}
     f!(y, x) = (y .= f(x))
     return sparse_jacobian!(J, fd, cache, f!, cache.fx, x)
 end
 
 function sparse_jacobian!(J::AbstractMatrix, _, cache::FiniteDiffJacobianCache, f!::F, _,
-    x) where {F}
+        x) where {F}
     FiniteDiff.finite_difference_jacobian!(J, f!, x, cache.cache)
     return J
 end

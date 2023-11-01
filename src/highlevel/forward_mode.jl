@@ -16,6 +16,7 @@ function ForwardDiff.checktag(::Type{<:ForwardDiff.Tag{<:SparseDiffToolsTag, <:T
 end
 
 __standard_tag(::Nothing, x) = ForwardDiff.Tag(SparseDiffToolsTag(), eltype(x))
+__standard_tag(tag::ForwardDiff.Tag, _) = tag
 __standard_tag(tag, x) = ForwardDiff.Tag(tag, eltype(x))
 
 function sparse_jacobian_cache(ad::Union{AutoSparseForwardDiff, AutoForwardDiff},

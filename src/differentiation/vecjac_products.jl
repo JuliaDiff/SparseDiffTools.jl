@@ -52,7 +52,7 @@ L(v, p, t; VJP_input = w)    # = df/dw * v
 L(x, v, p, t; VJP_input = w) # = df/dw * v
 ```
 
-## Allowed Function Signatures
+## Allowed Function Signatures for `f`
 
 For Out of Place Functions:
 

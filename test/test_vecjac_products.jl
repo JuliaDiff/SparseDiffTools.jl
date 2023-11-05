@@ -21,8 +21,10 @@ a, b = rand(Float32, 2)
 A = rand(Float32, N, N)
 _f(y, x) = mul!(y, A, x .^ 2)
 _f(x) = A * (x .^ 2)
+_f2(x, p, t) = _f(x) * p * t
+_f2(y, x, p, t) = (_f(y, x); lmul!(p * t, y); y)
 
-# Define state-dependent functions for operator tests 
+# Define state-dependent functions for operator tests
 include("update_coeffs_testutils.jl")
 f = WrapFunc(_f, 1.0f0, 1.0f0)
 
@@ -36,7 +38,9 @@ f = WrapFunc(_f, 1.0f0, 1.0f0)
 @info "VecJac AutoZygote"
 
 p, t = rand(Float32, 2)
-L = VecJac(f, copy(x1), p, t; autodiff = AutoZygote())
+f = WrapFunc(_f, p, t)
+
+L = VecJac(_f2, copy(x1), p, t; autodiff = AutoZygote())
 update_coefficients!(L, v, p, t)
 
 update_coefficients!(f, v, p, t)
@@ -83,7 +87,8 @@ y = zeros(N);
 @info "VecJac AutoFiniteDiff"
 
 p, t = rand(Float32, 2)
-L = VecJac(f, copy(x1), 1.0f0, 1.0f0; autodiff = AutoFiniteDiff())
+f = WrapFunc(_f, p, t)
+L = VecJac(_f2, copy(x1), p, t; autodiff = AutoFiniteDiff())
 update_coefficients!(L, v, p, t)
 update_coefficients!(f, v, p, t)
 
@@ -129,16 +134,39 @@ f2(y, x) = (copy!(y, x); lmul!(2, y); y)
 
 x = rand(Float32, N)
 for M in (100, 400)
-    local L = VecJac(f2, copy(x), 1.0f0, 1.0f0; autodiff = AutoZygote())
+    local L = VecJac(f2, copy(x); autodiff = AutoZygote())
     resize!(L, M)
 
     _x = resize!(copy(x), M)
     _u = rand(M)
     local J2 = Zygote.jacobian(f2, _x)[1]
 
-    update_coefficients!(L, _u, 1.0f0, 1.0f0; VJP_input = _x)
+    update_coefficients!(L, _u, nothing, 1.0f0; VJP_input = _x)
     @test L * _u≈J2' * _u rtol=1e-6
     local _v = zeros(M)
     @test mul!(_v, L, _u)≈J2' * _u rtol=1e-6
 end
-#
+
+# Test Non-Square Jacobians
+f3_oop(x) = vcat(x, x)
+function f3_iip(y, x)
+    y[1:length(x)] .= x
+    y[(length(x) + 1):end] .= x
+    return nothing
+end
+
+x = rand(Float32, 2)
+y = rand(eltype(x), 4)
+
+L = VecJac(f3_oop, copy(x); autodiff = AutoFiniteDiff())
+@test size(L) == (length(x), length(y))
+@test L * y ≈ num_vecjac(f3_oop, copy(x), y)
+
+L = VecJac(f3_iip, copy(x); autodiff = AutoFiniteDiff(), fu = copy(y))
+@test size(L) == (length(x), length(y))
+@test mul!(zero(x), L, y) ≈ num_vecjac!(zero(x), f3_iip, copy(x), y)
+@test L * y ≈ num_vecjac!(zero(x), f3_iip, copy(x), y)
+
+L = VecJac(f3_oop, copy(x); autodiff = AutoZygote())
+@test size(L) == (length(x), length(y))
+@test L * y ≈ Zygote.jacobian(f3_oop, copy(x))[1]' * y

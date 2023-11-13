@@ -264,8 +264,11 @@ f(du, u)        # Otherwise
 """
 function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
         autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
+    ff = JacFunctionWrapper(f, fu, u, p, t)
+    fu === nothing && (fu = __internal_oop(ff) ? ff(u) : u)
+
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
-        cache1 = similar(u)
+        cache1 = similar(fu)
         cache2 = similar(u)
 
         (cache1, cache2), num_jacvec, num_jacvec!
@@ -273,16 +276,14 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
         cache1 = Dual{
             typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1,
         }.(u, ForwardDiff.Partials.(tuple.(u)))
-
-        cache2 = copy(cache1)
+        cache2 = Dual{
+            typeof(ForwardDiff.Tag(tag, eltype(fu))), eltype(fu), 1,
+        }.(fu, ForwardDiff.Partials.(tuple.(fu)))
 
         (cache1, cache2), auto_jacvec, auto_jacvec!
     else
         error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
-
-    ff = JacFunctionWrapper(f, fu, u, p, t)
-    fu === nothing && (fu = __internal_oop(ff) ? ff(u) : u)
 
     op = FwdModeAutoDiffVecProd(ff, u, cache, vecprod, vecprod!)
 

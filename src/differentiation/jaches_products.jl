@@ -223,7 +223,46 @@ function Base.resize!(L::FwdModeAutoDiffVecProd, n::Integer)
     end
 end
 
-function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
+"""
+    JacVec(f, u, [p, t]; fu = nothing, autodiff = AutoForwardDiff(), tag = DeivVecTag(),
+        kwargs...)
+
+Returns SciMLOperators.FunctionOperator which computes jacobian-vector product `df/du * v`.
+
+!!! note
+
+    For non-square jacobians with inplace `f`, `fu` must be specified, else `JacVec` assumes
+    a square jacobian.
+
+```julia
+L = JacVec(f, u)
+
+L * v         # = df/du * v
+mul!(w, L, v) # = df/du * v
+
+L(v, p, t)    # = df/dw * v
+L(x, v, p, t) # = df/dw * v
+```
+
+## Allowed Function Signatures for `f`
+
+For Out of Place Functions:
+
+```julia
+f(u, p, t)  # t !== nothing
+f(u, p)     # p !== nothing
+f(u)        # Otherwise
+```
+
+For In Place Functions:
+
+```julia
+f(du, u, p, t)  # t !== nothing
+f(du, u, p)     # p !== nothing
+f(du, u)        # Otherwise
+```
+"""
+function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
         autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(u)
@@ -242,17 +281,13 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing;
         error("Set autodiff to either AutoForwardDiff(), or AutoFiniteDiff()")
     end
 
-    outofplace = static_hasmethod(f, typeof((u,)))
-    isinplace = static_hasmethod(f, typeof((u, u)))
+    ff = JacFunctionWrapper(f, fu, u, p, t)
+    fu === nothing && (fu = __internal_oop(ff) ? ff(u) : u)
 
-    if !(isinplace) & !(outofplace)
-        error("$f must have signature f(u), or f(du, u).")
-    end
+    op = FwdModeAutoDiffVecProd(ff, u, cache, vecprod, vecprod!)
 
-    L = FwdModeAutoDiffVecProd(f, u, cache, vecprod, vecprod!)
-
-    return FunctionOperator(L, u, u; isinplace, outofplace, p, t, islinear = true,
-        kwargs...)
+    return FunctionOperator(op, u, fu; isinplace = Val(true), outofplace = Val(true), p, t,
+        islinear = true, kwargs...)
 end
 
 function HesVec(f, u::AbstractArray, p = nothing, t = nothing;

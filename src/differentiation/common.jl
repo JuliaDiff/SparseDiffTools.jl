@@ -39,30 +39,33 @@ __internal_oop(::JacFunctionWrapper{iip, oop}) where {iip, oop} = oop
 (f::JacFunctionWrapper{false, true, 3})(u) = f.f(u)
 
 function JacFunctionWrapper(f::F, fu_, u, p, t) where {F}
+    # The warning instead of error ensures a non-breaking change for users relying on an
+    # undefined / undocumented feature
     fu = fu_ === nothing ? copy(u) : copy(fu_)
     if t !== nothing
         iip = static_hasmethod(f, typeof((fu, u, p, t)))
         oop = static_hasmethod(f, typeof((u, p, t)))
         if !iip && !oop
-            throw(ArgumentError("`f(u, p, t)` or `f(fu, u, p, t)` not defined for `f`"))
+            @warn """`p` and `t` provided but `f(u, p, t)` or `f(fu, u, p, t)` not defined
+            for `f`! Will fallback to `f(u)` or `f(fu, u)`.""" maxlog=1
+        else
+            return JacFunctionWrapper{iip, oop, 1, F, typeof(fu), typeof(p), typeof(t)}(f,
+                fu, p, t)
         end
-        return JacFunctionWrapper{iip, oop, 1, F, typeof(fu), typeof(p), typeof(t)}(f,
-            fu, p, t)
     elseif p !== nothing
         iip = static_hasmethod(f, typeof((fu, u, p)))
         oop = static_hasmethod(f, typeof((u, p)))
         if !iip && !oop
-            throw(ArgumentError("`f(u, p)` or `f(fu, u, p)` not defined for `f`"))
+            @warn """`p` provided but `f(u, p)` or `f(fu, u, p)` not defined for `f`! Will
+            fallback to `f(u)` or `f(fu, u)`.""" maxlog=1
+        else
+            return JacFunctionWrapper{iip, oop, 2, F, typeof(fu), typeof(p), typeof(t)}(f,
+                fu, p, t)
         end
-        return JacFunctionWrapper{iip, oop, 2, F, typeof(fu), typeof(p), typeof(t)}(f,
-            fu, p, t)
-    else
-        iip = static_hasmethod(f, typeof((fu, u)))
-        oop = static_hasmethod(f, typeof((u,)))
-        if !iip && !oop
-            throw(ArgumentError("`f(u)` or `f(fu, u)` not defined for `f`"))
-        end
-        return JacFunctionWrapper{iip, oop, 3, F, typeof(fu), typeof(p), typeof(t)}(f,
-            fu, p, t)
     end
+    iip = static_hasmethod(f, typeof((fu, u)))
+    oop = static_hasmethod(f, typeof((u,)))
+    !iip && !oop && throw(ArgumentError("`f(u)` or `f(fu, u)` not defined for `f`"))
+    return JacFunctionWrapper{iip, oop, 3, F, typeof(fu), typeof(p), typeof(t)}(f,
+        fu, p, t)
 end

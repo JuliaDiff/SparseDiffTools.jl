@@ -52,7 +52,7 @@ function JacFunctionWrapper(f::F, fu_, u, p, t) where {F}
             return JacFunctionWrapper{iip, oop, 1, F, typeof(fu), typeof(p), typeof(t)}(f,
                 fu, p, t)
         end
-    elseif p !== nothing
+    elseif p !== nothing && !(p isa SciMLBase.NullParameters)
         iip = static_hasmethod(f, typeof((fu, u, p)))
         oop = static_hasmethod(f, typeof((u, p)))
         if !iip && !oop

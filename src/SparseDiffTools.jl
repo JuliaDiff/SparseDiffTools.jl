@@ -18,7 +18,7 @@ import ArrayInterface: matrix_colors
 import StaticArrays
 import StaticArrays: StaticArray
 # Others
-using SciMLBase, SciMLOperators, LinearAlgebra, Random
+using SciMLOperators, LinearAlgebra, Random
 import DataStructures: DisjointSets, find_root!, union!
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!

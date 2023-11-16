@@ -72,8 +72,8 @@ f(du, u)        # Otherwise
 ```
 """
 function VecJac(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
-        autodiff = AutoFiniteDiff(), kwargs...)
-    ff = JacFunctionWrapper(f, fu, u, p, t)
+        autodiff = AutoFiniteDiff(), use_deprecated_ordering::Val = Val(true), kwargs...)
+    ff = JacFunctionWrapper(f, fu, u, p, t; use_deprecated_ordering)
 
     if !__internal_oop(ff) && autodiff isa AutoZygote
         msg = "Zygote requires an out of place method with signature f(u)."

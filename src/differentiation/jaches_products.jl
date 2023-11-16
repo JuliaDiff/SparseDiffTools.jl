@@ -263,8 +263,9 @@ f(du, u)        # Otherwise
 ```
 """
 function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
-        autodiff = AutoForwardDiff(), tag = DeivVecTag(), kwargs...)
-    ff = JacFunctionWrapper(f, fu, u, p, t)
+        autodiff = AutoForwardDiff(), tag = DeivVecTag(),
+        use_deprecated_ordering::Val = Val(true), kwargs...)
+    ff = JacFunctionWrapper(f, fu, u, p, t; use_deprecated_ordering)
     fu === nothing && (fu = __internal_oop(ff) ? ff(u) : u)
 
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff

@@ -173,6 +173,13 @@ A cache for computing the Jacobian of type `AbstractMaybeSparseJacobianCache`.
 """
 function sparse_jacobian_cache end
 
+function sparse_jacobian_static_array(ad, cache, f, x::SArray)
+    # Not the most performant fallback
+    J = init_jacobian(cache)
+    sparse_jacobian!(J, ad, cache, f, MArray(x))
+    return J
+end
+
 """
     sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f, x; fx=nothing)
     sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f!, fx, x)
@@ -189,19 +196,28 @@ function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection,
     sparse_jacobian!(J, ad, cache, args...)
     return J
 end
+function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f,
+        x::SArray; kwargs...)
+    cache = sparse_jacobian_cache(ad, sd, f, x; kwargs...)
+    return sparse_jacobian_static_array(ad, cache, f, x)
+end
 
 """
     sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache, f, x)
     sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache, f!, fx, x)
 
 Use the sparsity detection `cache` for computing the sparse Jacobian. This allocates a new
-Jacobian at every function call
+Jacobian at every function call.
 """
 function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache,
         args...)
     J = init_jacobian(cache)
     sparse_jacobian!(J, ad, cache, args...)
     return J
+end
+function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache, f,
+        x::SArray)
+    return sparse_jacobian_static_array(ad, cache, f, x)
 end
 
 """
@@ -247,14 +263,18 @@ function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}, x) w
     C isa ForwardDiff.Chunk && return C
     return __chunksize(Val(C), x)
 end
-__chunksize(::Val{nothing}, x) = ForwardDiff.Chunk(x)
+__chunksize(::Val{nothing}, x) = __chunksize(x)
 function __chunksize(::Val{C}, x) where {C}
     if C isa Integer && !(C isa Bool)
-        return C ≤ 0 ? ForwardDiff.Chunk(x) : ForwardDiff.Chunk{C}()
+        return C ≤ 0 ? __chunksize(x) : ForwardDiff.Chunk{C}()
     else
         error("$(C)::$(typeof(C)) is not a valid chunksize!")
     end
 end
+
+__chunksize(x) = ForwardDiff.Chunk(x)
+__chunksize(x::StaticArray) = ForwardDiff.Chunk{ForwardDiff.pickchunksize(prod(Size(x)))}()
+
 function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}) where {C}
     C === nothing && return nothing
     C isa Integer && !(C isa Bool) && return C ≤ 0 ? nothing : Val(C)
@@ -273,18 +293,36 @@ end
     return :(nothing)
 end
 
-function init_jacobian(c::AbstractMaybeSparseJacobianCache)
+"""
+    init_jacobian(cache::AbstractMaybeSparseJacobianCache;
+        preserve_immutable::Val = Val(false))
+
+Initialize the Jacobian based on the cache. Uses sparse jacobians if possible.
+
+If `preserve_immutable` is `true`, then the Jacobian returned might be immutable, this is
+relevant if the inputs are immutable like `StaticArrays`.
+"""
+function init_jacobian(c::AbstractMaybeSparseJacobianCache;
+        preserve_immutable::Val = Val(false))
     T = promote_type(eltype(c.fx), eltype(c.x))
-    return init_jacobian(__getfield(c, Val(:jac_prototype)), T, c.fx, c.x)
+    return init_jacobian(__getfield(c, Val(:jac_prototype)), T, c.fx, c.x;
+        preserve_immutable)
 end
-init_jacobian(::Nothing, ::Type{T}, fx, x) where {T} = similar(fx, T, length(fx), length(x))
-function init_jacobian(::Nothing, ::Type{T}, fx::StaticArray, x::StaticArray) where {T}
-    # We want to construct a MArray to preserve types
-    J = StaticArrays.MArray{Tuple{length(fx), length(x)}, T}(undef)
-    return J
+function init_jacobian(::Nothing, ::Type{T}, fx, x; kwargs...) where {T}
+    return similar(fx, T, length(fx), length(x))
 end
-init_jacobian(J, ::Type{T}, _, _) where {T} = similar(J, T, size(J, 1), size(J, 2))
-init_jacobian(J::SparseMatrixCSC, ::Type{T}, _, _) where {T} = T.(J)
+function init_jacobian(::Nothing, ::Type{T}, fx::StaticArray, x::StaticArray;
+        preserve_immutable::Val{PI} = Val(true)) where {T, PI}
+    if PI
+        return StaticArrays.SArray{Tuple{length(fx), length(x)}, T}(I)
+    else
+        return StaticArrays.MArray{Tuple{length(fx), length(x)}, T}(undef)
+    end
+end
+function init_jacobian(J, ::Type{T}, fx, x; kwargs...) where {T}
+    return similar(J, T, size(J, 1), size(J, 2))
+end
+init_jacobian(J::SparseMatrixCSC, ::Type{T}, fx, x; kwargs...) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing

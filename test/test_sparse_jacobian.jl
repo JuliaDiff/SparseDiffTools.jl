@@ -166,15 +166,17 @@ end
 
 @static if VERSION ≥ v"1.9"
     using AllocCheck
+end
 
+@static if VERSION ≥ v"1.9"
     # Testing that the non-sparse jacobian's are non-allocating.
     fvcat(x) = vcat(x, x)
 
-    x_sa = @SVector randn(Float32, 10);
+    x_sa = @SVector randn(Float32, 10)
 
     J_true_sa = ForwardDiff.jacobian(fvcat, x_sa)
 
-    @check_allocs function __sparse_jacobian_no_allocs(ad, sd, f::F, x) where {F}
+    AllocCheck.@check_allocs function __sparse_jacobian_no_allocs(ad, sd, f::F, x) where {F}
         return sparse_jacobian(ad, sd, f, x)
     end
 

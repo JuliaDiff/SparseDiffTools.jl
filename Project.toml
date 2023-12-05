@@ -62,6 +62,7 @@ Zygote = "0.6"
 julia = "1.6"
 
 [extras]
+AllocCheck = "9b6a8646-10ed-4001-bbdc-1d2f46dfbb1a"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
@@ -75,4 +76,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]
+test = ["Test", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays", "AllocCheck"]

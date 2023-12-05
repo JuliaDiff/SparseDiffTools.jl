@@ -188,6 +188,9 @@ Sequentially calls `sparse_jacobian_cache` and `sparse_jacobian!` to compute the
 `f` at `x`. Use this if the jacobian for `f` is computed exactly once. In all other
 cases, use `sparse_jacobian_cache` once to generate the cache and use `sparse_jacobian!`
 with the same cache to compute the jacobian.
+
+If `x` is a StaticArray, then this function tries to use a non-allocating implementation for
+the jacobian computation. This is possible only for a limited backends currently.
 """
 function sparse_jacobian(ad::AbstractADType, sd::AbstractMaybeSparsityDetection, args...;
         kwargs...)
@@ -208,6 +211,9 @@ end
 
 Use the sparsity detection `cache` for computing the sparse Jacobian. This allocates a new
 Jacobian at every function call.
+
+If `x` is a StaticArray, then this function tries to use a non-allocating implementation for
+the jacobian computation. This is possible only for a limited backends currently.
 """
 function sparse_jacobian(ad::AbstractADType, cache::AbstractMaybeSparseJacobianCache,
         args...)
@@ -326,3 +332,14 @@ init_jacobian(J::SparseMatrixCSC, ::Type{T}, fx, x; kwargs...) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing
+
+# Create a mutable version of the input array
+function __make_mutable(x)
+    if ArrayInterface.can_setindex(x)
+        return x
+    else
+        y = similar(x)
+        copyto!(y, x)
+        return y
+    end
+end

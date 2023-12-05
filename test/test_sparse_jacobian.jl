@@ -1,6 +1,6 @@
 ## Sparse Jacobian tests
-using SparseDiffTools, Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme
-using Test
+using AllocCheck, SparseDiffTools,
+    Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test, StaticArrays
 
 @views function fdiff(y, x) # in-place
     L = length(x)
@@ -161,5 +161,31 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 @test_throws Exception sparse_jacobian!(J, difftype, sd, fdiff, y, x)
             end
         end
+    end
+end
+
+# Testing that the non-sparse jacobian's are non-allocating.
+fvcat(x) = vcat(x, x)
+
+x_sa = @SVector randn(Float32, 10);
+
+J_true_sa = ForwardDiff.jacobian(fvcat, x_sa)
+
+@check_allocs function __sparse_jacobian_no_allocs(ad, sd, f::F, x) where {F}
+    return sparse_jacobian(ad, sd, f, x)
+end
+
+@testset "Static Arrays" begin
+    @testset "No Allocations: $(difftype)" for difftype in (AutoSparseForwardDiff(),
+        AutoForwardDiff())
+        J = __sparse_jacobian_no_allocs(difftype, NoSparsityDetection(), fvcat, x_sa)
+        @test J ≈ J_true_sa
+    end
+
+    @testset "Other Backends: $(difftype)" for difftype in (AutoSparseZygote(),
+        AutoZygote(), AutoSparseEnzyme(), AutoEnzyme(), AutoSparseFiniteDiff(),
+        AutoFiniteDiff())
+        J = sparse_jacobian(difftype, NoSparsityDetection(), fvcat, x_sa)
+        @test J ≈ J_true_sa
     end
 end

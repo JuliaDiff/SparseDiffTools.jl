@@ -10,6 +10,7 @@ __getfield(c::FiniteDiffJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
 
 function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
+    x = __make_mutable(x) # FiniteDiff is bad at handling immutables
     coloring_result = sd(fd, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
     if coloring_result isa NoMatrixColoring
@@ -25,6 +26,7 @@ end
 
 function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
+    x = __make_mutable(x) # FiniteDiff is bad at handling immutables
     coloring_result = sd(fd, f!, fx, x)
     if coloring_result isa NoMatrixColoring
         cache = FiniteDiff.JacobianCache(x, fx)

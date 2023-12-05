@@ -5,8 +5,8 @@ const GROUP = get(ENV, "GROUP", "All")
 const is_APPVEYOR = (Sys.iswindows() && haskey(ENV, "APPVEYOR"))
 const is_TRAVIS = haskey(ENV, "TRAVIS")
 
-function activate_gpu_env()
-    Pkg.activate("gpu")
+function activate_env(env)
+    Pkg.activate(env)
     Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
     Pkg.instantiate()
 end
@@ -42,6 +42,7 @@ if GROUP == "Core" || GROUP == "All"
 end
 
 if GROUP == "InterfaceI" || GROUP == "All"
+    VERSION ≥ v"1.9" && activate_env("allocs")
     @time @safetestset "Jac Vecs and Hes Vecs" begin
         include("test_jaches_products.jl")
     end
@@ -54,7 +55,7 @@ if GROUP == "InterfaceI" || GROUP == "All"
 end
 
 if GROUP == "GPU"
-    activate_gpu_env()
+    activate_env("gpu")
     @time @safetestset "GPU AD" begin
         include("test_gpu_ad.jl")
     end

@@ -48,3 +48,7 @@ function sparse_jacobian!(J::AbstractMatrix, _, cache::FiniteDiffJacobianCache, 
     FiniteDiff.finite_difference_jacobian!(J, f!, x, cache.cache)
     return J
 end
+
+function sparse_jacobian_static_array(_, cache::FiniteDiffJacobianCache, f, x::SArray)
+    return FiniteDiff.finite_difference_jacobian(f, x, cache.cache)
+end

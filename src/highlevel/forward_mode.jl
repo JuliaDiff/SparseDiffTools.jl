@@ -71,3 +71,11 @@ function sparse_jacobian!(J::AbstractMatrix, _, cache::ForwardDiffJacobianCache,
     end
     return J
 end
+
+function sparse_jacobian_static_array(_, cache::ForwardDiffJacobianCache, f, x::SArray)
+    if cache.cache isa ForwardColorJacCache
+        return forwarddiff_color_jacobian(f, x, cache.cache)
+    else
+        return ForwardDiff.jacobian(f, x, cache.cache)
+    end
+end

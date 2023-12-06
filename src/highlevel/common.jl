@@ -332,14 +332,3 @@ init_jacobian(J::SparseMatrixCSC, ::Type{T}, fx, x; kwargs...) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing
-
-# Create a mutable version of the input array
-function __make_mutable(x)
-    if ArrayInterface.can_setindex(x)
-        return x
-    else
-        y = similar(x)
-        copyto!(y, x)
-        return y
-    end
-end

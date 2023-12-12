@@ -332,3 +332,15 @@ init_jacobian(J::SparseMatrixCSC, ::Type{T}, fx, x; kwargs...) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing
+
+# Check Backend has been loaded
+## We pay a small compile time cost for this, but it avoids cryptic error messages
+@inline function __test_backend_loaded(ad::AbstractADType)
+    error("$(ad) requires $(__backend(ad)).jl to be loaded. Please load it.")
+end
+
+@inline __backend(ad) = nothing
+@inline __backend(::Union{AutoEnzyme, AutoSparseEnzyme}) = :Enzyme
+@inline __backend(::Union{AutoZygote, AutoSparseZygote}) = :Zygote
+@inline __backend(::Union{AutoForwardDiff, AutoSparseForwardDiff}) = :ForwardDiff
+@inline __backend(::Union{AutoFiniteDiff, AutoSparseFiniteDiff}) = :FiniteDiff

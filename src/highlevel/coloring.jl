@@ -34,28 +34,70 @@ end
 ## Right now we hardcode it to use `ForwardDiff`
 function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, x; fx = nothing,
         kwargs...) where {F}
+    if !(ad isa AutoSparseForwardDiff)
+        @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+    end
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
-    J = fill!(similar(fx, length(fx), length(x)), 0)
     cfg = ForwardDiff.JacobianConfig(f, x)
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    J_cache = similar(J)
+    x_ = similar(x)
     for _ in 1:ntrials
-        x_ = similar(x)
         randn!(rng, x_)
-        J .+= abs.(ForwardDiff.jacobian(f, x_, cfg))
+        ForwardDiff.jacobian!(J_cache, f, x_, cfg)
+        @. J += abs(J_cache)
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
         fx, kwargs...)
 end
 
-function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f!::F, fx, x;
+function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, fx, x;
+        kwargs...) where {F}
+    if !(ad isa AutoSparseForwardDiff)
+        @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+    end
+    @unpack ntrials, rng = alg
+    cfg = ForwardDiff.JacobianConfig(f, fx, x)
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    J_cache = similar(J)
+    x_ = similar(x)
+    for _ in 1:ntrials
+        randn!(rng, x_)
+        ForwardDiff.jacobian!(J_cache, f, fx, x_, cfg)
+        @. J += abs(J_cache)
+    end
+    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
+        fx, kwargs...)
+end
+
+function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f::F, x; fx = nothing,
         kwargs...) where {F}
     @unpack ntrials, rng = alg
-    cfg = ForwardDiff.JacobianConfig(f!, fx, x)
+    fx = fx === nothing ? f(x) : fx
+    cache = FiniteDiff.JacobianCache(x, fx)
     J = fill!(similar(fx, length(fx), length(x)), 0)
+    x_ = similar(x)
     for _ in 1:ntrials
-        x_ = similar(x)
         randn!(rng, x_)
-        J .+= abs.(ForwardDiff.jacobian(f!, fx, x_, cfg))
+        J_cache = FiniteDiff.finite_difference_jacobian(f, x, cache)
+        @. J += abs(J_cache)
+    end
+    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
+        fx, kwargs...)
+end
+
+function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f!::F, fx, x;
+        kwargs...) where {F}
+    @unpack ntrials, rng = alg
+    cache = FiniteDiff.JacobianCache(x, fx)
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    J_cache = similar(J)
+    x_ = similar(x)
+    for _ in 1:ntrials
+        randn!(rng, x_)
+        FiniteDiff.finite_difference_jacobian!(J_cache, f!, x_, cache)
+        @. J += abs(J_cache)
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f!, fx,
         x; kwargs...)

@@ -1,7 +1,7 @@
 module SparseDiffToolsZygoteExt
 
 using ADTypes, LinearAlgebra, Zygote
-import SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP
+import SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP, __test_backend_loaded
 import ForwardDiff: ForwardDiff, Dual, partials
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!
@@ -11,6 +11,8 @@ import SparseDiffTools: numback_hesvec!,
     numback_hesvec, autoback_hesvec!, autoback_hesvec, auto_vecjac!, auto_vecjac
 import SparseDiffTools: __f̂, __jacobian!, __gradient, __gradient!
 import ADTypes: AutoZygote, AutoSparseZygote
+
+@inline __test_backend_loaded(::Union{AutoSparseZygote, AutoZygote}) = nothing
 
 ## Satisfying High-Level Interface for Sparse Jacobians
 function __gradient(::Union{AutoSparseZygote, AutoZygote}, f::F, x, cols) where {F}

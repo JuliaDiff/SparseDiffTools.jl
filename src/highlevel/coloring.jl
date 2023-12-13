@@ -78,10 +78,11 @@ function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f::F, x; f
     cache = FiniteDiff.JacobianCache(x, fx)
     J = fill!(similar(fx, length(fx), length(x)), 0)
     x_ = similar(x)
+    ε = eps(eltype(x))^(1 / 3)
     for _ in 1:ntrials
         randn!(rng, x_)
         J_cache = FiniteDiff.finite_difference_jacobian(f, x, cache)
-        @. J += abs(J_cache)
+        @. J += (abs(J_cache) .≥ ε)  # hedge against numerical issues
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
         fx, kwargs...)
@@ -94,10 +95,11 @@ function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f!::F, fx,
     J = fill!(similar(fx, length(fx), length(x)), 0)
     J_cache = similar(J)
     x_ = similar(x)
+    ε = eps(eltype(x))^(1 / 3)
     for _ in 1:ntrials
         randn!(rng, x_)
         FiniteDiff.finite_difference_jacobian!(J_cache, f!, x_, cache)
-        @. J += abs(J_cache)
+        @. J += (abs(J_cache) .≥ ε)  # hedge against numerical issues
     end
     return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f!, fx,
         x; kwargs...)

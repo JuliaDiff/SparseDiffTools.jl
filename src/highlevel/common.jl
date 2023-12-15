@@ -114,7 +114,7 @@ end
 
 """
     ApproximateJacobianSparsity(; ntrials = 5, rng = Random.default_rng(),
-        alg = GreedyD1Color())
+        epsilon = nothing, alg = GreedyD1Color())
 
 Use `ntrials` random vectors to compute the sparsity pattern of the Jacobian. This is an
 approximate method and the sparsity pattern may not be exact.
@@ -124,17 +124,21 @@ approximate method and the sparsity pattern may not be exact.
     - `ntrials`: The number of random vectors to use for computing the sparsity pattern
     - `rng`: The random number generator used for generating the random vectors
     - `alg`: The algorithm used for computing the matrix colors
+    - `epsilon`: For Finite Differencing based Jacobian Approximations, any number smaller
+      than `epsilon` is considered to be zero. If `nothing` is specified, then this value
+      is calculated as `100 * eps(eltype(x))`
 """
-struct ApproximateJacobianSparsity{R <: AbstractRNG,
-    A <: ArrayInterface.ColoringAlgorithm} <: AbstractSparsityDetection
+struct ApproximateJacobianSparsity{R <: AbstractRNG, A <: ArrayInterface.ColoringAlgorithm,
+    E} <: AbstractSparsityDetection
     ntrials::Int
     rng::R
     alg::A
+    epsilon::E
 end
 
-function ApproximateJacobianSparsity(; ntrials::Int = 3,
+function ApproximateJacobianSparsity(; ntrials::Int = 3, epsilon = nothing,
         rng::AbstractRNG = Random.default_rng(), alg = GreedyD1Color())
-    return ApproximateJacobianSparsity(ntrials, rng, alg)
+    return ApproximateJacobianSparsity(ntrials, rng, alg, epsilon)
 end
 
 # No one should be using this currently

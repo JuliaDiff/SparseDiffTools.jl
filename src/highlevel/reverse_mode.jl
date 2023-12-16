@@ -28,6 +28,7 @@ end
 
 function sparse_jacobian!(J::AbstractMatrix, ad, cache::ReverseModeJacobianCache, args...)
     if cache.coloring isa NoMatrixColoring
+        __test_backend_loaded(ad)
         return __jacobian!(J, ad, args...)
     else
         return __sparse_jacobian_reverse_impl!(J, ad, cache.idx_vec, cache.coloring,
@@ -43,6 +44,7 @@ end
 function __sparse_jacobian_reverse_impl!(J::AbstractMatrix, ad, idx_vec,
         cache::MatrixColoringResult, f::F, fx, x) where {F}
     # If `fx` is `nothing` then assume `f` is not in-place
+    __test_backend_loaded(ad)
     x_ = __maybe_copy_x(ad, x)
     fx_ = __maybe_copy_x(ad, fx)
     @unpack colorvec, nz_rows, nz_cols = cache

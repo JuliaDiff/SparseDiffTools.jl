@@ -114,7 +114,7 @@ end
 
 """
     ApproximateJacobianSparsity(; ntrials = 5, rng = Random.default_rng(),
-        alg = GreedyD1Color())
+        epsilon = nothing, alg = GreedyD1Color())
 
 Use `ntrials` random vectors to compute the sparsity pattern of the Jacobian. This is an
 approximate method and the sparsity pattern may not be exact.
@@ -124,17 +124,21 @@ approximate method and the sparsity pattern may not be exact.
     - `ntrials`: The number of random vectors to use for computing the sparsity pattern
     - `rng`: The random number generator used for generating the random vectors
     - `alg`: The algorithm used for computing the matrix colors
+    - `epsilon`: For Finite Differencing based Jacobian Approximations, any number smaller
+      than `epsilon` is considered to be zero. If `nothing` is specified, then this value
+      is calculated as `100 * eps(eltype(x))`
 """
-struct ApproximateJacobianSparsity{R <: AbstractRNG,
-    A <: ArrayInterface.ColoringAlgorithm} <: AbstractSparsityDetection
+struct ApproximateJacobianSparsity{R <: AbstractRNG, A <: ArrayInterface.ColoringAlgorithm,
+    E} <: AbstractSparsityDetection
     ntrials::Int
     rng::R
     alg::A
+    epsilon::E
 end
 
-function ApproximateJacobianSparsity(; ntrials::Int = 3,
+function ApproximateJacobianSparsity(; ntrials::Int = 3, epsilon = nothing,
         rng::AbstractRNG = Random.default_rng(), alg = GreedyD1Color())
-    return ApproximateJacobianSparsity(ntrials, rng, alg)
+    return ApproximateJacobianSparsity(ntrials, rng, alg, epsilon)
 end
 
 # No one should be using this currently
@@ -332,3 +336,15 @@ init_jacobian(J::SparseMatrixCSC, ::Type{T}, fx, x; kwargs...) where {T} = T.(J)
 
 __maybe_copy_x(_, x) = x
 __maybe_copy_x(_, ::Nothing) = nothing
+
+# Check Backend has been loaded
+## We pay a small compile time cost for this, but it avoids cryptic error messages
+@inline function __test_backend_loaded(ad::AbstractADType)
+    error("$(ad) requires $(__backend(ad)).jl to be loaded. Please load it.")
+end
+
+@inline __backend(ad) = nothing
+@inline __backend(::Union{AutoEnzyme, AutoSparseEnzyme}) = :Enzyme
+@inline __backend(::Union{AutoZygote, AutoSparseZygote}) = :Zygote
+@inline __backend(::Union{AutoForwardDiff, AutoSparseForwardDiff}) = :ForwardDiff
+@inline __backend(::Union{AutoFiniteDiff, AutoSparseFiniteDiff}) = :FiniteDiff

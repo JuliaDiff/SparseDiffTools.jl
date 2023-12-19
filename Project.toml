@@ -37,7 +37,7 @@ SparseDiffToolsZygoteExt = "Zygote"
 
 [compat]
 ADTypes = "0.2.1"
-Adapt = "3.0"
+Adapt = "3.0, 4"
 ArrayInterface = "7.4.2"
 Compat = "4"
 DataStructures = "0.18"

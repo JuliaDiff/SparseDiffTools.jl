@@ -45,18 +45,17 @@ end
 
 ### Jac, Hes products
 
-function numback_hesvec!(dy, f::F, x, v, cache1 = similar(v), cache2 = similar(v)) where {F}
+function numback_hesvec!(dy, f::F, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v)) where {F}
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ * v
-    g(cache1, x)
-    @. x -= 2ϵ * v
-    g(cache2, x)
-    @. x += ϵ * v
+    @. cache3 = x + ϵ * v
+    g(cache1, cache3)
+    @. cache3 = x - ϵ * v
+    g(cache2, cache3)
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 

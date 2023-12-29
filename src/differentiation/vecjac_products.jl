@@ -1,14 +1,15 @@
-function num_vecjac!(du, f::F, x, v, cache1 = similar(v), cache2 = similar(v);
+function num_vecjac!(du, f::F, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v);
         compute_f0 = true) where {F}
     compute_f0 && (f(cache1, x))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
     vv = reshape(v, size(cache1))
+    cache3 .= x
     for i in 1:length(x)
-        x[i] += ϵ
-        f(cache2, x)
-        x[i] -= ϵ
+        cache3[i] += ϵ
+        f(cache2, cache3)
+        cache3[i] = x[i]
         du[i] = (((cache2 .- cache1) ./ ϵ)' * vv)[1]
     end
     return du
@@ -21,10 +22,11 @@ function num_vecjac(f::F, x, v, f0 = nothing) where {F}
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
     du = similar(x)
+    cache = copy(x)
     for i in 1:length(x)
-        x[i] += ϵ
+        cache[i] += ϵ
         f0 = f(x)
-        x[i] -= ϵ
+        cache[i] = x[i]
         du[i] = (((f0 .- _f0) ./ ϵ)' * vv)[1]
     end
     return vec(du)
@@ -91,7 +93,7 @@ function VecJac(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
 end
 
 function _vecjac(f::F, fu, u, autodiff::AutoFiniteDiff) where {F}
-    cache = (similar(fu), similar(fu))
+    cache = (similar(fu), similar(fu), similar(fu))
     pullback = nothing
     return AutoDiffVJP(f, u, cache, autodiff, pullback)
 end

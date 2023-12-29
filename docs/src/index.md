@@ -244,7 +244,7 @@ forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
 `dx` is a pre-allocated output vector which is used to declare the output size,
 and thus allows for specifying a non-square Jacobian.
 
-Also, it is possible retrieve the function value via `value(jac_cache)` or 
+Also, it is possible retrieve the function value via `value(jac_cache)` or
 `value!(result, jac_cache)`
 
 
@@ -276,7 +276,7 @@ H = numauto_color_hessian(f, x, colorvec, sparsity)
 numauto_color_hessian!(H, f, x, colorvec, sparsity)
 ```
 
-To avoid unnecessary allocations every time the Hessian is computed, 
+To avoid unnecessary allocations every time the Hessian is computed,
 construct a `ForwardColorHesCache` beforehand:
 
 ```julia
@@ -286,7 +286,7 @@ numauto_color_hessian!(H, f, x, hescache)
 
 By default, these methods use a mix of numerical and automatic differentiation,
 namely by taking finite differences of gradients calculated via ForwardDiff.jl.
-Alternatively, if you have your own custom gradient function `g!`, you can specify 
+Alternatively, if you have your own custom gradient function `g!`, you can specify
 it as an argument to `ForwardColorHesCache`:
 
 ```julia
@@ -294,7 +294,6 @@ hescache = ForwardColorHesCache(f, x, colorvec, sparsity, g!)
 ```
 Note that any user-defined gradient needs to have the signature `g!(G, x)`,
 i.e. updating the gradient `G` in place.
-
 
 ### Jacobian-Vector and Hessian-Vector Products
 
@@ -316,7 +315,8 @@ auto_jacvec(f, x, v)
 
 # If compute_f0 is false, then `f(cache1,x)` will be computed
 num_jacvec!(dy,f,x,v,cache1 = similar(v),
-                     cache2 = similar(v);
+                     cache2 = similar(v),
+                     cache3 = similar(v);
                      compute_f0 = true)
 num_jacvec(f,x,v,f0=nothing)
 ```
@@ -327,14 +327,16 @@ For Hessians, the following are provided:
 num_hesvec!(dy,f,x,v,
              cache1 = similar(v),
              cache2 = similar(v),
-             cache3 = similar(v))
+             cache3 = similar(v),
+             cache4 = similar(v))
 
 num_hesvec(f,x,v)
 
 numauto_hesvec!(dy,f,x,v,
                  cache = ForwardDiff.GradientConfig(f,v),
                  cache1 = similar(v),
-                 cache2 = similar(v))
+                 cache2 = similar(v),
+                 cache3 = similar(v))
 
 numauto_hesvec(f,x,v)
 
@@ -352,6 +354,7 @@ respectively:
 
 ```julia
 num_hesvecgrad!(dy,g,x,v,
+                     cache1 = similar(v),
                      cache2 = similar(v),
                      cache3 = similar(v))
 
@@ -378,7 +381,8 @@ using Zygote # Required
 
 numback_hesvec!(dy,f,x,v,
                      cache1 = similar(v),
-                     cache2 = similar(v))
+                     cache2 = similar(v),
+                     cache3 = similar(v))
 
 numback_hesvec(f,x,v)
 
@@ -390,7 +394,7 @@ autoback_hesvec!(dy,f,x,v,
 autoback_hesvec(f,x,v)
 ```
 
-#### J*v and H*v Operators
+#### `J*v` and `H*v` Operators
 
 The following produce matrix-free operators which are used for calculating
 Jacobian-vector and Hessian-vector products where the differentiation takes

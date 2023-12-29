@@ -32,16 +32,15 @@ function auto_jacvec(f, x, v)
     vec(partials.(vec(f(y)), 1))
 end
 
-function num_jacvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v);
+function num_jacvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v);
         compute_f0 = true)
     vv = reshape(v, axes(x))
     compute_f0 && (f(cache1, x))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ * vv
-    f(cache2, x)
-    @. x -= ϵ * vv
+    @. cache3 = x + ϵ * vv
+    f(cache2, cache3)
     vecdy = _vec(dy)
     veccache1 = _vec(cache1)
     veccache2 = _vec(cache2)
@@ -58,7 +57,7 @@ function num_jacvec(f, x, v, f0 = nothing)
 end
 
 function num_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v),
-        cache3 = similar(v))
+        cache3 = similar(v), cache4 = similar(v))
     cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
     g = let f = f, cache = cache
         (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
@@ -66,11 +65,10 @@ function num_hesvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v),
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ * v
-    g(cache2, x)
-    @. x -= 2ϵ * v
-    g(cache3, x)
-    @. x += ϵ * v
+    @. cache4 = x + ϵ * v
+    g(cache2, cache4)
+    @. cache4 = x - ϵ * v
+    g(cache3, cache4)
     @. dy = (cache2 - cache3) / (2ϵ)
 end
 
@@ -87,18 +85,17 @@ function num_hesvec(f, x, v)
 end
 
 function numauto_hesvec!(dy, f, x, v, cache = ForwardDiff.GradientConfig(f, v),
-        cache1 = similar(v), cache2 = similar(v))
+        cache1 = similar(v), cache2 = similar(v), cache3 = similar(v))
     g = let f = f, x = x, cache = cache
         g = (dx, x) -> ForwardDiff.gradient!(dx, f, x, cache)
     end
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ * v
-    g(cache1, x)
-    @. x -= 2ϵ * v
-    g(cache2, x)
-    @. x += ϵ * v
+    @. cache3 = x + ϵ * v
+    g(cache1, cache3)
+    @. cache3 = x - ϵ * v
+    g(cache2, cache3)
     @. dy = (cache1 - cache2) / (2ϵ)
 end
 
@@ -137,16 +134,15 @@ function autonum_hesvec(f, x, v)
     partials.(g(Dual{DeivVecTag}.(x, v)), 1)
 end
 
-function num_hesvecgrad!(dy, g, x, v, cache2 = similar(v), cache3 = similar(v))
+function num_hesvecgrad!(dy, g, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))
-    @. x += ϵ * v
-    g(cache2, x)
-    @. x -= 2ϵ * v
-    g(cache3, x)
-    @. x += ϵ * v
-    @. dy = (cache2 - cache3) / (2ϵ)
+    @. cache3 = x + ϵ * v
+    g(cache1, cache3)
+    @. cache3 = x - ϵ * v
+    g(cache2, cache3)
+    @. dy = (cache1 - cache2) / (2ϵ)
 end
 
 function num_hesvecgrad(g, x, v)

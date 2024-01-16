@@ -45,7 +45,8 @@ end
 
 ### Jac, Hes products
 
-function numback_hesvec!(dy, f::F, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v)) where {F}
+function numback_hesvec!(dy, f::F, x, v, cache1 = similar(v), cache2 = similar(v),
+        cache3 = similar(v)) where {F}
     g = let f = f
         (dx, x) -> dx .= first(Zygote.gradient(f, x))
     end

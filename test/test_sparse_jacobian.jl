@@ -1,6 +1,6 @@
 ## Sparse Jacobian tests
-using SparseDiffTools,
-    Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test, StaticArrays
+using SparseDiffTools, PolyesterForwardDiff, Symbolics, ForwardDiff, LinearAlgebra,
+    SparseArrays, Zygote, Enzyme, Test, StaticArrays
 
 @views function fdiff(y, x) # in-place
     L = length(x)
@@ -42,7 +42,12 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
             AutoZygote(), AutoSparseForwardDiff(), AutoForwardDiff(),
             AutoSparseForwardDiff(; chunksize = 0), AutoForwardDiff(; chunksize = 0),
             AutoSparseForwardDiff(; chunksize = 4), AutoForwardDiff(; chunksize = 4),
-            AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
+            AutoSparsePolyesterForwardDiff(), AutoPolyesterForwardDiff(),
+            AutoSparsePolyesterForwardDiff(; chunksize = 0),
+            AutoPolyesterForwardDiff(; chunksize = 0),
+            AutoSparsePolyesterForwardDiff(; chunksize = 4),
+            AutoPolyesterForwardDiff(; chunksize = 4), AutoSparseFiniteDiff(),
+            AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = init_jacobian(cache)
@@ -59,7 +64,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
 
                 @test J ≈ J_true
 
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff ||
+                     difftype isa AutoSparsePolyesterForwardDiff ||
+                     difftype isa AutoPolyesterForwardDiff)
                     @inferred sparse_jacobian(difftype, cache, fdiff, x)
                 end
 
@@ -71,7 +78,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, sd, fdiff, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff ||
+                     difftype isa AutoSparsePolyesterForwardDiff ||
+                     difftype isa AutoPolyesterForwardDiff)
                     @inferred sparse_jacobian(difftype, sd, fdiff, x)
                 end
 
@@ -114,7 +123,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, cache, fdiff, y, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff ||
+                     difftype isa AutoSparsePolyesterForwardDiff ||
+                     difftype isa AutoPolyesterForwardDiff)
                     @inferred sparse_jacobian(difftype, cache, fdiff, y, x)
                 end
 
@@ -126,7 +137,9 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, sd, fdiff, y, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff ||
+                     difftype isa AutoSparsePolyesterForwardDiff ||
+                     difftype isa AutoPolyesterForwardDiff)
                     @inferred sparse_jacobian(difftype, sd, fdiff, y, x)
                 end
 

@@ -269,7 +269,8 @@ function init_jacobian end
 const __init_𝒥 = init_jacobian
 
 # Misc Functions
-function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}, x) where {C}
+function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
+            AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}}, x) where {C}
     C isa ForwardDiff.Chunk && return C
     return __chunksize(Val(C), x)
 end
@@ -285,7 +286,8 @@ end
 __chunksize(x) = ForwardDiff.Chunk(x)
 __chunksize(x::StaticArray) = ForwardDiff.Chunk{ForwardDiff.pickchunksize(prod(Size(x)))}()
 
-function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C}}) where {C}
+function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
+        AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}}) where {C}
     C === nothing && return nothing
     C isa Integer && !(C isa Bool) && return C ≤ 0 ? nothing : Val(C)
     return nothing
@@ -347,4 +349,5 @@ end
 @inline __backend(::Union{AutoEnzyme, AutoSparseEnzyme}) = :Enzyme
 @inline __backend(::Union{AutoZygote, AutoSparseZygote}) = :Zygote
 @inline __backend(::Union{AutoForwardDiff, AutoSparseForwardDiff}) = :ForwardDiff
+@inline __backend(::Union{AutoPolyesterForwardDiff, AutoSparsePolyesterForwardDiff}) = :PolyesterForwardDiff
 @inline __backend(::Union{AutoFiniteDiff, AutoSparseFiniteDiff}) = :FiniteDiff

@@ -32,8 +32,8 @@ function auto_jacvec(f, x, v)
     vec(partials.(vec(f(y)), 1))
 end
 
-function num_jacvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v);
-        compute_f0 = true)
+function num_jacvec!(dy, f, x, v, cache1 = similar(v), cache2 = similar(v),
+        cache3 = similar(v); compute_f0 = true)
     vv = reshape(v, axes(x))
     compute_f0 && (f(cache1, x))
     T = eltype(x)
@@ -134,7 +134,8 @@ function autonum_hesvec(f, x, v)
     partials.(g(Dual{DeivVecTag}.(x, v)), 1)
 end
 
-function num_hesvecgrad!(dy, g, x, v, cache1 = similar(v), cache2 = similar(v), cache3 = similar(v))
+function num_hesvecgrad!(dy, g, x, v, cache1 = similar(v), cache2 = similar(v),
+        cache3 = similar(v))
     T = eltype(x)
     # Should it be min? max? mean?
     ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(x)))

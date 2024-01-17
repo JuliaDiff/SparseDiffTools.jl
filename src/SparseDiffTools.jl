@@ -14,7 +14,7 @@ import ADTypes: AbstractADType, AutoSparseZygote, AbstractSparseForwardMode,
 import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 # Array Packages
 using ArrayInterface, SparseArrays
-import ArrayInterface: matrix_colors
+import ArrayInterface: matrix_colors, allowed_setindex!
 import StaticArrays
 import StaticArrays: StaticArray, SArray, MArray, Size
 # Others

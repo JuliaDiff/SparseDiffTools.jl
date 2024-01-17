@@ -1,5 +1,6 @@
-using SparseDiffTools, Zygote
+using SparseDiffTools, Zygote, ForwardDiff
 using LinearAlgebra, Test
+using StaticArrays
 
 using Random
 Random.seed!(123)
@@ -170,3 +171,17 @@ L = VecJac(f3_iip, copy(x); autodiff = AutoFiniteDiff(), fu = copy(y))
 L = VecJac(f3_oop, copy(x); autodiff = AutoZygote())
 @test size(L) == (length(x), length(y))
 @test L * y ≈ Zygote.jacobian(f3_oop, copy(x))[1]' * y
+
+@info "Testing StaticArrays"
+
+const A_sa = rand(SMatrix{4, 4, Float32})
+_f_sa(x) = A_sa * (x .^ 2)
+
+u = rand(SVector{4, Float32})
+v = rand(SVector{4, Float32})
+
+J = ForwardDiff.jacobian(_f_sa, u)
+Jᵀv_true = J' * v
+
+@test num_vecjac(_f_sa, u, v) isa SArray
+@test num_vecjac(_f_sa, u, v)≈Jᵀv_true atol=1e-3

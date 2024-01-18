@@ -2,6 +2,22 @@
 using SparseDiffTools,
     Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test, StaticArrays
 
+@static if VERSION ≥ v"1.9"
+    using PolyesterForwardDiff
+end
+
+function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
+        AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}}) where {C}
+    return C
+end
+
+function __isinferrable(difftype)
+    return !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff ||
+             difftype isa AutoSparsePolyesterForwardDiff ||
+             difftype isa AutoPolyesterForwardDiff) ||
+           (__chunksize(difftype) isa Int && __chunksize(difftype) > 0)
+end
+
 @views function fdiff(y, x) # in-place
     L = length(x)
     y[2:(L - 1)] .= x[1:(L - 2)] .- 2 .* x[2:(L - 1)] .+ x[3:L]
@@ -38,11 +54,22 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @info "Sparsity Detection: $(nameof(typeof(sd)))"
         @info "Out of Place Function"
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in (AutoSparseZygote(),
-            AutoZygote(), AutoSparseForwardDiff(), AutoForwardDiff(),
-            AutoSparseForwardDiff(; chunksize = 0), AutoForwardDiff(; chunksize = 0),
-            AutoSparseForwardDiff(; chunksize = 4), AutoForwardDiff(; chunksize = 4),
-            AutoSparseFiniteDiff(), AutoFiniteDiff(), AutoEnzyme(), AutoSparseEnzyme())
+        DIFFTYPES = [AutoSparseZygote(), AutoZygote(), AutoSparseForwardDiff(),
+            AutoForwardDiff(), AutoSparseForwardDiff(; chunksize = 0),
+            AutoForwardDiff(; chunksize = 0), AutoSparseForwardDiff(; chunksize = 4),
+            AutoForwardDiff(; chunksize = 4), AutoSparseFiniteDiff(), AutoFiniteDiff(),
+            AutoEnzyme(), AutoSparseEnzyme()]
+
+        if VERSION ≥ v"1.9"
+            append!(DIFFTYPES,
+                [AutoSparsePolyesterForwardDiff(), AutoPolyesterForwardDiff(),
+                    AutoSparsePolyesterForwardDiff(; chunksize = 0),
+                    AutoPolyesterForwardDiff(; chunksize = 0),
+                    AutoSparsePolyesterForwardDiff(; chunksize = 4),
+                    AutoPolyesterForwardDiff(; chunksize = 4)])
+        end
+
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in DIFFTYPES
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = init_jacobian(cache)
@@ -59,7 +86,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
 
                 @test J ≈ J_true
 
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if __isinferrable(difftype)
                     @inferred sparse_jacobian(difftype, cache, fdiff, x)
                 end
 
@@ -71,7 +98,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, sd, fdiff, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if __isinferrable(difftype)
                     @inferred sparse_jacobian(difftype, sd, fdiff, x)
                 end
 
@@ -114,7 +141,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, cache, fdiff, y, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if __isinferrable(difftype)
                     @inferred sparse_jacobian(difftype, cache, fdiff, y, x)
                 end
 
@@ -126,7 +153,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 J = sparse_jacobian(difftype, sd, fdiff, y, x)
 
                 @test J ≈ J_true
-                if !(difftype isa AutoSparseForwardDiff || difftype isa AutoForwardDiff)
+                if __isinferrable(difftype)
                     @inferred sparse_jacobian(difftype, sd, fdiff, y, x)
                 end
 

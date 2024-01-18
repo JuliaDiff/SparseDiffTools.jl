@@ -1,7 +1,7 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "2.15.1"
+version = "2.16.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -27,17 +27,19 @@ VertexSafeGraphs = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 
 [weakdeps]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+PolyesterForwardDiff = "98d1487c-24ca-40b6-b7ab-df2af84e126b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 SparseDiffToolsEnzymeExt = "Enzyme"
+SparseDiffToolsPolyesterForwardDiffExt = "PolyesterForwardDiff"
 SparseDiffToolsSymbolicsExt = "Symbolics"
 SparseDiffToolsZygoteExt = "Zygote"
 
 [compat]
-ADTypes = "0.2.1"
-Adapt = "3.0, 4"
+ADTypes = "0.2.6"
+Adapt = "3, 4"
 ArrayInterface = "7.4.2"
 Compat = "4"
 DataStructures = "0.18"
@@ -47,7 +49,8 @@ ForwardDiff = "0.10"
 Graphs = "1"
 LinearAlgebra = "<0.0.1, 1"
 PackageExtensionCompat = "1"
-Random = "<0.0.1, 1"
+PolyesterForwardDiff = "0.1.1"
+Random = "1.6"
 Reexport = "1"
 SciMLOperators = "0.3.7"
 Setfield = "1"
@@ -67,6 +70,7 @@ BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PolyesterForwardDiff = "98d1487c-24ca-40b6-b7ab-df2af84e126b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

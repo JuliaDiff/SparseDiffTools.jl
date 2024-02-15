@@ -94,7 +94,8 @@ function (alg::ApproximateJacobianSparsity)(
         fx, kwargs...)
 end
 
-function (alg::ApproximateJacobianSparsity)(ad::AutoSparsePolyesterForwardDiff, f::F, fx, x;
+function (alg::ApproximateJacobianSparsity)(
+        ad::AutoSparsePolyesterForwardDiff, f::F, fx, x;
         kwargs...) where {F}
     @unpack ntrials, rng = alg
     ck = __chunksize(ad, x)

@@ -45,9 +45,9 @@ function polyesterforwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
     end
 
     batch((length(p), min(length(p), Threads.nthreads()))) do _, start, stop
+        color_i = (start - 1) * chunksize + 1
         for i in start:stop
             partial_i = p[i]
-            color_i = i
             t_ = reshape(eltype(t).(vecx, ForwardDiff.Partials.(partial_i)), size(t))
             fx = f(t_)
             for j in 1:chunksize
@@ -60,6 +60,7 @@ function polyesterforwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
                 @inbounds @simd for i in 1:length(rows_index_c)
                     J[rows_index_c[i], cols_index_c[i]] = dx[rows_index_c[i]]
                 end
+                color_i += 1
             end
         end
     end

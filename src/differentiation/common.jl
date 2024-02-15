@@ -53,18 +53,20 @@ function JacFunctionWrapper(f::F, fu_, u, p, t;
         oop = static_hasmethod(f, typeof((u,)))
         if iip || oop
             if p !== nothing || t !== nothing
-                Base.depwarn("""`p` and/or `t` provided and are not `nothing`. But we
-                potentially detected `f(du, u)` or `f(u)`. This can be caused by:
+                Base.depwarn(
+                    """`p` and/or `t` provided and are not `nothing`. But we
+       potentially detected `f(du, u)` or `f(u)`. This can be caused by:
 
-                1. `f(du, u)` or `f(u)` is defined, in-which case `p` and/or `t` should not
-                be supplied.
-                2. `f(args...)` is defined, in which case `hasmethod` can be spurious.
+       1. `f(du, u)` or `f(u)` is defined, in-which case `p` and/or `t` should not
+       be supplied.
+       2. `f(args...)` is defined, in which case `hasmethod` can be spurious.
 
-                Currently, we perform the check for `f(du, u)` and `f(u)` first, but in
-                future breaking releases, this check will be performed last, which means
-                that if `t` is provided `f(du, u, p, t)`/`f(u, p, t)` will be given
-                precedence, similarly if `p` is provided `f(du, u, p)`/`f(u, p)` will be
-                given precedence.""", :JacFunctionWrapper)
+       Currently, we perform the check for `f(du, u)` and `f(u)` first, but in
+       future breaking releases, this check will be performed last, which means
+       that if `t` is provided `f(du, u, p, t)`/`f(u, p, t)` will be given
+       precedence, similarly if `p` is provided `f(du, u, p)`/`f(u, p)` will be
+       given precedence.""",
+                    :JacFunctionWrapper)
             end
             return JacFunctionWrapper{iip, oop, 3, F, typeof(fu), typeof(p), typeof(t)}(f,
                 fu, p, t)

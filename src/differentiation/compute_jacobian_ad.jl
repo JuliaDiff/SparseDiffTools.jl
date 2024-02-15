@@ -42,7 +42,7 @@ function ForwardColorJacCache(f::F, x, _chunksize = nothing; dx = nothing, tag =
         _t = Dual{
             T,
             eltype(x),
-            getsize(chunksize),
+            getsize(chunksize)
         }.(vec(x), ForwardDiff.Partials.(first(p)))
         t = ArrayInterface.restructure(x, _t)
     end
@@ -54,7 +54,8 @@ function ForwardColorJacCache(f::F, x, _chunksize = nothing; dx = nothing, tag =
         tup = ArrayInterface.allowed_getindex(ArrayInterface.allowed_getindex(p, 1),
             1) .* false
         _pi = adapt(parameterless_type(dx), [tup for i in 1:length(dx)])
-        fx = reshape(Dual{T, eltype(dx), length(tup)}.(vec(dx), ForwardDiff.Partials.(_pi)),
+        fx = reshape(
+            Dual{T, eltype(dx), length(tup)}.(vec(dx), ForwardDiff.Partials.(_pi)),
             size(dx)...)
         _dx = dx
     end
@@ -204,7 +205,7 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
                 dx = vec(partials.(fx, j))
                 pick_inds = [i
                              for i in 1:length(rows_index)
-                                 if colorvec[cols_index[i]] == color_i]
+                             if colorvec[cols_index[i]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
                 if J isa SparseMatrixCSC || j > 1
@@ -232,8 +233,9 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
             for j in 1:chunksize
                 col_index = (i - 1) * chunksize + j
                 (col_index > ncols) && return J
-                Ji = mapreduce(i -> i == col_index ? partials.(vec(fx), j) :
-                                    adapt(parameterless_type(J), zeros(eltype(J), nrows)),
+                Ji = mapreduce(
+                    i -> i == col_index ? partials.(vec(fx), j) :
+                         adapt(parameterless_type(J), zeros(eltype(J), nrows)),
                     hcat, 1:ncols)
                 if j == 1 && i == 1
                     J .= (size(Ji) != size(J) ? reshape(Ji, size(J)) : Ji) # overwrite pre-allocated matrix
@@ -281,7 +283,7 @@ function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
                 dx = vec(partials.(fx, j))
                 pick_inds = [i
                              for i in 1:length(rows_index)
-                                 if colorvec[cols_index[i]] == color_i]
+                             if colorvec[cols_index[i]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
                 if J isa SparseMatrixCSC
@@ -302,8 +304,9 @@ function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
             for j in 1:chunksize
                 col_index = (i - 1) * chunksize + j
                 (col_index > ncols) && return J
-                Ji = mapreduce(i -> i == col_index ? partials.(vec(fx), j) :
-                                    adapt(parameterless_type(J), zeros(eltype(J), nrows)),
+                Ji = mapreduce(
+                    i -> i == col_index ? partials.(vec(fx), j) :
+                         adapt(parameterless_type(J), zeros(eltype(J), nrows)),
                     hcat, 1:ncols)
                 J = J + (size(Ji) != size(J) ? reshape(Ji, size(J)) : Ji) #branch when size(dx) == (1,) => size(Ji) == (1,) while size(J) == (1,1)
             end

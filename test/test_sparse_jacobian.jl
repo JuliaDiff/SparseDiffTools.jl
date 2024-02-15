@@ -1,6 +1,7 @@
 ## Sparse Jacobian tests
 using SparseDiffTools,
-    Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test, StaticArrays
+      Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test,
+      StaticArrays
 
 @static if VERSION ≥ v"1.9"
     using PolyesterForwardDiff
@@ -120,7 +121,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
 
         @info "Inplace Place Function"
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseForwardDiff(),
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
+            AutoSparseForwardDiff(),
             AutoForwardDiff(), AutoSparseForwardDiff(; chunksize = 0),
             AutoForwardDiff(; chunksize = 0), AutoSparseForwardDiff(; chunksize = 4),
             AutoForwardDiff(; chunksize = 4), AutoSparseFiniteDiff(), AutoFiniteDiff(),
@@ -172,7 +174,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
             end
         end
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (AutoSparseZygote(),
+        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
+            AutoSparseZygote(),
             AutoZygote())
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)

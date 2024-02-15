@@ -3,8 +3,9 @@ module SparseDiffToolsPolyesterForwardDiffExt
 using ADTypes, SparseDiffTools, PolyesterForwardDiff
 import ForwardDiff
 import SparseDiffTools: AbstractMaybeSparseJacobianCache, AbstractMaybeSparsityDetection,
-    ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache, sparse_jacobian!,
-    sparse_jacobian_static_array, __standard_tag, __chunksize
+                        ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache,
+                        sparse_jacobian!,
+                        sparse_jacobian_static_array, __standard_tag, __chunksize
 
 struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
        AbstractMaybeSparseJacobianCache
@@ -15,8 +16,10 @@ struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
     x::X
 end
 
-function sparse_jacobian_cache(ad::Union{AutoSparsePolyesterForwardDiff,
-            AutoPolyesterForwardDiff}, sd::AbstractMaybeSparsityDetection, f::F, x;
+function sparse_jacobian_cache(
+        ad::Union{AutoSparsePolyesterForwardDiff,
+            AutoPolyesterForwardDiff},
+        sd::AbstractMaybeSparsityDetection, f::F, x;
         fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
@@ -35,8 +38,10 @@ function sparse_jacobian_cache(ad::Union{AutoSparsePolyesterForwardDiff,
     return PolyesterForwardDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)
 end
 
-function sparse_jacobian_cache(ad::Union{AutoSparsePolyesterForwardDiff,
-            AutoPolyesterForwardDiff}, sd::AbstractMaybeSparsityDetection, f!::F, fx,
+function sparse_jacobian_cache(
+        ad::Union{AutoSparsePolyesterForwardDiff,
+            AutoPolyesterForwardDiff},
+        sd::AbstractMaybeSparsityDetection, f!::F, fx,
         x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     if coloring_result isa NoMatrixColoring

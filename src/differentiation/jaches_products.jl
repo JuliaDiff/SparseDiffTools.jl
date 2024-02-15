@@ -6,13 +6,13 @@ get_tag(::Dual{T, V, N}) where {T, V, N} = T
 # J(f(x))*v
 function auto_jacvec!(dy, f, x, v,
         cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-            eltype(x), 1,
+            eltype(x), 1
         }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
         cache2 = similar(cache1))
     cache1 .= Dual{
         get_tag(cache1),
         eltype(x),
-        1,
+        1
     }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     f(cache2, cache1)
     vecdy = _vec(dy)
@@ -27,7 +27,7 @@ function auto_jacvec(f, x, v)
     y = ForwardDiff.Dual{
         typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
         eltype(x),
-        1,
+        1
     }.(x, ForwardDiff.Partials.(tuple.(vv)))
     vec(partials.(vec(f(y)), 1))
 end
@@ -113,17 +113,17 @@ end
 
 function autonum_hesvec!(dy, f, x, v,
         cache1 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-            eltype(x), 1,
+            eltype(x), 1
         }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
         cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-            eltype(x), 1,
+            eltype(x), 1
         }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
     cache = FiniteDiff.GradientCache(v[1], cache1, Val{:central})
     g = (dx, x) -> FiniteDiff.finite_difference_gradient!(dx, f, x, cache)
     cache1 .= Dual{
         get_tag(cache1),
         eltype(x),
-        1,
+        1
     }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache2, cache1)
     dy .= partials.(cache2, 1)
@@ -159,15 +159,15 @@ end
 
 function auto_hesvecgrad!(dy, g, x, v,
         cache2 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-            eltype(x), 1,
+            eltype(x), 1
         }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))),
         cache3 = Dual{typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
-            eltype(x), 1,
+            eltype(x), 1
         }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x))))))
     cache2 .= Dual{
         get_tag(cache2),
         eltype(x),
-        1,
+        1
     }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     g(cache3, cache2)
     dy .= partials.(cache3, 1)
@@ -177,7 +177,7 @@ function auto_hesvecgrad(g, x, v)
     y = Dual{
         typeof(ForwardDiff.Tag(DeivVecTag(), eltype(x))),
         eltype(x),
-        1,
+        1
     }.(x, ForwardDiff.Partials.(tuple.(reshape(v, size(x)))))
     partials.(g(y), 1)
 end
@@ -272,10 +272,10 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
         (cache1, cache2), num_jacvec, num_jacvec!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
-            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1,
+            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
         }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = Dual{
-            typeof(ForwardDiff.Tag(tag, eltype(fu))), eltype(fu), 1,
+            typeof(ForwardDiff.Tag(tag, eltype(fu))), eltype(fu), 1
         }.(fu, ForwardDiff.Partials.(tuple.(fu)))
 
         (cache1, cache2), auto_jacvec, auto_jacvec!
@@ -307,7 +307,7 @@ function HesVec(f, u::AbstractArray, p = nothing, t = nothing;
         @assert static_hasmethod(autoback_hesvec, typeof((f, u, u))) "To use AutoZygote() AD, first load Zygote with `using Zygote`, or `import Zygote`"
 
         cache1 = Dual{
-            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1,
+            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
         }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 
@@ -338,7 +338,7 @@ function HesVecGrad(f, u::AbstractArray, p = nothing, t = nothing;
         (cache1, cache2), num_hesvecgrad, num_hesvecgrad!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
-            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1,
+            typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1
         }.(u, ForwardDiff.Partials.(tuple.(u)))
         cache2 = copy(cache1)
 

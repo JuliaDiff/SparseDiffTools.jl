@@ -36,7 +36,11 @@ function (alg::ApproximateJacobianSparsity)(
         ad::AbstractSparseADType, f::F, x; fx = nothing,
         kwargs...) where {F}
     if !(ad isa AutoSparseForwardDiff)
-        @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+        if ad isa AutoSparsePolyesterForwardDiff
+            @warn "$(ad) is only supported if `PolyesterForwardDiff` is explicitly loaded. Using ForwardDiff instead." maxlog=1
+        else
+            @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+        end
     end
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
@@ -56,7 +60,11 @@ end
 function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, fx, x;
         kwargs...) where {F}
     if !(ad isa AutoSparseForwardDiff)
-        @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+        if ad isa AutoSparsePolyesterForwardDiff
+            @warn "$(ad) is only supported if `PolyesterForwardDiff` is explicitly loaded. Using ForwardDiff instead." maxlog=1
+        else
+            @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
+        end
     end
     @unpack ntrials, rng = alg
     cfg = ForwardDiff.JacobianConfig(f, fx, x)

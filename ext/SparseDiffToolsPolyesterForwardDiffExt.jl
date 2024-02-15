@@ -1,6 +1,6 @@
 module SparseDiffToolsPolyesterForwardDiffExt
 
-using ADTypes, SparseDiffTools, PolyesterForwardDiff
+using ADTypes, SparseDiffTools, PolyesterForwardDiff, UnPack, Random, SparseArrays
 import ForwardDiff
 import SparseDiffTools: AbstractMaybeSparseJacobianCache, AbstractMaybeSparsityDetection,
                         ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache,
@@ -17,10 +17,8 @@ struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
 end
 
 function sparse_jacobian_cache(
-        ad::Union{AutoSparsePolyesterForwardDiff,
-            AutoPolyesterForwardDiff},
-        sd::AbstractMaybeSparsityDetection, f::F, x;
-        fx = nothing) where {F}
+        ad::Union{AutoSparsePolyesterForwardDiff, AutoPolyesterForwardDiff},
+        sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
     if coloring_result isa NoMatrixColoring
@@ -39,10 +37,8 @@ function sparse_jacobian_cache(
 end
 
 function sparse_jacobian_cache(
-        ad::Union{AutoSparsePolyesterForwardDiff,
-            AutoPolyesterForwardDiff},
-        sd::AbstractMaybeSparsityDetection, f!::F, fx,
-        x) where {F}
+        ad::Union{AutoSparsePolyesterForwardDiff, AutoPolyesterForwardDiff},
+        sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     if coloring_result isa NoMatrixColoring
         cache = __chunksize(ad, x)
@@ -77,6 +73,40 @@ function sparse_jacobian!(J::AbstractMatrix, _, cache::PolyesterForwardDiffJacob
         PolyesterForwardDiff.threaded_jacobian!(f!, fx, J, x, cache.cache) # Don't try to exploit sparsity
     end
     return J
+end
+
+## Approximate Sparsity Detection
+function (alg::ApproximateJacobianSparsity)(
+        ad::AutoSparsePolyesterForwardDiff, f::F, x; fx = nothing, kwargs...) where {F}
+    @unpack ntrials, rng = alg
+    fx = fx === nothing ? f(x) : fx
+    ck = __chunksize(ad, x)
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    J_cache = similar(J)
+    x_ = similar(x)
+    for _ in 1:ntrials
+        randn!(rng, x_)
+        PolyesterForwardDiff.threaded_jacobian!(f, J_cache, x_, ck)
+        @. J += abs(J_cache)
+    end
+    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
+        fx, kwargs...)
+end
+
+function (alg::ApproximateJacobianSparsity)(ad::AutoSparsePolyesterForwardDiff, f::F, fx, x;
+        kwargs...) where {F}
+    @unpack ntrials, rng = alg
+    ck = __chunksize(ad, x)
+    J = fill!(similar(fx, length(fx), length(x)), 0)
+    J_cache = similar(J)
+    x_ = similar(x)
+    for _ in 1:ntrials
+        randn!(rng, x_)
+        PolyesterForwardDiff.threaded_jacobian!(f, fx, J_cache, x_, ck)
+        @. J += abs(J_cache)
+    end
+    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f, x;
+        fx, kwargs...)
 end
 
 end

@@ -41,7 +41,8 @@ function ForwardColorHesCache(f, x::AbstractVector{<:Number},
     if sparsity === nothing
         sparsity = sparse(ones(length(x), length(x)))
     end
-    return ForwardColorHesCache(sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G,
+    return ForwardColorHesCache(
+        sparsity, colorvec, ncolors, D, buffer, g1!, grad_config, G,
         G2)
 end
 
@@ -123,12 +124,14 @@ function ForwardAutoColorHesCache(f, x::AbstractVector{V},
     return ForwardAutoColorHesCache(jac_cache, g!, sparsity, colorvec)
 end
 
-function autoauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
+function autoauto_color_hessian!(
+        H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
         hes_cache::ForwardAutoColorHesCache)
     forwarddiff_color_jacobian!(H, hes_cache.grad!, x, hes_cache.jac_cache)
 end
 
-function autoauto_color_hessian!(H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
+function autoauto_color_hessian!(
+        H::AbstractMatrix{<:Number}, f, x::AbstractArray{<:Number},
         colorvec::AbstractVector{<:Integer} = eachindex(x),
         sparsity::Union{AbstractMatrix, Nothing} = nothing)
     hes_cache = ForwardAutoColorHesCache(f, x, colorvec, sparsity)

@@ -269,8 +269,10 @@ function init_jacobian end
 const __init_𝒥 = init_jacobian
 
 # Misc Functions
-function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
-            AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}}, x) where {C}
+function __chunksize(
+        ::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
+            AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}},
+        x) where {C}
     C isa ForwardDiff.Chunk && return C
     return __chunksize(Val(C), x)
 end

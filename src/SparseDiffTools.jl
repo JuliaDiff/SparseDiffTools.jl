@@ -10,7 +10,8 @@ import Graphs: SimpleGraph
 using FiniteDiff, ForwardDiff
 @reexport using ADTypes
 import ADTypes: AbstractADType, AutoSparseZygote, AbstractSparseForwardMode,
-    AbstractSparseReverseMode, AbstractSparseFiniteDifferences, AbstractReverseMode
+                AbstractSparseReverseMode, AbstractSparseFiniteDifferences,
+                AbstractReverseMode
 import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 # Array Packages
 using ArrayInterface, SparseArrays
@@ -66,21 +67,22 @@ function auto_vecjac! end
 
 # Coloring Algorithms
 export AcyclicColoring,
-    BacktrackingColor, ContractionColor, GreedyD1Color, GreedyStar1Color, GreedyStar2Color
+       BacktrackingColor, ContractionColor, GreedyD1Color, GreedyStar1Color,
+       GreedyStar2Color
 export matrix2graph, matrix_colors
 # Sparse Jacobian Computation
 export ForwardColorJacCache, forwarddiff_color_jacobian, forwarddiff_color_jacobian!
 # Sparse Hessian Computation
 export numauto_color_hessian, numauto_color_hessian!, autoauto_color_hessian,
-    autoauto_color_hessian!, ForwardAutoColorHesCache, ForwardColorHesCache
+       autoauto_color_hessian!, ForwardAutoColorHesCache, ForwardColorHesCache
 # JacVec Products
 export auto_jacvec, auto_jacvec!, num_jacvec, num_jacvec!
 # VecJac Products
 export num_vecjac, num_vecjac!, auto_vecjac, auto_vecjac!
 # HesVec Products
 export numauto_hesvec,
-    numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec, numback_hesvec!,
-    num_hesvec, num_hesvec!, autoback_hesvec, autoback_hesvec!
+       numauto_hesvec!, autonum_hesvec, autonum_hesvec!, numback_hesvec, numback_hesvec!,
+       num_hesvec, num_hesvec!, autoback_hesvec, autoback_hesvec!
 # HesVecGrad Products
 export num_hesvecgrad, num_hesvecgrad!, auto_hesvecgrad, auto_hesvecgrad!
 # Operators
@@ -91,7 +93,7 @@ export update_coefficients, update_coefficients!, value!
 export AutoSparseEnzyme
 
 export NoSparsityDetection, SymbolicsSparsityDetection, JacPrototypeSparsityDetection,
-    PrecomputedJacobianColorvec, ApproximateJacobianSparsity, AutoSparsityDetection
+       PrecomputedJacobianColorvec, ApproximateJacobianSparsity, AutoSparsityDetection
 export sparse_jacobian, sparse_jacobian_cache, sparse_jacobian!
 export init_jacobian
 

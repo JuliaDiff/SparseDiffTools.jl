@@ -32,7 +32,8 @@ end
 
 # Approximate Jacobian Sparsity Detection
 ## Right now we hardcode it to use `ForwardDiff`
-function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, x; fx = nothing,
+function (alg::ApproximateJacobianSparsity)(
+        ad::AbstractSparseADType, f::F, x; fx = nothing,
         kwargs...) where {F}
     if !(ad isa AutoSparseForwardDiff)
         @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
@@ -71,7 +72,8 @@ function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, fx, 
         fx, kwargs...)
 end
 
-function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f::F, x; fx = nothing,
+function (alg::ApproximateJacobianSparsity)(
+        ad::AutoSparseFiniteDiff, f::F, x; fx = nothing,
         kwargs...) where {F}
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
@@ -101,7 +103,8 @@ function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f!::F, fx,
         FiniteDiff.finite_difference_jacobian!(J_cache, f!, x_, cache)
         @. J += (abs(J_cache) .≥ ε)  # hedge against numerical issues
     end
-    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(ad, f!, fx,
+    return (JacPrototypeSparsityDetection(; jac_prototype = sparse(J), alg.alg))(
+        ad, f!, fx,
         x; kwargs...)
 end
 

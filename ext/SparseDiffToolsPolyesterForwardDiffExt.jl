@@ -5,7 +5,9 @@ import ForwardDiff
 import SparseDiffTools: AbstractMaybeSparseJacobianCache, AbstractMaybeSparsityDetection,
                         ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache,
                         sparse_jacobian!,
-                        sparse_jacobian_static_array, __standard_tag, __chunksize
+                        sparse_jacobian_static_array, __standard_tag, __chunksize,
+                        polyesterforwarddiff_color_jacobian,
+                        polyesterforwarddiff_color_jacobian!
 
 struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
        AbstractMaybeSparseJacobianCache
@@ -25,8 +27,6 @@ function sparse_jacobian_cache(
         cache = __chunksize(ad, x)
         jac_prototype = nothing
     else
-        @warn """Currently PolyesterForwardDiff does not support sparsity detection
-                 natively. Falling back to using ForwardDiff.jl""" maxlog=1
         tag = __standard_tag(nothing, x)
         # Colored ForwardDiff passes `tag` directly into Dual so we need the `typeof`
         cache = ForwardColorJacCache(f, x, __chunksize(ad); coloring_result.colorvec,
@@ -45,7 +45,8 @@ function sparse_jacobian_cache(
         jac_prototype = nothing
     else
         @warn """Currently PolyesterForwardDiff does not support sparsity detection
-                 natively. Falling back to using ForwardDiff.jl""" maxlog=1
+                 natively for inplace functions. Falling back to using
+                ForwardDiff.jl""" maxlog=1
         tag = __standard_tag(nothing, x)
         # Colored ForwardDiff passes `tag` directly into Dual so we need the `typeof`
         cache = ForwardColorJacCache(f!, x, __chunksize(ad); coloring_result.colorvec,
@@ -58,7 +59,7 @@ end
 function sparse_jacobian!(J::AbstractMatrix, _, cache::PolyesterForwardDiffJacobianCache,
         f::F, x) where {F}
     if cache.cache isa ForwardColorJacCache
-        forwarddiff_color_jacobian(J, f, x, cache.cache) # Use Sparse ForwardDiff
+        polyesterforwarddiff_color_jacobian(J, f, x, cache.cache)
     else
         PolyesterForwardDiff.threaded_jacobian!(f, J, x, cache.cache) # Don't try to exploit sparsity
     end
@@ -68,7 +69,7 @@ end
 function sparse_jacobian!(J::AbstractMatrix, _, cache::PolyesterForwardDiffJacobianCache,
         f!::F, fx, x) where {F}
     if cache.cache isa ForwardColorJacCache
-        forwarddiff_color_jacobian!(J, f!, x, cache.cache) # Use Sparse ForwardDiff
+        forwarddiff_color_jacobian!(J, f!, x, cache.cache)
     else
         PolyesterForwardDiff.threaded_jacobian!(f!, fx, J, x, cache.cache) # Don't try to exploit sparsity
     end

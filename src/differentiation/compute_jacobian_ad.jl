@@ -173,6 +173,9 @@ function forwarddiff_color_jacobian(f::F, x::AbstractArray{<:Number},
     end
 end
 
+# Defined in extension. Polyester version of `forwarddiff_color_jacobian`
+function polyesterforwarddiff_color_jacobian end
+
 # When J is mutable, this version of forwarddiff_color_jacobian will mutate J to avoid allocations
 function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
         x::AbstractArray{<:Number},
@@ -249,9 +252,8 @@ function forwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
 end
 
 # When J is immutable, this version of forwarddiff_color_jacobian will avoid mutating J
-function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
-        jac_cache::ForwardColorJacCache,
-        jac_prototype = nothing)
+function forwarddiff_color_jacobian_immutable(f::F, x::AbstractArray{<:Number},
+        jac_cache::ForwardColorJacCache, jac_prototype = nothing) where {F}
     t = jac_cache.t
     dx = jac_cache.dx
     p = jac_cache.p
@@ -315,16 +317,16 @@ function forwarddiff_color_jacobian_immutable(f, x::AbstractArray{<:Number},
     return J
 end
 
-function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number}, f,
+function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number}, f::F,
         x::AbstractArray{<:Number}; dx = similar(x, size(J, 1)), colorvec = 1:length(x),
-        sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing)
+        sparsity = ArrayInterface.has_sparsestruct(J) ? J : nothing) where {F}
     forwarddiff_color_jacobian!(J, f, x, ForwardColorJacCache(f, x; dx, colorvec, sparsity))
 end
 
 function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
-        f,
+        f::F,
         x::AbstractArray{<:Number},
-        jac_cache::ForwardColorJacCache)
+        jac_cache::ForwardColorJacCache) where {F}
     t = jac_cache.t
     fx = jac_cache.fx
     dx = jac_cache.dx

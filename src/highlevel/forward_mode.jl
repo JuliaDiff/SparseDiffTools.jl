@@ -8,22 +8,15 @@ end
 
 __getfield(c::ForwardDiffJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
 
-struct SparseDiffToolsTag end
-
-function ForwardDiff.checktag(::Type{<:ForwardDiff.Tag{<:SparseDiffToolsTag, <:T}}, f::F,
-        x::AbstractArray{T}) where {T, F}
-    return true
-end
-
-__standard_tag(::Nothing, x) = ForwardDiff.Tag(SparseDiffToolsTag(), eltype(x))
-__standard_tag(tag::ForwardDiff.Tag, _) = tag
-__standard_tag(tag, x) = ForwardDiff.Tag(tag, eltype(x))
+__standard_tag(::Nothing, f::F, x) where {F} = ForwardDiff.Tag(f, eltype(x))
+__standard_tag(tag::ForwardDiff.Tag, ::F, _) where {F} = tag
+__standard_tag(tag, f::F, x) where {F} = ForwardDiff.Tag(f, eltype(x))
 
 function sparse_jacobian_cache(ad::Union{AutoSparseForwardDiff, AutoForwardDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
-    tag = __standard_tag(ad.tag, x)
+    tag = __standard_tag(ad.tag, f, x)
     if coloring_result isa NoMatrixColoring
         cache = ForwardDiff.JacobianConfig(f, x, __chunksize(ad, x), tag)
         jac_prototype = nothing
@@ -39,7 +32,7 @@ end
 function sparse_jacobian_cache(ad::Union{AutoSparseForwardDiff, AutoForwardDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
-    tag = __standard_tag(ad.tag, x)
+    tag = __standard_tag(ad.tag, f!, x)
     if coloring_result isa NoMatrixColoring
         cache = ForwardDiff.JacobianConfig(f!, fx, x, __chunksize(ad, x), tag)
         jac_prototype = nothing

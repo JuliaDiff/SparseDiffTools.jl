@@ -6,8 +6,7 @@ import SparseDiffTools: AbstractMaybeSparseJacobianCache, AbstractMaybeSparsityD
                         ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache,
                         sparse_jacobian!,
                         sparse_jacobian_static_array, __standard_tag, __chunksize,
-                        polyesterforwarddiff_color_jacobian,
-                        polyesterforwarddiff_color_jacobian!
+                        polyesterforwarddiff_color_jacobian
 
 struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
        AbstractMaybeSparseJacobianCache
@@ -27,7 +26,7 @@ function sparse_jacobian_cache(
         cache = __chunksize(ad, x)
         jac_prototype = nothing
     else
-        tag = __standard_tag(nothing, x)
+        tag = __standard_tag(nothing, f, x)
         # Colored ForwardDiff passes `tag` directly into Dual so we need the `typeof`
         cache = ForwardColorJacCache(f, x, __chunksize(ad); coloring_result.colorvec,
             dx = fx, sparsity = coloring_result.jacobian_sparsity, tag = typeof(tag))
@@ -47,7 +46,7 @@ function sparse_jacobian_cache(
         @warn """Currently PolyesterForwardDiff does not support sparsity detection
                  natively for inplace functions. Falling back to using
                 ForwardDiff.jl""" maxlog=1
-        tag = __standard_tag(nothing, x)
+        tag = __standard_tag(nothing, f!, x)
         # Colored ForwardDiff passes `tag` directly into Dual so we need the `typeof`
         cache = ForwardColorJacCache(f!, x, __chunksize(ad); coloring_result.colorvec,
             dx = fx, sparsity = coloring_result.jacobian_sparsity, tag = typeof(tag))

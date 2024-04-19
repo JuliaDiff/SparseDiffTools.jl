@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · SparseDiffTools.jl</title><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://docs.sciml.ai/SparseDiffTools/stable/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="SparseDiffTools.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>SparseDiffTools.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Example"><span>Example</span></a></li><li><a class="tocitem" href="#High-Level-API"><span>High Level API</span></a></li><li><a class="tocitem" href="#Lower-Level-API"><span>Lower Level API</span></a></li><li><a class="tocitem" href="#Documentation"><span>Documentation</span></a></li></ul></li><li><a class="tocitem" href="sparsedifftools/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDiff/SparseDiffTools.jl/blob/master/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SparseDiffTools.jl"><a class="docs-heading-anchor" href="#SparseDiffTools.jl">SparseDiffTools.jl</a><a id="SparseDiffTools.jl-1"></a><a class="docs-heading-anchor-permalink" href="#SparseDiffTools.jl" title="Permalink"></a></h1><p>This package is for exploiting sparsity in Jacobians and Hessians to accelerate computations. Matrix-free Jacobian-vector product and Hessian-vector product operators are provided that are compatible with AbstractMatrix-based libraries like IterativeSolvers.jl for easy and efficient Newton-Krylov implementation. It is possible to perform matrix coloring, and utilize coloring in Jacobian and Hessian construction.</p><p>Optionally, automatic and numerical differentiation are utilized.</p><h2 id="Example"><a class="docs-heading-anchor" href="#Example">Example</a><a id="Example-1"></a><a class="docs-heading-anchor-permalink" href="#Example" title="Permalink"></a></h2><p>Suppose we had the function</p><pre><code class="language-julia hljs">fcalls = 0
+function f(y,x) # in-place
+  global fcalls += 1
+  for i in 2:length(x)-1
+    y[i] = x[i-1] - 2x[i] + x[i+1]
+  end
+  y[1] = -2x[1] + x[2]
+  y[end] = x[end-1] - 2x[end]
+  nothing
+end
+
+function g(x) # out-of-place
+  global fcalls += 1
+  y = zero(x)
+  for i in 2:length(x)-1
+    y[i] = x[i-1] - 2x[i] + x[i+1]
+  end
+  y[1] = -2x[1] + x[2]
+  y[end] = x[end-1] - 2x[end]
+  y
+end</code></pre><h2 id="High-Level-API"><a class="docs-heading-anchor" href="#High-Level-API">High Level API</a><a id="High-Level-API-1"></a><a class="docs-heading-anchor-permalink" href="#High-Level-API" title="Permalink"></a></h2><p>We need to perform the following steps to utilize SparseDiffTools:</p><ol><li>Specify a Sparsity Detection Algorithm. There are 3 possible choices currently:<ol><li><code>NoSparsityDetection</code>: This will ignore any AD choice and compute the dense Jacobian</li><li><code>JacPrototypeSparsityDetection</code>: If you already know the sparsity pattern, you can specify it as <code>JacPrototypeSparsityDetection(; jac_prototype=&lt;sparsity pattern&gt;)</code>.</li><li><code>SymbolicsSparsityDetection</code>: This will use <code>Symbolics.jl</code> to automatically detect the sparsity pattern. (Note that <code>Symbolics.jl</code> must be explicitly loaded before using this functionality.)</li></ol></li><li>Now choose an AD backend from <code>ADTypes.jl</code>:<ol><li>If using a Non <code>*Sparse*</code> type, then we will not use sparsity detection.</li><li>All other sparse AD types will internally compute the proper sparsity pattern, and try to exploit that.</li></ol></li><li>Now there are 2 options:<ol><li>Precompute the cache using <code>sparse_jacobian_cache</code> and use the <code>sparse_jacobian</code> or <code>sparse_jacobian!</code> functions to compute the Jacobian. This option is recommended if you are repeatedly computing the Jacobian for the same function.</li><li>Directly use <code>sparse_jacobian</code> or <code>sparse_jacobian!</code> to compute the Jacobian. This option should be used if you are only computing the Jacobian once.</li></ol></li></ol><pre><code class="language-julia hljs">using Symbolics
+
+sd = SymbolicsSparsityDetection()
+adtype = AutoSparseFiniteDiff()
+x = rand(30)
+y = similar(x)
+
+# Option 1
+## OOP Function
+cache = sparse_jacobian_cache(adtype, sd, g, x; fx=y) # Passing `fx` is needed if size(y) != size(x)
+J = sparse_jacobian(adtype, cache, g, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, cache, g, x)
+
+## IIP Function
+cache = sparse_jacobian_cache(adtype, sd, f, y, x)
+J = sparse_jacobian(adtype, cache, f, y, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, cache, f, y, x)
+
+# Option 2
+## OOP Function
+J = sparse_jacobian(adtype, sd, g, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, sd, g, x)
+
+## IIP Function
+J = sparse_jacobian(adtype, sd, f, y, x)
+### Or
+J_preallocated = similar(J)
+sparse_jacobian!(J_preallocated, adtype, sd, f, y, x)</code></pre><h2 id="Lower-Level-API"><a class="docs-heading-anchor" href="#Lower-Level-API">Lower Level API</a><a id="Lower-Level-API-1"></a><a class="docs-heading-anchor-permalink" href="#Lower-Level-API" title="Permalink"></a></h2><p>For this function, we know that the sparsity pattern of the Jacobian is a <code>Tridiagonal</code> matrix. However, if we didn&#39;t know the sparsity pattern for the Jacobian, we could use the <code>Symbolics.jacobian_sparsity</code> function to automatically detect the sparsity pattern. We declare that the function <code>f</code> outputs a vector of length 30 and takes in a vector of length 30, and <code>jacobian_sparsity</code> returns a <code>SparseMatrixCSC</code>:</p><pre><code class="language-julia hljs">using Symbolics
+input = rand(30)
+output = similar(input)
+sparsity_pattern = Symbolics.jacobian_sparsity(f,output,input)
+jac = Float64.(sparsity_pattern)</code></pre><p>Now we call <code>matrix_colors</code> to get the colorvec vector for that matrix:</p><pre><code class="language-julia hljs">using SparseDiffTools
+colors = matrix_colors(jac)</code></pre><p>Since <code>maximum(colors)</code> is 3, this means that finite differencing can now compute the Jacobian in just 4 <code>f</code>-evaluations. Generating the sparsity pattern used 1 (pseudo) <code>f</code>-evaluation, so the total number of times that <code>f</code> is called to compute the sparsity pattern plus the entire 30x30 Jacobian is 5 times:</p><pre><code class="language-julia hljs">using FiniteDiff
+FiniteDiff.finite_difference_jacobian!(jac, f, rand(30), colorvec=colors)
+@show fcalls # 5</code></pre><p>In addition, a faster forward-mode autodiff call can be utilized as well:</p><pre><code class="language-julia hljs">forwarddiff_color_jacobian!(jac, f, x, colorvec = colors)</code></pre><p>If one only needs to compute products, one can use the operators. For example,</p><pre><code class="language-julia hljs">x = rand(30)
+J = JacVec(f,x)</code></pre><p>makes <code>J</code> into a matrix-free operator which calculates <code>J*v</code> products. For example:</p><pre><code class="language-julia hljs">v = rand(30)
+res = similar(v)
+mul!(res,J,v) # Does 1 f evaluation</code></pre><p>makes <code>res = J*v</code>. Additional operators for <code>HesVec</code> exists, including <code>HesVecGrad</code> which allows one to utilize a gradient function. These operators are compatible with iterative solver libraries like IterativeSolvers.jl, meaning the following performs the Newton-Krylov update iteration:</p><pre><code class="language-julia hljs">using IterativeSolvers
+gmres!(res,J,v)</code></pre><h2 id="Documentation"><a class="docs-heading-anchor" href="#Documentation">Documentation</a><a id="Documentation-1"></a><a class="docs-heading-anchor-permalink" href="#Documentation" title="Permalink"></a></h2><h3 id="Matrix-Coloring"><a class="docs-heading-anchor" href="#Matrix-Coloring">Matrix Coloring</a><a id="Matrix-Coloring-1"></a><a class="docs-heading-anchor-permalink" href="#Matrix-Coloring" title="Permalink"></a></h3><p>This library extends the common <code>ArrayInterfaceCore.matrix_colors</code> function to allow for coloring sparse matrices using graphical techniques.</p><p>Matrix coloring allows you to reduce the number of times finite differencing requires an <code>f</code> call to <code>maximum(colors)+1</code>, or reduces automatic differentiation to using <code>maximum(colors)</code> partials. Since normally these values are <code>length(x)</code>, this can be significant savings.</p><p>The API for computing the colorvec vector is:</p><pre><code class="language-julia hljs">matrix_colors(A::AbstractMatrix,alg::ColoringAlgorithm = GreedyD1Color();
+              partition_by_rows::Bool = false)</code></pre><p>The first argument is the abstract matrix which represents the sparsity pattern of the Jacobian. The second argument is the optional choice of coloring algorithm. It will default to a greedy distance 1 coloring, though if your special matrix type has more information, like is a <code>Tridiagonal</code> or <code>BlockBandedMatrix</code>, the colorvec vector will be analytically calculated instead. The keyword argument <code>partition_by_rows</code> allows you to partition the Jacobian on the basis of rows instead of columns and generate a corresponding coloring vector which can be used for reverse-mode AD. Default value is false.</p><p>The result is a vector which assigns a colorvec to each column (or row) of the matrix.</p><h3 id="Colorvec-Assisted-Differentiation"><a class="docs-heading-anchor" href="#Colorvec-Assisted-Differentiation">Colorvec-Assisted Differentiation</a><a id="Colorvec-Assisted-Differentiation-1"></a><a class="docs-heading-anchor-permalink" href="#Colorvec-Assisted-Differentiation" title="Permalink"></a></h3><p>Colorvec-assisted differentiation for numerical differentiation is provided by FiniteDiff.jl and for automatic differentiation is provided by ForwardDiff.jl.</p><p>For FiniteDiff.jl, one simply has to use the provided <code>colorvec</code> keyword argument. See <a href="https://github.com/JuliaDiff/FiniteDiff.jl#jacobians">the FiniteDiff Jacobian documentation</a> for more details.</p><p>For forward-mode automatic differentiation, use of a colorvec vector is provided by the following function:</p><pre><code class="language-julia hljs">forwarddiff_color_jacobian!(J::AbstractMatrix{&lt;:Number},
+                            f,
+                            x::AbstractArray{&lt;:Number};
+                            dx = nothing,
+                            colorvec = eachindex(x),
+                            sparsity = nothing)</code></pre><p>Notice that if a sparsity pattern is not supplied then the built Jacobian will be the compressed Jacobian: <code>sparsity</code> must be a sparse matrix or a structured matrix (<code>Tridiagonal</code>, <code>Banded</code>, etc. conforming to the ArrayInterfaceCore.jl specs) with the appropriate sparsity pattern to allow for decompression.</p><p>This call will allocate the cache variables each time. To avoid allocating the cache, construct the cache in advance:</p><pre><code class="language-julia hljs">ForwardColorJacCache(f,x,_chunksize = nothing;
+                              dx = nothing,
+                              colorvec=1:length(x),
+                              sparsity = nothing)</code></pre><p>and utilize the following signature:</p><pre><code class="language-julia hljs">forwarddiff_color_jacobian!(J::AbstractMatrix{&lt;:Number},
+                            f,
+                            x::AbstractArray{&lt;:Number},
+                            jac_cache::ForwardColorJacCache)</code></pre><p><code>dx</code> is a pre-allocated output vector which is used to declare the output size, and thus allows for specifying a non-square Jacobian.</p><p>Also, it is possible retrieve the function value via <code>value(jac_cache)</code> or <code>value!(result, jac_cache)</code></p><p>If one is using an out-of-place function <code>f(x)</code>, then the alternative form ca be used:</p><pre><code class="language-julia hljs">jacout = forwarddiff_color_jacobian(g, x,
+                                    dx = similar(x),
+                                    colorvec = 1:length(x),
+                                    sparsity = nothing,
+                                    jac_prototype = nothing)</code></pre><p>Note that the out-of-place form is efficient and compatible with StaticArrays. One can specify the type and shape of the output Jacobian by giving an additional <code>jac_prototype</code> to the out-of place <code>forwarddiff_color_jacobian</code> function, otherwise it will become a dense matrix. If <code>jac_prototype</code> and <code>sparsity</code> are not specified, then the oop Jacobian will assume that the function has a <em>square</em> Jacobian matrix. If it is not the case, please specify the shape of output by giving <code>dx</code>.</p><p>Similar functionality is available for Hessians, using finite differences of forward derivatives. Given a scalar function <code>f(x)</code>, a vector value for <code>x</code>, and a color vector and sparsity pattern, this can be accomplished using <code>numauto_color_hessian</code> or its in-place form <code>numauto_color_hessian!</code>.</p><pre><code class="language-julia hljs">H = numauto_color_hessian(f, x, colorvec, sparsity)
+numauto_color_hessian!(H, f, x, colorvec, sparsity)</code></pre><p>To avoid unnecessary allocations every time the Hessian is computed, construct a <code>ForwardColorHesCache</code> beforehand:</p><pre><code class="language-julia hljs">hescache = ForwardColorHesCache(f, x, colorvec, sparsity)
+numauto_color_hessian!(H, f, x, hescache)</code></pre><p>By default, these methods use a mix of numerical and automatic differentiation, namely by taking finite differences of gradients calculated via ForwardDiff.jl. Alternatively, if you have your own custom gradient function <code>g!</code>, you can specify it as an argument to <code>ForwardColorHesCache</code>:</p><pre><code class="language-julia hljs">hescache = ForwardColorHesCache(f, x, colorvec, sparsity, g!)</code></pre><p>Note that any user-defined gradient needs to have the signature <code>g!(G, x)</code>, i.e. updating the gradient <code>G</code> in place.</p><h3 id="Jacobian-Vector-and-Hessian-Vector-Products"><a class="docs-heading-anchor" href="#Jacobian-Vector-and-Hessian-Vector-Products">Jacobian-Vector and Hessian-Vector Products</a><a id="Jacobian-Vector-and-Hessian-Vector-Products-1"></a><a class="docs-heading-anchor-permalink" href="#Jacobian-Vector-and-Hessian-Vector-Products" title="Permalink"></a></h3><p>Matrix-free implementations of Jacobian-Vector and Hessian-Vector products is provided in both an operator and function form. For the functions, each choice has the choice of being in-place and out-of-place, and the in-place versions have the ability to pass in cache vectors to be non-allocating. When in-place the function signature for Jacobians is <code>f!(du,u)</code>, while out-of-place has <code>du=f(u)</code>. For Hessians, all functions must be <code>f(u)</code> which returns a scalar</p><p>The functions for Jacobians are:</p><pre><code class="language-julia hljs">auto_jacvec!(dy, f, x, v,
+                      cache1 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                      cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+
+auto_jacvec(f, x, v)
+
+# If compute_f0 is false, then `f(cache1,x)` will be computed
+num_jacvec!(dy,f,x,v,cache1 = similar(v),
+                     cache2 = similar(v),
+                     cache3 = similar(v);
+                     compute_f0 = true)
+num_jacvec(f,x,v,f0=nothing)</code></pre><p>For Hessians, the following are provided:</p><pre><code class="language-julia hljs">num_hesvec!(dy,f,x,v,
+             cache1 = similar(v),
+             cache2 = similar(v),
+             cache3 = similar(v),
+             cache4 = similar(v))
+
+num_hesvec(f,x,v)
+
+numauto_hesvec!(dy,f,x,v,
+                 cache = ForwardDiff.GradientConfig(f,v),
+                 cache1 = similar(v),
+                 cache2 = similar(v),
+                 cache3 = similar(v))
+
+numauto_hesvec(f,x,v)
+
+autonum_hesvec!(dy,f,x,v,
+                 cache1 = similar(v),
+                 cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                 cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+
+autonum_hesvec(f,x,v)</code></pre><p>In addition, the following forms allow you to provide a gradient function <code>g(dy,x)</code> or <code>dy=g(x)</code> respectively:</p><pre><code class="language-julia hljs">num_hesvecgrad!(dy,g,x,v,
+                     cache1 = similar(v),
+                     cache2 = similar(v),
+                     cache3 = similar(v))
+
+num_hesvecgrad(g,x,v)
+
+auto_hesvecgrad!(dy,g,x,v,
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+
+auto_hesvecgrad(g,x,v)</code></pre><p>The <code>numauto</code> and <code>autonum</code> methods both mix numerical and automatic differentiation, with the former almost always being more efficient and thus being recommended.</p><p>Optionally, if you load Zygote.jl, the following <code>numback</code> and <code>autoback</code> methods are available and allow numerical/ForwardDiff over reverse mode automatic differentiation respectively, where the reverse-mode AD is provided by Zygote.jl. Currently these methods are not competitive against <code>numauto</code>, but as Zygote.jl gets optimized these will likely be the fastest.</p><pre><code class="language-julia hljs">using Zygote # Required
+
+numback_hesvec!(dy,f,x,v,
+                     cache1 = similar(v),
+                     cache2 = similar(v),
+                     cache3 = similar(v))
+
+numback_hesvec(f,x,v)
+
+# Currently errors! See https://github.com/FluxML/Zygote.jl/issues/241
+autoback_hesvec!(dy,f,x,v,
+                     cache2 = ForwardDiff.Dual{DeivVecTag}.(x, v),
+                     cache3 = ForwardDiff.Dual{DeivVecTag}.(x, v))
+
+autoback_hesvec(f,x,v)</code></pre><h4 id="J*v-and-H*v-Operators"><a class="docs-heading-anchor" href="#J*v-and-H*v-Operators"><code>J*v</code> and <code>H*v</code> Operators</a><a id="J*v-and-H*v-Operators-1"></a><a class="docs-heading-anchor-permalink" href="#J*v-and-H*v-Operators" title="Permalink"></a></h4><p>The following produce matrix-free operators which are used for calculating Jacobian-vector and Hessian-vector products where the differentiation takes place at the vector <code>u</code>:</p><pre><code class="language-julia hljs">JacVec(f,x::AbstractArray;autodiff=true)
+HesVec(f,x::AbstractArray;autodiff=true)
+HesVecGrad(g,x::AbstractArray;autodiff=false)</code></pre><p>These all have the same interface, where <code>J*v</code> utilizes the out-of-place Jacobian-vector or Hessian-vector function, whereas <code>mul!(res,J,v)</code> utilizes the appropriate in-place versions. To update the location of differentiation in the operator, simply mutate the vector <code>u</code>: <code>J.u .= ...</code>.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="sparsedifftools/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 19 April 2024 05:47">Friday 19 April 2024</span>. Using Julia version 1.10.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -40,7 +40,7 @@ SparseDiffToolsSymbolicsExt = "Symbolics"
 SparseDiffToolsZygoteExt = "Zygote"
 
 [compat]
-ADTypes = "0.2.6"
+ADTypes = "0.2.6, 1"
 Adapt = "3, 4"
 ArrayInterface = "7.4.2"
 Compat = "4"

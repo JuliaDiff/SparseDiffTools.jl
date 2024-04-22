@@ -9,9 +9,8 @@ import Graphs: SimpleGraph
 # Differentiation
 using FiniteDiff, ForwardDiff
 @reexport using ADTypes
-import ADTypes: AbstractADType, AutoSparseZygote, AbstractSparseForwardMode,
-                AbstractSparseReverseMode, AbstractSparseFiniteDifferences,
-                AbstractReverseMode
+import ADTypes: AbstractADType, AutoSparse, ForwardMode, ForwardOrReverseMode, ReverseMode,
+                SymbolicMode, mode
 import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 # Array Packages
 using ArrayInterface, SparseArrays
@@ -31,6 +30,9 @@ function __init__()
 end
 
 abstract type AbstractAutoDiffVecProd end
+
+my_dense_ad(ad::AbstractADType) = ad
+my_dense_ad(ad::AutoSparse) = ADTypes.dense_ad(ad)
 
 include("coloring/high_level.jl")
 include("coloring/backtracking_coloring.jl")
@@ -52,6 +54,7 @@ include("highlevel/common.jl")
 include("highlevel/coloring.jl")
 include("highlevel/forward_mode.jl")
 include("highlevel/reverse_mode.jl")
+include("highlevel/forward_or_reverse_mode.jl")
 include("highlevel/finite_diff.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper
@@ -90,7 +93,6 @@ export JacVec, HesVec, HesVecGrad, VecJac
 export update_coefficients, update_coefficients!, value!
 
 # High Level Interface: sparse_jacobian
-export AutoSparseEnzyme
 
 export NoSparsityDetection, SymbolicsSparsityDetection, JacPrototypeSparsityDetection,
        PrecomputedJacobianColorvec, ApproximateJacobianSparsity, AutoSparsityDetection

@@ -1,8 +1,3 @@
-const AbstractSparseADType = Union{AbstractSparseForwardMode, AbstractSparseReverseMode,
-    AbstractSparseFiniteDifferences}
-
-struct AutoSparseEnzyme <: AbstractSparseReverseMode end
-
 # Sparsity Detection
 abstract type AbstractMaybeSparsityDetection end
 abstract type AbstractSparsityDetection <: AbstractMaybeSparsityDetection end
@@ -106,7 +101,7 @@ function _get_colorvec(alg::PrecomputedJacobianColorvec, ad)
     return cvec
 end
 
-function _get_colorvec(alg::PrecomputedJacobianColorvec, ::AbstractReverseMode)
+function _get_colorvec(alg::PrecomputedJacobianColorvec, ::ReverseMode)
     cvec = alg.row_colorvec
     @assert cvec!==nothing "`row_colorvec` is nothing, but Reverse Mode AD is being used!"
     return cvec
@@ -175,7 +170,15 @@ If `fx` is not specified, it will be computed by calling `f(x)`.
 
 A cache for computing the Jacobian of type `AbstractMaybeSparseJacobianCache`.
 """
-function sparse_jacobian_cache end
+function sparse_jacobian_cache(
+        ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f, x; fx = nothing)
+    return sparse_jacobian_cache_aux(mode(ad), ad, sd, f, x; fx)
+end
+
+function sparse_jacobian_cache(
+        ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f!, x, fx)
+    return sparse_jacobian_cache_aux(mode(ad), ad, sd, f!, x, fx)
+end
 
 function sparse_jacobian_static_array(ad, cache, f, x::SArray)
     # Not the most performant fallback
@@ -270,8 +273,8 @@ const __init_𝒥 = init_jacobian
 
 # Misc Functions
 function __chunksize(
-        ::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
-            AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}},
+        ::Union{AutoSparse{<:AutoForwardDiff{C}}, AutoForwardDiff{C},
+            AutoSparse{<:AutoPolyesterForwardDiff{C}}, AutoPolyesterForwardDiff{C}},
         x) where {C}
     C isa ForwardDiff.Chunk && return C
     return __chunksize(Val(C), x)
@@ -288,8 +291,8 @@ end
 __chunksize(x) = ForwardDiff.Chunk(x)
 __chunksize(x::StaticArray) = ForwardDiff.Chunk{ForwardDiff.pickchunksize(prod(Size(x)))}()
 
-function __chunksize(::Union{AutoSparseForwardDiff{C}, AutoForwardDiff{C},
-        AutoSparsePolyesterForwardDiff{C}, AutoPolyesterForwardDiff{C}}) where {C}
+function __chunksize(::Union{AutoSparse{<:AutoForwardDiff{C}}, AutoForwardDiff{C},
+        AutoSparse{<:AutoPolyesterForwardDiff{C}}, AutoPolyesterForwardDiff{C}}) where {C}
     C === nothing && return nothing
     C isa Integer && !(C isa Bool) && return C ≤ 0 ? nothing : Val(C)
     return nothing
@@ -348,8 +351,8 @@ __maybe_copy_x(_, ::Nothing) = nothing
 end
 
 @inline __backend(ad) = nothing
-@inline __backend(::Union{AutoEnzyme, AutoSparseEnzyme}) = :Enzyme
-@inline __backend(::Union{AutoZygote, AutoSparseZygote}) = :Zygote
-@inline __backend(::Union{AutoForwardDiff, AutoSparseForwardDiff}) = :ForwardDiff
-@inline __backend(::Union{AutoPolyesterForwardDiff, AutoSparsePolyesterForwardDiff}) = :PolyesterForwardDiff
-@inline __backend(::Union{AutoFiniteDiff, AutoSparseFiniteDiff}) = :FiniteDiff
+@inline __backend(::Union{AutoEnzyme, AutoSparse{<:AutoEnzyme}}) = :Enzyme
+@inline __backend(::Union{AutoZygote, AutoSparse{<:AutoZygote}}) = :Zygote
+@inline __backend(::Union{AutoForwardDiff, AutoSparse{<:AutoForwardDiff}}) = :ForwardDiff
+@inline __backend(::Union{AutoPolyesterForwardDiff, AutoSparse{<:AutoPolyesterForwardDiff}}) = :PolyesterForwardDiff
+@inline __backend(::Union{AutoFiniteDiff, AutoSparse{<:AutoFiniteDiff}}) = :FiniteDiff

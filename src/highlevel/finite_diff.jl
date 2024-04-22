@@ -8,7 +8,8 @@ end
 
 __getfield(c::FiniteDiffJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
 
-function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
+function sparse_jacobian_cache_aux(
+        ::ForwardMode, fd::Union{AutoSparse{<:AutoFiniteDiff}, AutoFiniteDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(fd, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
@@ -23,7 +24,8 @@ function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
     return FiniteDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)
 end
 
-function sparse_jacobian_cache(fd::Union{AutoSparseFiniteDiff, AutoFiniteDiff},
+function sparse_jacobian_cache_aux(
+        ::ForwardMode, fd::Union{AutoSparse{<:AutoFiniteDiff}, AutoFiniteDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(fd, f!, fx, x)
     if coloring_result isa NoMatrixColoring

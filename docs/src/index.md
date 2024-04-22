@@ -63,7 +63,7 @@ We need to perform the following steps to utilize SparseDiffTools:
 using Symbolics
 
 sd = SymbolicsSparsityDetection()
-adtype = AutoSparseFiniteDiff()
+adtype = AutoSparse(AutoFiniteDiff())
 x = rand(30)
 y = similar(x)
 

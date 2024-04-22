@@ -42,7 +42,6 @@ if GROUP == "Core" || GROUP == "All"
 end
 
 if GROUP == "InterfaceI" || GROUP == "All"
-    VERSION ≥ v"1.9" && activate_env("1.9specific")
     @time @safetestset "Jac Vecs and Hes Vecs" begin
         include("test_jaches_products.jl")
     end

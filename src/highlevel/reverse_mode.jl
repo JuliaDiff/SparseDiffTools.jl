@@ -9,7 +9,7 @@ end
 
 __getfield(c::ReverseModeJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
 
-function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
+function sparse_jacobian_cache_aux(::ReverseMode, ad::AbstractADType,
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     fx = fx === nothing ? similar(f(x)) : fx
     coloring_result = sd(ad, f, x)
@@ -18,7 +18,7 @@ function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
         collect(1:length(fx)))
 end
 
-function sparse_jacobian_cache(ad::Union{AutoEnzyme, AbstractReverseMode},
+function sparse_jacobian_cache_aux(::ReverseMode, ad::AbstractADType,
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     jac_prototype = __getfield(coloring_result, Val(:jacobian_sparsity))

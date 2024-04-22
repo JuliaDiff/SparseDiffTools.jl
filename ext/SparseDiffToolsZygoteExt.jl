@@ -11,17 +11,18 @@ import SparseDiffTools: numback_hesvec!,
                         numback_hesvec, autoback_hesvec!, autoback_hesvec, auto_vecjac!,
                         auto_vecjac
 import SparseDiffTools: __f̂, __jacobian!, __gradient, __gradient!
-import ADTypes: AutoZygote, AutoSparseZygote
+import ADTypes: AutoZygote, AutoSparse
 
-@inline __test_backend_loaded(::Union{AutoSparseZygote, AutoZygote}) = nothing
+@inline __test_backend_loaded(::Union{AutoSparse{<:AutoZygote}, AutoZygote}) = nothing
 
 ## Satisfying High-Level Interface for Sparse Jacobians
-function __gradient(::Union{AutoSparseZygote, AutoZygote}, f::F, x, cols) where {F}
+function __gradient(::Union{AutoSparse{<:AutoZygote}, AutoZygote}, f::F, x, cols) where {F}
     _, ∂x, _ = Zygote.gradient(__f̂, f, x, cols)
     return vec(∂x)
 end
 
-function __gradient!(::Union{AutoSparseZygote, AutoZygote}, f!::F, fx, x, cols) where {F}
+function __gradient!(
+        ::Union{AutoSparse{<:AutoZygote}, AutoZygote}, f!::F, fx, x, cols) where {F}
     return error("Zygote.jl cannot differentiate in-place (mutating) functions.")
 end
 
@@ -29,7 +30,8 @@ end
 # https://github.com/FluxML/Zygote.jl/blob/82c7a000bae7fb0999275e62cc53ddb61aed94c7/src/lib/grad.jl#L140-L157C4
 import Zygote: _jvec, _eyelike, _gradcopy!
 
-@views function __jacobian!(J::AbstractMatrix, ::Union{AutoSparseZygote, AutoZygote}, f::F,
+@views function __jacobian!(
+        J::AbstractMatrix, ::Union{AutoSparse{<:AutoZygote}, AutoZygote}, f::F,
         x) where {F}
     y, back = Zygote.pullback(_jvec ∘ f, x)
     δ = _eyelike(y)
@@ -40,7 +42,8 @@ import Zygote: _jvec, _eyelike, _gradcopy!
     return J
 end
 
-function __jacobian!(_, ::Union{AutoSparseZygote, AutoZygote}, f!::F, fx, x) where {F}
+function __jacobian!(
+        _, ::Union{AutoSparse{<:AutoZygote}, AutoZygote}, f!::F, fx, x) where {F}
     return error("Zygote.jl cannot differentiate in-place (mutating) functions.")
 end
 

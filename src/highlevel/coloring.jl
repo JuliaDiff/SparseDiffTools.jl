@@ -14,17 +14,17 @@ struct NoMatrixColoring end
 (::AbstractMaybeSparsityDetection)(::AbstractADType, args...; kws...) = NoMatrixColoring()
 
 # Prespecified Jacobian Structure
-function (alg::JacPrototypeSparsityDetection)(ad::AbstractSparseADType, args...; kwargs...)
+function (alg::JacPrototypeSparsityDetection)(ad::AutoSparse, args...; kwargs...)
     J = alg.jac_prototype
     colorvec = matrix_colors(J, alg.alg;
-        partition_by_rows = ad isa AbstractSparseReverseMode)
+        partition_by_rows = mode(ad) isa ReverseMode)
     (nz_rows, nz_cols) = ArrayInterface.findstructralnz(J)
     return MatrixColoringResult(colorvec, J, nz_rows, nz_cols)
 end
 
 # Prespecified Colorvecs
-function (alg::PrecomputedJacobianColorvec)(ad::AbstractSparseADType, args...; kwargs...)
-    colorvec = _get_colorvec(alg, ad)
+function (alg::PrecomputedJacobianColorvec)(ad::AutoSparse, args...; kwargs...)
+    colorvec = _get_colorvec(alg, mode(ad))
     J = alg.jac_prototype
     (nz_rows, nz_cols) = ArrayInterface.findstructralnz(J)
     return MatrixColoringResult(colorvec, J, nz_rows, nz_cols)
@@ -33,10 +33,10 @@ end
 # Approximate Jacobian Sparsity Detection
 ## Right now we hardcode it to use `ForwardDiff`
 function (alg::ApproximateJacobianSparsity)(
-        ad::AbstractSparseADType, f::F, x; fx = nothing,
+        ad::AutoSparse, f::F, x; fx = nothing,
         kwargs...) where {F}
-    if !(ad isa AutoSparseForwardDiff)
-        if ad isa AutoSparsePolyesterForwardDiff
+    if !(ad isa AutoSparse{<:AutoForwardDiff})
+        if ad isa AutoSparse{<:AutoPolyesterForwardDiff}
             @warn "$(ad) is only supported if `PolyesterForwardDiff` is explicitly loaded. Using ForwardDiff instead." maxlog=1
         else
             @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
@@ -57,10 +57,10 @@ function (alg::ApproximateJacobianSparsity)(
         fx, kwargs...)
 end
 
-function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, fx, x;
+function (alg::ApproximateJacobianSparsity)(ad::AutoSparse, f::F, fx, x;
         kwargs...) where {F}
-    if !(ad isa AutoSparseForwardDiff)
-        if ad isa AutoSparsePolyesterForwardDiff
+    if !(ad isa AutoSparse{<:AutoForwardDiff})
+        if ad isa AutoSparse{<:AutoPolyesterForwardDiff}
             @warn "$(ad) is only supported if `PolyesterForwardDiff` is explicitly loaded. Using ForwardDiff instead." maxlog=1
         else
             @warn "$(ad) support for approximate jacobian not implemented. Using ForwardDiff instead." maxlog=1
@@ -81,7 +81,7 @@ function (alg::ApproximateJacobianSparsity)(ad::AbstractSparseADType, f::F, fx, 
 end
 
 function (alg::ApproximateJacobianSparsity)(
-        ad::AutoSparseFiniteDiff, f::F, x; fx = nothing,
+        ad::AutoSparse{<:AutoFiniteDiff}, f::F, x; fx = nothing,
         kwargs...) where {F}
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
@@ -98,7 +98,7 @@ function (alg::ApproximateJacobianSparsity)(
         fx, kwargs...)
 end
 
-function (alg::ApproximateJacobianSparsity)(ad::AutoSparseFiniteDiff, f!::F, fx, x;
+function (alg::ApproximateJacobianSparsity)(ad::AutoSparse{<:AutoFiniteDiff}, f!::F, fx, x;
         kwargs...) where {F}
     @unpack ntrials, rng = alg
     cache = FiniteDiff.JacobianCache(x, fx)

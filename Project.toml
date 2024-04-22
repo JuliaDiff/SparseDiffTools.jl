@@ -1,7 +1,10 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
-version = "2.18.0"
+authors = [
+    "Pankaj Mishra <pankajmishra1511@gmail.com>",
+    "Chris Rackauckas <contact@chrisrackauckas.com>",
+]
+version = "2.19.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -40,7 +43,7 @@ SparseDiffToolsSymbolicsExt = "Symbolics"
 SparseDiffToolsZygoteExt = "Zygote"
 
 [compat]
-ADTypes = "0.2.6"
+ADTypes = "1.0.0"
 Adapt = "3, 4"
 ArrayInterface = "7.4.2"
 Compat = "4"
@@ -65,9 +68,10 @@ Tricks = "0.1.6"
 UnPack = "1"
 VertexSafeGraphs = "0.2"
 Zygote = "0.6"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
+AllocCheck = "9b6a8646-10ed-4001-bbdc-1d2f46dfbb1a"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
@@ -83,4 +87,18 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]
+test = [
+    "Test",
+    "AllocCheck",
+    "BandedMatrices",
+    "BlockBandedMatrices",
+    "Enzyme",
+    "IterativeSolvers",
+    "Pkg",
+    "PolyesterForwardDiff",
+    "Random",
+    "SafeTestsets",
+    "Symbolics",
+    "Zygote",
+    "StaticArrays",
+]

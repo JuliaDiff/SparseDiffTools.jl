@@ -291,8 +291,8 @@ end
 __chunksize(x) = ForwardDiff.Chunk(x)
 __chunksize(x::StaticArray) = ForwardDiff.Chunk{ForwardDiff.pickchunksize(prod(Size(x)))}()
 
-function __chunksize(::Union{AutoSparse{<:AutoForwardDiff}{C}, AutoForwardDiff{C},
-        AutoSparse{<:AutoPolyesterForwardDiff}{C}, AutoPolyesterForwardDiff{C}}) where {C}
+function __chunksize(::Union{AutoSparse{<:AutoForwardDiff{C}}, AutoForwardDiff{C},
+        AutoSparse{<:AutoPolyesterForwardDiff{C}}, AutoPolyesterForwardDiff{C}}) where {C}
     C === nothing && return nothing
     C isa Integer && !(C isa Bool) && return C ≤ 0 ? nothing : Val(C)
     return nothing

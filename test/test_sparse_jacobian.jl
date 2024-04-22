@@ -124,8 +124,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
             AutoSparse(AutoForwardDiff()),
             AutoForwardDiff(), AutoSparse{<:AutoForwardDiff}(; chunksize = 0),
-            AutoForwardDiff(; chunksize = 0), AutoSparse{<:AutoForwardDiff}(;
-                chunksize = 4),
+            AutoForwardDiff(; chunksize = 0), AutoSparse(AutoForwardDiff(;
+                chunksize = 4)),
             AutoForwardDiff(; chunksize = 4), AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
             AutoEnzyme(), AutoSparse(AutoEnzyme()))
             y = similar(x)

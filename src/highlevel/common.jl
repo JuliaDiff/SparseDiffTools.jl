@@ -171,12 +171,12 @@ If `fx` is not specified, it will be computed by calling `f(x)`.
 A cache for computing the Jacobian of type `AbstractMaybeSparseJacobianCache`.
 """
 function sparse_jacobian_cache(
-        ad::AbstractADType, sd::AbstractSparsityDetection, f, x; fx = nothing)
+        ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f, x; fx = nothing)
     return sparse_jacobian_cache_aux(mode(ad), ad, sd, f, x; fx)
 end
 
 function sparse_jacobian_cache(
-        ad::AbstractADType, sd::AbstractSparsityDetection, f!, x, fx)
+        ad::AbstractADType, sd::AbstractMaybeSparsityDetection, f!, x, fx)
     return sparse_jacobian_cache_aux(mode(ad), ad, sd, f!, x, fx)
 end
 

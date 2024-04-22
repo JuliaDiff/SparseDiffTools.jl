@@ -54,6 +54,7 @@ include("highlevel/common.jl")
 include("highlevel/coloring.jl")
 include("highlevel/forward_mode.jl")
 include("highlevel/reverse_mode.jl")
+include("highlevel/forward_or_reverse_mode.jl")
 include("highlevel/finite_diff.jl")
 
 Base.@pure __parameterless_type(T) = Base.typename(T).wrapper

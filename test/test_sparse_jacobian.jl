@@ -1,19 +1,20 @@
 ## Sparse Jacobian tests
-using SparseDiffTools,
-      Symbolics, ForwardDiff, LinearAlgebra, SparseArrays, Zygote, Enzyme, Test,
+using ADTypes, SparseDiffTools,
+      Symbolics, ForwardDiff, PolyesterForwardDiff, LinearAlgebra, SparseArrays, Zygote,
+      Enzyme, Test,
       StaticArrays
+using ADTypes: dense_ad
 
-@static if VERSION ≥ v"1.9"
-    using PolyesterForwardDiff
-end
-
-function __chunksize(::Union{AutoSparse{<:AutoForwardDiff}{C}, AutoForwardDiff{C},
-        AutoSparse{<:AutoPolyesterForwardDiff}{C}, AutoPolyesterForwardDiff{C}}) where {C}
+function __chunksize(::Union{
+        AutoSparse{<:AutoForwardDiff{C}}, AutoForwardDiff{C},
+        AutoSparse{<:AutoPolyesterForwardDiff{C}}, AutoPolyesterForwardDiff{C}
+}) where {C}
     return C
 end
 
 function __isinferrable(difftype)
-    return !(difftype isa AutoSparse{<:AutoForwardDiff} || difftype isa AutoForwardDiff ||
+    return !(difftype isa AutoSparse{<:AutoForwardDiff} ||
+             difftype isa AutoForwardDiff ||
              difftype isa AutoSparse{<:AutoPolyesterForwardDiff} ||
              difftype isa AutoPolyesterForwardDiff) ||
            (__chunksize(difftype) isa Int && __chunksize(difftype) > 0)
@@ -51,24 +52,23 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
     PrecomputedJacobianColorvec(; jac_prototype = J_sparsity, row_colorvec, col_colorvec)]
 
 @testset "High-Level API" begin
-    @testset "Sparsity Detection: $(nameof(typeof(sd)))" for sd in SPARSITY_DETECTION_ALGS
+    @testset "Sparsity Detection: $(nameof(typeof(sd))) - $(isa(ad, AutoSparse) ? $(nameof(typeof(dense_ad(ad)))) : "")" for sd in SPARSITY_DETECTION_ALGS
         @info "Sparsity Detection: $(nameof(typeof(sd)))"
         @info "Out of Place Function"
 
-        DIFFTYPES = [AutoSparse(AutoZygote()), AutoZygote(), AutoSparse(AutoForwardDiff()),
-            AutoForwardDiff(), AutoSparse(AutoForwardDiff(; chunksize = 0)),
-            AutoForwardDiff(; chunksize = 0), AutoSparse(AutoForwardDiff(; chunksize = 4)),
-            AutoForwardDiff(; chunksize = 4), AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
-            AutoEnzyme(), AutoSparse(AutoEnzyme())]
-
-        if VERSION ≥ v"1.9"
-            append!(DIFFTYPES,
-                [AutoSparse(AutoPolyesterForwardDiff()), AutoPolyesterForwardDiff(),
-                    AutoSparse(AutoPolyesterForwardDiff(; chunksize = 0)),
-                    AutoPolyesterForwardDiff(; chunksize = 0),
-                    AutoSparse(AutoPolyesterForwardDiff(; chunksize = 4)),
-                    AutoPolyesterForwardDiff(; chunksize = 4)])
-        end
+        DIFFTYPES = [
+            AutoSparse(AutoZygote()), AutoZygote(),
+            AutoSparse(AutoForwardDiff()), AutoForwardDiff(),
+            AutoSparse(AutoForwardDiff(; chunksize = 0)), AutoForwardDiff(; chunksize = 0),
+            AutoSparse(AutoForwardDiff(; chunksize = 4)), AutoForwardDiff(; chunksize = 4),
+            AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
+            AutoEnzyme(), AutoSparse(AutoEnzyme()),
+            AutoSparse(AutoPolyesterForwardDiff()), AutoPolyesterForwardDiff(),
+            AutoSparse(AutoPolyesterForwardDiff(; chunksize = 0)),
+            AutoPolyesterForwardDiff(; chunksize = 0),
+            AutoSparse(AutoPolyesterForwardDiff(; chunksize = 4)),
+            AutoPolyesterForwardDiff(; chunksize = 4)
+        ]
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in DIFFTYPES
             @testset "Cache & Reuse" begin

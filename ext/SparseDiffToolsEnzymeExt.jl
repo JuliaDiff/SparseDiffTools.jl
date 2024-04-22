@@ -2,23 +2,23 @@ module SparseDiffToolsEnzymeExt
 
 import ArrayInterface: fast_scalar_indexing
 import SparseDiffTools: __f̂, __maybe_copy_x, __jacobian!, __gradient, __gradient!,
-                        AutoSparseEnzyme, __test_backend_loaded
+                        AutoSparse{<:AutoEnzyme}, __test_backend_loaded
 # FIXME: For Enzyme we currently assume reverse mode
-import ADTypes: AutoEnzyme
+import ADTypes: AutoSparse, AutoEnzyme
 using Enzyme
 
 using ForwardDiff
 
-@inline __test_backend_loaded(::Union{AutoSparseEnzyme, AutoEnzyme}) = nothing
+@inline __test_backend_loaded(::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}) = nothing
 
 ## Satisfying High-Level Interface for Sparse Jacobians
-function __gradient(::Union{AutoSparseEnzyme, AutoEnzyme}, f, x, cols)
+function __gradient(::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f, x, cols)
     dx = zero(x)
     autodiff(Reverse, __f̂, Const(f), Duplicated(x, dx), Const(cols))
     return vec(dx)
 end
 
-function __gradient!(::Union{AutoSparseEnzyme, AutoEnzyme}, f!, fx, x, cols)
+function __gradient!(::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f!, fx, x, cols)
     dx = zero(x)
     dfx = zero(fx)
     autodiff(Reverse, __f̂, Active, Const(f!), Duplicated(fx, dfx), Duplicated(x, dx),
@@ -26,12 +26,12 @@ function __gradient!(::Union{AutoSparseEnzyme, AutoEnzyme}, f!, fx, x, cols)
     return dx
 end
 
-function __jacobian!(J::AbstractMatrix, ::Union{AutoSparseEnzyme, AutoEnzyme}, f, x)
+function __jacobian!(J::AbstractMatrix, ::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f, x)
     J .= jacobian(Reverse, f, x, Val(size(J, 1)))
     return J
 end
 
-@views function __jacobian!(J, ad::Union{AutoSparseEnzyme, AutoEnzyme}, f!, fx, x)
+@views function __jacobian!(J, ad::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f!, fx, x)
     # This version is slowish not sure how to do jacobians for inplace functions
     @warn "Current code for computing jacobian for inplace functions in Enzyme is slow." maxlog=1
     dfx = zero(fx)
@@ -58,6 +58,6 @@ end
     return J
 end
 
-__maybe_copy_x(::Union{AutoSparseEnzyme, AutoEnzyme}, x::SubArray) = copy(x)
+__maybe_copy_x(::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, x::SubArray) = copy(x)
 
 end

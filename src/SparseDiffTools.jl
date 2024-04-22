@@ -9,9 +9,8 @@ import Graphs: SimpleGraph
 # Differentiation
 using FiniteDiff, ForwardDiff
 @reexport using ADTypes
-import ADTypes: AbstractADType, AutoSparseZygote, AbstractSparseForwardMode,
-                AbstractSparseReverseMode, AbstractSparseFiniteDifferences,
-                AbstractReverseMode
+import ADTypes: AbstractADType, AutoSparse, ForwardMode, ForwardOrReverseMode, ReverseMode,
+                SymbolicMode, mode
 import ForwardDiff: Dual, jacobian, partials, DEFAULT_CHUNK_THRESHOLD
 # Array Packages
 using ArrayInterface, SparseArrays
@@ -90,7 +89,6 @@ export JacVec, HesVec, HesVecGrad, VecJac
 export update_coefficients, update_coefficients!, value!
 
 # High Level Interface: sparse_jacobian
-export AutoSparseEnzyme
 
 export NoSparsityDetection, SymbolicsSparsityDetection, JacPrototypeSparsityDetection,
        PrecomputedJacobianColorvec, ApproximateJacobianSparsity, AutoSparsityDetection

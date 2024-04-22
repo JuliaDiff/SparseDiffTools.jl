@@ -18,7 +18,7 @@ struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
 end
 
 function sparse_jacobian_cache(
-        ad::Union{AutoSparsePolyesterForwardDiff, AutoPolyesterForwardDiff},
+        ad::Union{AutoSparse{<:AutoPolyesterForwardDiff}, AutoPolyesterForwardDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
@@ -36,7 +36,7 @@ function sparse_jacobian_cache(
 end
 
 function sparse_jacobian_cache(
-        ad::Union{AutoSparsePolyesterForwardDiff, AutoPolyesterForwardDiff},
+        ad::Union{AutoSparse{<:AutoPolyesterForwardDiff}, AutoPolyesterForwardDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     if coloring_result isa NoMatrixColoring
@@ -77,7 +77,7 @@ end
 
 ## Approximate Sparsity Detection
 function (alg::ApproximateJacobianSparsity)(
-        ad::AutoSparsePolyesterForwardDiff, f::F, x; fx = nothing, kwargs...) where {F}
+        ad::AutoSparse{<:AutoPolyesterForwardDiff}, f::F, x; fx = nothing, kwargs...) where {F}
     @unpack ntrials, rng = alg
     fx = fx === nothing ? f(x) : fx
     ck = __chunksize(ad, x)
@@ -94,7 +94,7 @@ function (alg::ApproximateJacobianSparsity)(
 end
 
 function (alg::ApproximateJacobianSparsity)(
-        ad::AutoSparsePolyesterForwardDiff, f::F, fx, x;
+        ad::AutoSparse{<:AutoPolyesterForwardDiff}, f::F, fx, x;
         kwargs...) where {F}
     @unpack ntrials, rng = alg
     ck = __chunksize(ad, x)

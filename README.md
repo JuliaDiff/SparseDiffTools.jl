@@ -59,8 +59,8 @@ We need to perform the following steps to utilize SparseDiffTools:
        the sparsity pattern. (Note that `Symbolics.jl` must be explicitly loaded before
        using this functionality.)
 2. Now choose an AD backend from `ADTypes.jl`:
-    1. If using a Non `*Sparse*` type, then we will not use sparsity detection.
-    2. All other sparse AD types will internally compute the proper sparsity pattern, and
+    1. If using a standard type like `AutoForwardDiff()`, then we will not use sparsity detection.
+    2. If you wrap it inside `AutoSparse(AutoForwardDiff())`, then we will internally compute the proper sparsity pattern, and
        try to exploit that.
 3. Now there are 2 options:
     1. Precompute the cache using `sparse_jacobian_cache` and use the `sparse_jacobian` or
@@ -73,7 +73,7 @@ We need to perform the following steps to utilize SparseDiffTools:
 using Symbolics
 
 sd = SymbolicsSparsityDetection()
-adtype = AutoSparseFiniteDiff()
+adtype = AutoSparse(AutoFiniteDiff())
 x = rand(30)
 y = similar(x)
 

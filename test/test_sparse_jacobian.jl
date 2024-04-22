@@ -56,17 +56,17 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @info "Out of Place Function"
 
         DIFFTYPES = [AutoSparse(AutoZygote()), AutoZygote(), AutoSparse(AutoForwardDiff()),
-            AutoForwardDiff(), AutoSparse{<:AutoForwardDiff}(; chunksize = 0),
-            AutoForwardDiff(; chunksize = 0), AutoSparse{<:AutoForwardDiff}(; chunksize = 4),
+            AutoForwardDiff(), AutoSparse(AutoForwardDiff(; chunksize = 0)),
+            AutoForwardDiff(; chunksize = 0), AutoSparse(AutoForwardDiff(; chunksize = 4)),
             AutoForwardDiff(; chunksize = 4), AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
             AutoEnzyme(), AutoSparse(AutoEnzyme())]
 
         if VERSION ≥ v"1.9"
             append!(DIFFTYPES,
                 [AutoSparse(AutoPolyesterForwardDiff()), AutoPolyesterForwardDiff(),
-                    AutoSparse{<:AutoPolyesterForwardDiff}(; chunksize = 0),
+                    AutoSparse(AutoPolyesterForwardDiff(; chunksize = 0)),
                     AutoPolyesterForwardDiff(; chunksize = 0),
-                    AutoSparse{<:AutoPolyesterForwardDiff}(; chunksize = 4),
+                    AutoSparse(AutoPolyesterForwardDiff(; chunksize = 4)),
                     AutoPolyesterForwardDiff(; chunksize = 4)])
         end
 
@@ -124,7 +124,8 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
             AutoSparse(AutoForwardDiff()),
             AutoForwardDiff(), AutoSparse{<:AutoForwardDiff}(; chunksize = 0),
-            AutoForwardDiff(; chunksize = 0), AutoSparse{<:AutoForwardDiff}(; chunksize = 4),
+            AutoForwardDiff(; chunksize = 0), AutoSparse{<:AutoForwardDiff}(;
+                chunksize = 4),
             AutoForwardDiff(; chunksize = 4), AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
             AutoEnzyme(), AutoSparse(AutoEnzyme()))
             y = similar(x)
@@ -211,7 +212,8 @@ end
     end
 
     @testset "Static Arrays" begin
-        @testset "No Allocations: $(difftype)" for difftype in (AutoSparse(AutoForwardDiff()),
+        @testset "No Allocations: $(difftype)" for difftype in (
+            AutoSparse(AutoForwardDiff()),
             AutoForwardDiff())
             J = __sparse_jacobian_no_allocs(difftype, NoSparsityDetection(), fvcat, x_sa)
             @test J ≈ J_true_sa

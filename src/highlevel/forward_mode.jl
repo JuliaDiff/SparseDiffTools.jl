@@ -12,7 +12,8 @@ __standard_tag(::Nothing, f::F, x) where {F} = ForwardDiff.Tag(f, eltype(x))
 __standard_tag(tag::ForwardDiff.Tag, ::F, _) where {F} = tag
 __standard_tag(tag, f::F, x) where {F} = ForwardDiff.Tag(f, eltype(x))
 
-function sparse_jacobian_cache(ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForwardDiff},
+function sparse_jacobian_cache_aux(
+        ::ForwardMode, ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForwardDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
@@ -29,7 +30,8 @@ function sparse_jacobian_cache(ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForw
     return ForwardDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)
 end
 
-function sparse_jacobian_cache(ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForwardDiff},
+function sparse_jacobian_cache_aux(
+        ::ForwardMode, ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForwardDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
     tag = __standard_tag(ad.tag, f!, x)

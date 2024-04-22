@@ -2,7 +2,7 @@ module SparseDiffToolsEnzymeExt
 
 import ArrayInterface: fast_scalar_indexing
 import SparseDiffTools: __f̂, __maybe_copy_x, __jacobian!, __gradient, __gradient!,
-                        AutoSparse{<:AutoEnzyme}, __test_backend_loaded
+                        __test_backend_loaded
 # FIXME: For Enzyme we currently assume reverse mode
 import ADTypes: AutoSparse, AutoEnzyme
 using Enzyme

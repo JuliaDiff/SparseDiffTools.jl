@@ -24,7 +24,7 @@ end
 
 # Prespecified Colorvecs
 function (alg::PrecomputedJacobianColorvec)(ad::AutoSparse, args...; kwargs...)
-    colorvec = _get_colorvec(alg, ad)
+    colorvec = _get_colorvec(alg, mode(ad))
     J = alg.jac_prototype
     (nz_rows, nz_cols) = ArrayInterface.findstructralnz(J)
     return MatrixColoringResult(colorvec, J, nz_rows, nz_cols)

@@ -17,7 +17,7 @@ struct PolyesterForwardDiffJacobianCache{CO, CA, J, FX, X} <:
     x::X
 end
 
-function sparse_jacobian_cache(
+function sparse_jacobian_cache_aux(::ADTypes.ForwardMode,
         ad::Union{AutoSparse{<:AutoPolyesterForwardDiff}, AutoPolyesterForwardDiff},
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
@@ -35,7 +35,7 @@ function sparse_jacobian_cache(
     return PolyesterForwardDiffJacobianCache(coloring_result, cache, jac_prototype, fx, x)
 end
 
-function sparse_jacobian_cache(
+function sparse_jacobian_cache_aux(::ADTypes.ForwardMode,
         ad::Union{AutoSparse{<:AutoPolyesterForwardDiff}, AutoPolyesterForwardDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)

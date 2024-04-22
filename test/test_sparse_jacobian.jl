@@ -52,7 +52,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
     PrecomputedJacobianColorvec(; jac_prototype = J_sparsity, row_colorvec, col_colorvec)]
 
 @testset "High-Level API" begin
-    @testset "Sparsity Detection: $(nameof(typeof(sd))) - $(isa(ad, AutoSparse) ? $(nameof(typeof(dense_ad(ad)))) : "")" for sd in SPARSITY_DETECTION_ALGS
+    @testset "Sparsity Detection: $(nameof(typeof(sd)))" for sd in SPARSITY_DETECTION_ALGS
         @info "Sparsity Detection: $(nameof(typeof(sd)))"
         @info "Out of Place Function"
 
@@ -122,11 +122,10 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
         @info "Inplace Place Function"
 
         @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
-            AutoSparse(AutoForwardDiff()),
-            AutoForwardDiff(), AutoSparse{<:AutoForwardDiff}(; chunksize = 0),
-            AutoForwardDiff(; chunksize = 0), AutoSparse(AutoForwardDiff(;
-                chunksize = 4)),
-            AutoForwardDiff(; chunksize = 4), AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
+            AutoSparse(AutoForwardDiff()), AutoForwardDiff(),
+            AutoSparse(AutoForwardDiff(; chunksize = 0)), AutoForwardDiff(; chunksize = 0),
+            AutoSparse(AutoForwardDiff(; chunksize = 4)), AutoForwardDiff(; chunksize = 4),
+            AutoSparse(AutoFiniteDiff()), AutoFiniteDiff(),
             AutoEnzyme(), AutoSparse(AutoEnzyme()))
             y = similar(x)
             cache = sparse_jacobian_cache(difftype, sd, fdiff, y, x)
@@ -195,35 +194,31 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
     end
 end
 
-@static if VERSION ≥ v"1.9"
-    using AllocCheck
+using AllocCheck
+
+# Testing that the non-sparse jacobian's are non-allocating.
+fvcat(x) = vcat(x, x)
+
+x_sa = @SVector randn(Float32, 10)
+
+J_true_sa = ForwardDiff.jacobian(fvcat, x_sa)
+
+AllocCheck.@check_allocs function __sparse_jacobian_no_allocs(ad, sd, f::F, x) where {F}
+    return sparse_jacobian(ad, sd, f, x)
 end
 
-@static if VERSION ≥ v"1.9"
-    # Testing that the non-sparse jacobian's are non-allocating.
-    fvcat(x) = vcat(x, x)
-
-    x_sa = @SVector randn(Float32, 10)
-
-    J_true_sa = ForwardDiff.jacobian(fvcat, x_sa)
-
-    AllocCheck.@check_allocs function __sparse_jacobian_no_allocs(ad, sd, f::F, x) where {F}
-        return sparse_jacobian(ad, sd, f, x)
+@testset "Static Arrays" begin
+    @testset "No Allocations: $(difftype)" for difftype in (
+        AutoSparse(AutoForwardDiff()),
+        AutoForwardDiff())
+        J = __sparse_jacobian_no_allocs(difftype, NoSparsityDetection(), fvcat, x_sa)
+        @test J ≈ J_true_sa
     end
 
-    @testset "Static Arrays" begin
-        @testset "No Allocations: $(difftype)" for difftype in (
-            AutoSparse(AutoForwardDiff()),
-            AutoForwardDiff())
-            J = __sparse_jacobian_no_allocs(difftype, NoSparsityDetection(), fvcat, x_sa)
-            @test J ≈ J_true_sa
-        end
-
-        @testset "Other Backends: $(difftype)" for difftype in (AutoSparse(AutoZygote()),
-            AutoZygote(), AutoSparse(AutoEnzyme()), AutoEnzyme(), AutoSparse(AutoFiniteDiff()),
-            AutoFiniteDiff())
-            J = sparse_jacobian(difftype, NoSparsityDetection(), fvcat, x_sa)
-            @test J ≈ J_true_sa
-        end
+    @testset "Other Backends: $(difftype)" for difftype in (AutoSparse(AutoZygote()),
+        AutoZygote(), AutoSparse(AutoEnzyme()), AutoEnzyme(), AutoSparse(AutoFiniteDiff()),
+        AutoFiniteDiff())
+        J = sparse_jacobian(difftype, NoSparsityDetection(), fvcat, x_sa)
+        @test J ≈ J_true_sa
     end
 end

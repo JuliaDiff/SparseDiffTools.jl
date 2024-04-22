@@ -5,6 +5,14 @@ using ADTypes, SparseDiffTools,
       StaticArrays
 using ADTypes: dense_ad
 
+function nice_string(ad::AbstractADType)
+    if ad isa AutoSparse
+        return "AutoSparse($(nice_string(dense_ad(ad))))"
+    else
+        return nameof(typeof(ad))
+    end
+end
+
 function __chunksize(::Union{
         AutoSparse{<:AutoForwardDiff{C}}, AutoForwardDiff{C},
         AutoSparse{<:AutoPolyesterForwardDiff{C}}, AutoPolyesterForwardDiff{C}
@@ -70,7 +78,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
             AutoPolyesterForwardDiff(; chunksize = 4)
         ]
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): Out of Place" for difftype in DIFFTYPES
+        @testset "sparse_jacobian $(nice_string(difftype)): Out of Place" for difftype in DIFFTYPES
             @testset "Cache & Reuse" begin
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = init_jacobian(cache)
@@ -81,7 +89,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 @inferred sparse_jacobian!(J, difftype, cache, fdiff, x)
 
                 t₁ = @elapsed sparse_jacobian!(J, difftype, cache, fdiff, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
 
                 J = sparse_jacobian(difftype, cache, fdiff, x)
 
@@ -92,7 +100,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 end
 
                 t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with matrix allocation) time: $(t₂)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian` (with matrix allocation) time: $(t₂)s"
             end
 
             @testset "Single Use" begin
@@ -104,7 +112,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 end
 
                 t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian` (complete) time: $(t₁)s"
 
                 cache = sparse_jacobian_cache(difftype, sd, fdiff, x)
                 J = init_jacobian(cache)
@@ -115,13 +123,13 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 @inferred sparse_jacobian!(J, difftype, sd, fdiff, x)
 
                 t₂ = @elapsed sparse_jacobian!(J, difftype, sd, fdiff, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
             end
         end
 
         @info "Inplace Place Function"
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
+        @testset "sparse_jacobian $(nice_string(difftype)): In place" for difftype in (
             AutoSparse(AutoForwardDiff()), AutoForwardDiff(),
             AutoSparse(AutoForwardDiff(; chunksize = 0)), AutoForwardDiff(; chunksize = 0),
             AutoSparse(AutoForwardDiff(; chunksize = 4)), AutoForwardDiff(; chunksize = 4),
@@ -138,7 +146,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 @inferred sparse_jacobian!(J, difftype, cache, fdiff, y, x)
 
                 t₁ = @elapsed sparse_jacobian!(J, difftype, cache, fdiff, y, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian!` (only differentiation) time: $(t₁)s"
 
                 J = sparse_jacobian(difftype, cache, fdiff, y, x)
 
@@ -148,7 +156,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 end
 
                 t₂ = @elapsed sparse_jacobian(difftype, cache, fdiff, y, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (with jacobian allocation) time: $(t₂)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian` (with jacobian allocation) time: $(t₂)s"
             end
 
             @testset "Single Use" begin
@@ -160,7 +168,7 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 end
 
                 t₁ = @elapsed sparse_jacobian(difftype, sd, fdiff, y, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian` (complete) time: $(t₁)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian` (complete) time: $(t₁)s"
 
                 J = init_jacobian(cache)
 
@@ -170,11 +178,11 @@ SPARSITY_DETECTION_ALGS = [JacPrototypeSparsityDetection(; jac_prototype = J_spa
                 @inferred sparse_jacobian!(J, difftype, sd, fdiff, y, x)
 
                 t₂ = @elapsed sparse_jacobian!(J, difftype, sd, fdiff, y, x)
-                @info "$(nameof(typeof(difftype)))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
+                @info "$(nice_string(difftype))() `sparse_jacobian!` (with matrix coloring) time: $(t₂)s"
             end
         end
 
-        @testset "sparse_jacobian $(nameof(typeof(difftype))): In place" for difftype in (
+        @testset "sparse_jacobian $(nice_string(difftype)): In place" for difftype in (
             AutoSparse(AutoZygote()),
             AutoZygote())
             y = similar(x)

@@ -4,6 +4,7 @@ using ADTypes, SparseDiffTools, PolyesterForwardDiff, UnPack, Random, SparseArra
 import ForwardDiff
 import SparseDiffTools: AbstractMaybeSparseJacobianCache, AbstractMaybeSparsityDetection,
                         ForwardColorJacCache, NoMatrixColoring, sparse_jacobian_cache,
+                        sparse_jacobian_cache_aux,
                         sparse_jacobian!,
                         sparse_jacobian_static_array, __standard_tag, __chunksize,
                         polyesterforwarddiff_color_jacobian

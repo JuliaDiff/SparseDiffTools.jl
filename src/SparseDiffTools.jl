@@ -31,6 +31,9 @@ end
 
 abstract type AbstractAutoDiffVecProd end
 
+my_dense_ad(ad::AbstractADType) = ad
+my_dense_ad(ad::AutoSparse) = ADTypes.dense_ad(ad)
+
 include("coloring/high_level.jl")
 include("coloring/backtracking_coloring.jl")
 include("coloring/contraction_coloring.jl")

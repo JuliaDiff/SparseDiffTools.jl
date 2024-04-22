@@ -17,7 +17,7 @@ function sparse_jacobian_cache_aux(
         sd::AbstractMaybeSparsityDetection, f::F, x; fx = nothing) where {F}
     coloring_result = sd(ad, f, x)
     fx = fx === nothing ? similar(f(x)) : fx
-    tag = __standard_tag(ad.tag, f, x)
+    tag = __standard_tag(my_dense_ad(ad).tag, f, x)
     if coloring_result isa NoMatrixColoring
         cache = ForwardDiff.JacobianConfig(f, x, __chunksize(ad, x), tag)
         jac_prototype = nothing
@@ -34,7 +34,7 @@ function sparse_jacobian_cache_aux(
         ::ForwardMode, ad::Union{AutoSparse{<:AutoForwardDiff}, AutoForwardDiff},
         sd::AbstractMaybeSparsityDetection, f!::F, fx, x) where {F}
     coloring_result = sd(ad, f!, fx, x)
-    tag = __standard_tag(ad.tag, f!, x)
+    tag = __standard_tag(my_dense_ad(ad).tag, f!, x)
     if coloring_result isa NoMatrixColoring
         cache = ForwardDiff.JacobianConfig(f!, fx, x, __chunksize(ad, x), tag)
         jac_prototype = nothing

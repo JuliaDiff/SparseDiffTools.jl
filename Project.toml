@@ -4,7 +4,7 @@ authors = [
     "Pankaj Mishra <pankajmishra1511@gmail.com>",
     "Chris Rackauckas <contact@chrisrackauckas.com>",
 ]
-version = "2.19.0"
+version = "2.20.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"

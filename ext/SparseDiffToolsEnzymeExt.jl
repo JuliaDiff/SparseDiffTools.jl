@@ -27,7 +27,8 @@ function __gradient!(::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f!, fx, x, c
 end
 
 function __jacobian!(J::AbstractMatrix, ::Union{AutoSparse{<:AutoEnzyme}, AutoEnzyme}, f, x)
-    J .= jacobian(Reverse, f, x, Val(size(J, 1)))
+    J .= only(jacobian(
+        Reverse, a -> vec(f(reshape(a, size(x)))), vec(x); n_outs = Val(size(J, 1))))
     return J
 end
 

@@ -366,7 +366,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
 
         if vect isa Array
-            @inbounds @simd ivdep for j in eachindex(vect, vecx, partials_i)
+            @inbounds @simd ivdep for j in eachindex(vect, vecx, partial_i)
                 vect[j] = eltype(t)(vecx[j], ForwardDiff.Partials(partial_i[j]))
             end
         else

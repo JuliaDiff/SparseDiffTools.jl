@@ -57,7 +57,7 @@ function polyesterforwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
                              if colorvec[cols_index[idx]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
-                @inbounds @simd for i in 1:length(rows_index_c)
+                @simd for i in eachindex(rows_index_c, cols_index_c)
                     J[rows_index_c[i], cols_index_c[i]] = dx[rows_index_c[i]]
                 end
                 color_i += 1

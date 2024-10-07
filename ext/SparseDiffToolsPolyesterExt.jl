@@ -34,8 +34,9 @@ function polyesterforwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
         rows_index = [rows_index[i] for i in 1:length(rows_index)]
         cols_index = [cols_index[i] for i in 1:length(cols_index)]
     else
-        rows_index = 1:nrows
-        cols_index = 1:ncols
+        cartind = vec(CartesianIndices(x))
+        rows_index = Base.Iterators.map(first ∘ Tuple, cartind)
+        cols_index = Base.Iterators.map(last ∘ Tuple, cartind)
     end
 
     if J isa AbstractSparseMatrix
@@ -57,7 +58,7 @@ function polyesterforwarddiff_color_jacobian(J::AbstractMatrix{<:Number}, f::F,
                              if colorvec[cols_index[idx]] == color_i]
                 rows_index_c = rows_index[pick_inds]
                 cols_index_c = cols_index[pick_inds]
-                @inbounds @simd for i in 1:length(rows_index_c)
+                @simd for i in eachindex(rows_index_c, cols_index_c)
                     J[rows_index_c[i], cols_index_c[i]] = dx[rows_index_c[i]]
                 end
                 color_i += 1

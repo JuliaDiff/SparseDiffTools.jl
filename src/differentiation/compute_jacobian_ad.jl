@@ -366,7 +366,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         partial_i = p[i]
 
         if vect isa Array
-            @inbounds @simd ivdep for j in eachindex(vect)
+            @inbounds @simd ivdep for j in eachindex(vect, vecx, partial_i)
                 vect[j] = eltype(t)(vecx[j], ForwardDiff.Partials(partial_i[j]))
             end
         else
@@ -377,7 +377,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
         if !(sparsity isa Nothing)
             for j in 1:chunksize
                 if dx isa Array
-                    @inbounds @simd for k in eachindex(dx)
+                    @inbounds @simd for k in eachindex(dx, fx)
                         dx[k] = partials(fx[k], j)
                     end
                 else
@@ -429,7 +429,7 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
                 col_index = (i - 1) * chunksize + j
                 (col_index > ncols) && return J
                 if J isa Array
-                    @inbounds @simd for k in 1:size(J, 1)
+                    @simd for k in axes(J, 1)
                         J[k, col_index] = partials(vecfx[k], j)
                     end
                 else

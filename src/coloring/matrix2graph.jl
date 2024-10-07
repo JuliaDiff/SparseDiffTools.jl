@@ -45,7 +45,7 @@ function matrix2graph(sparse_matrix::AbstractSparseMatrix{<:Number},
 
     if partition_by_rows
         rows_by_cols = _rows_by_cols(rows_index, cols_index)
-        @inbounds for (cur_row, cur_col) in zip(rows_index, cols_index)
+        for (cur_row, cur_col) in zip(rows_index, cols_index)
             if !isempty(rows_by_cols[cur_col])
                 for next_row in rows_by_cols[cur_col]
                     if next_row < cur_row
@@ -56,7 +56,7 @@ function matrix2graph(sparse_matrix::AbstractSparseMatrix{<:Number},
         end
     else
         cols_by_rows = _cols_by_rows(rows_index, cols_index)
-        @inbounds for (cur_row, cur_col) in zip(rows_index, cols_index)
+        for (cur_row, cur_col) in zip(rows_index, cols_index)
             if !isempty(cols_by_rows[cur_row])
                 for next_col in cols_by_rows[cur_row]
                     if next_col < cur_col

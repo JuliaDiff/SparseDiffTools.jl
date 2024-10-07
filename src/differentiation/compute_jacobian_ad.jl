@@ -348,8 +348,9 @@ function forwarddiff_color_jacobian!(J::AbstractMatrix{<:Number},
     if FiniteDiff._use_findstructralnz(sparsity)
         rows_index, cols_index = ArrayInterface.findstructralnz(sparsity)
     else
-        rows_index = nothing
-        cols_index = nothing
+        cartind = vec(CartesianIndices(x))
+        rows_index = Base.Iterators.map(first ∘ Tuple, cartind)
+        cols_index = Base.Iterators.map(last ∘ Tuple, cartind)
     end
 
     # fast path if J and sparsity are both AbstractSparseMatrix and have the same sparsity pattern

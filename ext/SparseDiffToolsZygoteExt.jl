@@ -5,7 +5,6 @@ import SparseDiffTools: SparseDiffTools, DeivVecTag, AutoDiffVJP, __test_backend
 import ForwardDiff: ForwardDiff, Dual, partials
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!
-import Tricks: static_hasmethod
 
 import SparseDiffTools: numback_hesvec!,
                         numback_hesvec, autoback_hesvec!, autoback_hesvec, auto_vecjac!,
@@ -101,7 +100,7 @@ end
 
 # VJP methods
 function auto_vecjac!(du, f::F, x, v) where {F}
-    !static_hasmethod(f, typeof((x,))) &&
+    !hasmethod(f, typeof((x,))) &&
         error("For inplace function use autodiff = AutoFiniteDiff()")
     du .= reshape(SparseDiffTools.auto_vecjac(f, x, v), size(du))
 end
@@ -113,7 +112,7 @@ end
 
 # overload operator interface
 function SparseDiffTools._vecjac(f::F, _, u, autodiff::AutoZygote) where {F}
-    !static_hasmethod(f, typeof((u,))) &&
+    !hasmethod(f, typeof((u,))) &&
         error("For inplace function use autodiff = AutoFiniteDiff()")
     pullback = Zygote.pullback(f, u)
     return AutoDiffVJP(f, u, (), autodiff, pullback)

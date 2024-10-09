@@ -49,8 +49,8 @@ function JacFunctionWrapper(f::F, fu_, u, p, t;
     if deporder
         # Check this first else we were breaking things
         # In the next breaking release, we will fix the ordering of the checks
-        iip = static_hasmethod(f, typeof((fu, u)))
-        oop = static_hasmethod(f, typeof((u,)))
+        iip = hasmethod(f, typeof((fu, u)))
+        oop = hasmethod(f, typeof((u,)))
         if iip || oop
             if p !== nothing || t !== nothing
                 Base.depwarn(
@@ -74,8 +74,8 @@ function JacFunctionWrapper(f::F, fu_, u, p, t;
     end
 
     if t !== nothing
-        iip = static_hasmethod(f, typeof((fu, u, p, t)))
-        oop = static_hasmethod(f, typeof((u, p, t)))
+        iip = hasmethod(f, typeof((fu, u, p, t)))
+        oop = hasmethod(f, typeof((u, p, t)))
         if !iip && !oop
             throw(ArgumentError("""`p` and `t` provided but `f(u, p, t)` or `f(fu, u, p, t)`
             not defined for `f`!"""))
@@ -83,8 +83,8 @@ function JacFunctionWrapper(f::F, fu_, u, p, t;
         return JacFunctionWrapper{iip, oop, 1, F, typeof(fu), typeof(p), typeof(t)}(f,
             fu, p, t)
     elseif p !== nothing
-        iip = static_hasmethod(f, typeof((fu, u, p)))
-        oop = static_hasmethod(f, typeof((u, p)))
+        iip = hasmethod(f, typeof((fu, u, p)))
+        oop = hasmethod(f, typeof((u, p)))
         if !iip && !oop
             throw(ArgumentError("""`p` is provided but `f(u, p)` or `f(fu, u, p)`
             not defined for `f`!"""))
@@ -94,8 +94,8 @@ function JacFunctionWrapper(f::F, fu_, u, p, t;
     end
 
     if !deporder
-        iip = static_hasmethod(f, typeof((fu, u)))
-        oop = static_hasmethod(f, typeof((u,)))
+        iip = hasmethod(f, typeof((fu, u)))
+        oop = hasmethod(f, typeof((u,)))
         if !iip && !oop
             throw(ArgumentError("""`p` is provided but `f(u)` or `f(fu, u)` not defined for
             `f`!"""))

@@ -152,7 +152,7 @@ function (L::AutoDiffVJP{<:AutoFiniteDiff})(dv, v, p, t; VJP_input = nothing)
 end
 
 function Base.resize!(L::AutoDiffVJP, n::Integer)
-    static_hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
+    hasmethod(resize!, typeof((L.f, n))) && resize!(L.f, n)
     resize!(L.u, n)
     for v in L.cache
         resize!(v, n)

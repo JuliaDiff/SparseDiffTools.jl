@@ -22,7 +22,6 @@ using SciMLOperators, LinearAlgebra, Random
 import DataStructures: DisjointSets, find_root!, union!
 import SciMLOperators: update_coefficients, update_coefficients!
 import Setfield: @set!
-import Tricks: Tricks, static_hasmethod
 
 import PackageExtensionCompat: @require_extensions
 function __init__()

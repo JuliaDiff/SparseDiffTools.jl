@@ -7,6 +7,7 @@ struct ReverseModeJacobianCache{CO, CA, J, FX, X, I} <: AbstractMaybeSparseJacob
     idx_vec::I
 end
 
+__test_backend_loaded(ad::ADTypes.AutoSparseReverseDiff) = nothing
 __getfield(c::ReverseModeJacobianCache, ::Val{:jac_prototype}) = c.jac_prototype
 
 function sparse_jacobian_cache_aux(::ReverseMode, ad::AbstractADType,

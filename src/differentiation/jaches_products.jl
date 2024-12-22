@@ -268,8 +268,9 @@ function JacVec(f, u::AbstractArray, p = nothing, t = nothing; fu = nothing,
     cache, vecprod, vecprod! = if autodiff isa AutoFiniteDiff
         cache1 = similar(fu)
         cache2 = similar(u)
+        cache3 = similar(u)
 
-        (cache1, cache2), num_jacvec, num_jacvec!
+        (cache1, cache2, cache3), num_jacvec, num_jacvec!
     elseif autodiff isa AutoForwardDiff
         cache1 = Dual{
             typeof(ForwardDiff.Tag(tag, eltype(u))), eltype(u), 1

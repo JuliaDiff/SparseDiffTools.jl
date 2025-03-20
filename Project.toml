@@ -4,7 +4,7 @@ authors = [
     "Pankaj Mishra <pankajmishra1511@gmail.com>",
     "Chris Rackauckas <contact@chrisrackauckas.com>",
 ]
-version = "2.23.1"
+version = "2.24.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -65,7 +65,7 @@ StaticArrays = "1"
 Symbolics = "5.5, 6"
 UnPack = "1"
 VertexSafeGraphs = "0.2"
-Zygote = "0.6"
+Zygote = "0.7"
 julia = "1.10"
 
 [extras]

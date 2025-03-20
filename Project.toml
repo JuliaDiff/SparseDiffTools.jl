@@ -1,9 +1,6 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-authors = [
-    "Pankaj Mishra <pankajmishra1511@gmail.com>",
-    "Chris Rackauckas <contact@chrisrackauckas.com>",
-]
+authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
 version = "2.23.1"
 
 [deps]
@@ -65,7 +62,7 @@ StaticArrays = "1"
 Symbolics = "5.5, 6"
 UnPack = "1"
 VertexSafeGraphs = "0.2"
-Zygote = "0.6"
+Zygote = "0.6, 0.7"
 julia = "1.10"
 
 [extras]
@@ -85,18 +82,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = [
-    "Test",
-    "AllocCheck",
-    "BandedMatrices",
-    "BlockBandedMatrices",
-    "Enzyme",
-    "IterativeSolvers",
-    "Pkg",
-    "PolyesterForwardDiff",
-    "Random",
-    "SafeTestsets",
-    "Symbolics",
-    "Zygote",
-    "StaticArrays",
-]
+test = ["Test", "AllocCheck", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "PolyesterForwardDiff", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]

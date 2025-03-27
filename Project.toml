@@ -1,9 +1,6 @@
 name = "SparseDiffTools"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-authors = [
-    "Pankaj Mishra <pankajmishra1511@gmail.com>",
-    "Chris Rackauckas <contact@chrisrackauckas.com>",
-]
+authors = ["Pankaj Mishra <pankajmishra1511@gmail.com>", "Chris Rackauckas <contact@chrisrackauckas.com>"]
 version = "2.24.0"
 
 [deps]
@@ -49,7 +46,7 @@ Compat = "4"
 DataStructures = "0.18"
 Enzyme = "0.13"
 FiniteDiff = "2.8.1"
-ForwardDiff = "0.10"
+ForwardDiff = "0.10, 1"
 Graphs = "1"
 LinearAlgebra = "<0.0.1, 1"
 PackageExtensionCompat = "1"
@@ -85,18 +82,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = [
-    "Test",
-    "AllocCheck",
-    "BandedMatrices",
-    "BlockBandedMatrices",
-    "Enzyme",
-    "IterativeSolvers",
-    "Pkg",
-    "PolyesterForwardDiff",
-    "Random",
-    "SafeTestsets",
-    "Symbolics",
-    "Zygote",
-    "StaticArrays",
-]
+test = ["Test", "AllocCheck", "BandedMatrices", "BlockBandedMatrices", "Enzyme", "IterativeSolvers", "Pkg", "PolyesterForwardDiff", "Random", "SafeTestsets", "Symbolics", "Zygote", "StaticArrays"]
